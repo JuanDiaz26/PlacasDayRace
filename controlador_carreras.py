@@ -133,20 +133,19 @@ def abrir_ventana_dividendos():
 
     tk.Button(ventana_div, text="💾 GUARDAR EN MEMORIA", command=guardar_en_memoria, bg="#27ae60", fg="white", font=("bold", 11), height=2).pack(fill="x", pady=10, padx=10)
 
-# --- 3. VENTANA MARCADOR VIVO (CON VALIDACIÓN) ---
+# --- 3. VENTANA MARCADOR VIVO (CON NOMBRES AUTOMÁTICOS) ---
 def abrir_ventana_marcador():
     ventana_mar = tk.Toplevel(root); ventana_mar.title("Marcador EN VIVO"); ventana_mar.geometry("300x350"); ventana_mar.configure(bg="#2c3e50")
     
-    # Obtener el máximo de caballos para validar
-    max_caballos = 16 # Default por si falla
+    max_caballos = 16 
+    lista_caballos_obj = [] # Aquí guardamos la info completa de los caballos
+    
     if carrera_actual_data and carrera_actual_data.get("caballos"):
-        max_caballos = len(carrera_actual_data["caballos"])
+        lista_caballos_obj = carrera_actual_data["caballos"]
+        max_caballos = len(lista_caballos_obj)
 
     tk.Label(ventana_mar, text="MARCADOR VIVO", font=("Segoe UI", 14, "bold"), bg="#2c3e50", fg="#f1c40f").pack(pady=5)
-    
-    # AVISO DE CANTIDAD DE CABALLOS
-    txt_aviso = f"Carrera con {max_caballos} caballos"
-    tk.Label(ventana_mar, text=txt_aviso, font=("Segoe UI", 10, "bold"), bg="#2c3e50", fg="#00ffcc").pack(pady=0)
+    tk.Label(ventana_mar, text=f"Carrera con {max_caballos} caballos", font=("Segoe UI", 10, "bold"), bg="#2c3e50", fg="#00ffcc").pack(pady=0)
 
     entradas_pos = []
     frame_grid = tk.Frame(ventana_mar, bg="#2c3e50"); frame_grid.pack(pady=10)
@@ -163,30 +162,46 @@ def abrir_ventana_marcador():
         for i, entry in enumerate(entradas_pos):
             num_mandil = entry.get().strip()
             if num_mandil:
-                # --- VALIDACIÓN ---
-                # Extraemos solo el número (por si pone 1A)
+                # 1. Validación de Rango
                 solo_num_str = "".join(filter(str.isdigit, num_mandil))
-                
                 es_valido = False
                 if solo_num_str:
-                    num_int = int(solo_num_str)
-                    if 1 <= num_int <= max_caballos:
+                    # Usamos un rango seguro (hasta 25) por si las dudas con yuntas, pero validamos que sea numero
+                    if 1 <= int(solo_num_str) <= 30: 
                         es_valido = True
                 
                 if not es_valido:
-                    errores.append(f"Posición {i+1}: El caballo '{num_mandil}' no existe (Máx: {max_caballos})")
-                    continue # Saltamos este caballo malo
+                    errores.append(f"Posición {i+1}: Número '{num_mandil}' inválido")
+                    continue
 
+                # 2. BÚSQUEDA DEL NOMBRE (La magia nueva)
+                nombre_caballo = "COMPETIDOR" # Valor por defecto
+                
+                # Buscamos en la lista de la carrera actual
+                for cab in lista_caballos_obj:
+                    # Comparamos strings para que "1" sea igual a "1"
+                    if str(cab["numero"]) == str(num_mandil):
+                        nombre_caballo = cab["nombre"]
+                        break
+                
+                # 3. Precio
                 precio = dividendos_memoria.get(num_mandil, "")
-                datos_json.append({ "posicion": i+1, "numero": num_mandil, "dividendo": precio })
+                
+                # 4. Empaquetamos todo
+                datos_json.append({ 
+                    "posicion": i+1, 
+                    "numero": num_mandil, 
+                    "nombre": nombre_caballo, # Campo nuevo
+                    "dividendo": precio 
+                })
         
         if errores:
             msg = "\n".join(errores)
-            messagebox.showwarning("Error de Validación", f"No se envió nada porque hay errores:\n\n{msg}")
-            return # NO ENVÍA NADA SI HAY ERROR
+            messagebox.showwarning("Error de Validación", f"No se envió nada:\n\n{msg}")
+            return 
 
         with open(ARCHIVO_MARCADOR, "w", encoding="utf-8") as f: json.dump(datos_json, f)
-        lbl_feed.config(text="✅ EN AIRE", fg="#2ecc71")
+        lbl_feed.config(text="✅ EN AIRE (Con Nombres)", fg="#2ecc71")
 
     def limpiar_pantalla():
         with open(ARCHIVO_MARCADOR, "w", encoding="utf-8") as f: json.dump([], f)

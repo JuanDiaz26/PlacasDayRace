@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Marcador Vivo ESTÁTICO</title>
+    <title>Marcador Vivo PRO + NOMBRES</title>
     <style>
         body { margin: 0; padding: 0; background: transparent; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
 
@@ -12,25 +12,24 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 10px;
+            gap: 15px; /* Más espacio entre cajas */
             justify-content: center;
             align-items: center;
         }
 
         .caja-caballo {
-            background: linear-gradient(180deg, rgba(30,30,30,0.95) 0%, rgba(10,10,10,0.95) 100%);
-            border-top: 3px solid #EF5B2B; 
-            border-radius: 6px;
-            width: 140px; 
-            height: 50px;
+            background: linear-gradient(180deg, rgba(30,30,30,0.98) 0%, rgba(10,10,10,0.98) 100%);
+            border-top: 4px solid #EF5B2B; 
+            border-radius: 8px;
+            /* CAMBIO: MUCHO MÁS ANCHO Y ALTO */
+            width: 220px; 
+            height: 60px;
             display: flex;
             align-items: center;
-            padding: 0 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            padding: 0 15px;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.6);
             
-            /* ESTADO INICIAL: OCULTO */
             opacity: 0; 
-            /* Solo animamos la aparición inicial. Una vez visible, NO se mueve. */
             transition: opacity 0.3s ease-out;
         }
 
@@ -38,38 +37,53 @@
             opacity: 1;
         }
 
+        /* --- MANDIL A LA IZQUIERDA --- */
         .mandil {
-            width: 36px;
-            height: 36px;
-            border-radius: 4px;
+            /* CAMBIO: MÁS GRANDE */
+            width: 45px;
+            height: 45px;
+            border-radius: 6px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 18px; 
+            font-size: 24px; /* Número gigante */
             font-weight: 900;
             color: white;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            margin-right: 10px;
+            margin-right: 15px;
             flex-shrink: 0;
             border: 1px solid rgba(255,255,255,0.2);
             text-transform: uppercase;
-            
-            /* ÚNICA TRANSICIÓN: Cambio de color de fondo muy rápido y suave */
             transition: background-color 0.2s ease;
         }
 
-        .info-pago {
+        /* --- COLUMNA DE INFO A LA DERECHA --- */
+        .info-columna {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            line-height: 1;
+            width: 100%;
+            overflow: hidden; /* Para que el nombre no rompa todo */
         }
 
-        .label-pago { color: #888; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 2px;}
-        
+        /* NOMBRE DEL CABALLO (ARRIBA) */
+        .nombre-caballo {
+            color: #ccc;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; /* Pone "..." si es largo */
+            margin-bottom: 2px;
+            letter-spacing: 0.5px;
+        }
+
+        /* PRECIO (ABAJO) */
         .contenedor-precio { display: flex; align-items: baseline; }
-        .simbolo { color: #2ecc71; font-size: 14px; margin-right: 2px; display: none; } /* Oculto por defecto */
-        .monto-pago { color: #fff; font-size: 18px; font-weight: 700; }
+        .label-pago { color: #888; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-right: 5px; }
+        .simbolo { color: #2ecc71; font-size: 14px; margin-right: 2px; display: none; } 
+        .monto-pago { color: #fff; font-size: 22px; font-weight: 800; line-height: 1; }
 
         /* --- COLORES OFICIALES --- */
         .m1 { background-color: #d32f2f; color: #fff !important; } 
@@ -95,9 +109,10 @@
     <div id="contenedor-marcador">
         <div class="caja-caballo" id="slot-0">
             <div class="mandil m0" id="mandil-0">-</div>
-            <div class="info-pago">
-                <span class="label-pago" id="lbl-0">POSICIÓN</span>
+            <div class="info-columna">
+                <div class="nombre-caballo" id="nom-0">COMPETIDOR</div>
                 <div class="contenedor-precio">
+                    <span class="label-pago" id="lbl-0">POSICIÓN</span>
                     <span class="simbolo" id="sim-0">$</span>
                     <span class="monto-pago" id="monto-0">#1</span>
                 </div>
@@ -105,9 +120,10 @@
         </div>
         <div class="caja-caballo" id="slot-1">
             <div class="mandil m0" id="mandil-1">-</div>
-            <div class="info-pago">
-                <span class="label-pago" id="lbl-1">POSICIÓN</span>
+            <div class="info-columna">
+                <div class="nombre-caballo" id="nom-1">COMPETIDOR</div>
                 <div class="contenedor-precio">
+                    <span class="label-pago" id="lbl-1">POSICIÓN</span>
                     <span class="simbolo" id="sim-1">$</span>
                     <span class="monto-pago" id="monto-1">#2</span>
                 </div>
@@ -115,9 +131,10 @@
         </div>
         <div class="caja-caballo" id="slot-2">
             <div class="mandil m0" id="mandil-2">-</div>
-            <div class="info-pago">
-                <span class="label-pago" id="lbl-2">POSICIÓN</span>
+            <div class="info-columna">
+                <div class="nombre-caballo" id="nom-2">COMPETIDOR</div>
                 <div class="contenedor-precio">
+                    <span class="label-pago" id="lbl-2">POSICIÓN</span>
                     <span class="simbolo" id="sim-2">$</span>
                     <span class="monto-pago" id="monto-2">#3</span>
                 </div>
@@ -125,9 +142,10 @@
         </div>
         <div class="caja-caballo" id="slot-3">
             <div class="mandil m0" id="mandil-3">-</div>
-            <div class="info-pago">
-                <span class="label-pago" id="lbl-3">POSICIÓN</span>
+            <div class="info-columna">
+                <div class="nombre-caballo" id="nom-3">COMPETIDOR</div>
                 <div class="contenedor-precio">
+                    <span class="label-pago" id="lbl-3">POSICIÓN</span>
                     <span class="simbolo" id="sim-3">$</span>
                     <span class="monto-pago" id="monto-3">#4</span>
                 </div>
@@ -136,12 +154,11 @@
     </div>
 
     <script>
-        // Memoria de estado
         let estadoPrevio = [
-            { num: null, div: null, visible: false },
-            { num: null, div: null, visible: false },
-            { num: null, div: null, visible: false },
-            { num: null, div: null, visible: false }
+            { num: null, div: null, nom: null, visible: false },
+            { num: null, div: null, nom: null, visible: false },
+            { num: null, div: null, nom: null, visible: false },
+            { num: null, div: null, nom: null, visible: false }
         ];
 
         async function leerMarcador() {
@@ -153,54 +170,57 @@
                     const slot = document.getElementById(`slot-${i}`);
                     const mandilDiv = document.getElementById(`mandil-${i}`);
                     
-                    // Elementos internos de texto (No los creamos, ya existen)
+                    const nomDiv = document.getElementById(`nom-${i}`);
                     const lblDiv = document.getElementById(`lbl-${i}`);
                     const simDiv = document.getElementById(`sim-${i}`);
                     const montoDiv = document.getElementById(`monto-${i}`);
 
-                    // DATOS NUEVOS
                     let nuevoNum = null;
                     let nuevoDiv = null;
+                    let nuevoNom = null;
                     let nuevoVisible = false;
 
                     if (data[i]) {
                         nuevoNum = data[i].numero;
                         nuevoDiv = data[i].dividendo || ""; 
+                        nuevoNom = data[i].nombre || "COMPETIDOR"; // Leemos el nombre
                         nuevoVisible = true;
                     }
 
-                    // --- COMPARACIÓN ESTRICTA ---
                     const estado = estadoPrevio[i];
 
-                    // 1. Visibilidad (Solo si cambia)
+                    // 1. Visibilidad
                     if (estado.visible !== nuevoVisible) {
                         if (nuevoVisible) slot.classList.add('visible');
                         else slot.classList.remove('visible');
                         estado.visible = nuevoVisible;
                     }
-
-                    // Si está oculto, pasamos al siguiente slot sin tocar nada más
                     if (!nuevoVisible) continue;
 
                     // 2. Número y Color
                     if (estado.num !== nuevoNum) {
                         let numColor = nuevoNum.replace(/\D/g, '') || "0";
                         mandilDiv.innerText = nuevoNum; 
-                        mandilDiv.className = `mandil m${numColor}`; // Solo cambiamos la clase
+                        mandilDiv.className = `mandil m${numColor}`;
                         estado.num = nuevoNum;
                     }
 
-                    // 3. Info de Pago (Actualizamos TEXTO, no HTML)
+                    // 3. Nombre (Nuevo)
+                    if (estado.nom !== nuevoNom) {
+                        nomDiv.innerText = nuevoNom;
+                        estado.nom = nuevoNom;
+                    }
+
+                    // 4. Precio/Posición
                     if (estado.div !== nuevoDiv) {
                         if (nuevoDiv) {
-                            // MODO PRECIO
-                            lblDiv.innerText = "PAGA";
-                            simDiv.style.display = "inline"; // Mostrar $
+                            lblDiv.style.display = "none"; // Ocultamos "POSICIÓN" para ganar espacio
+                            simDiv.style.display = "inline"; 
                             montoDiv.innerText = nuevoDiv;
                         } else {
-                            // MODO POSICIÓN
+                            lblDiv.style.display = "inline";
                             lblDiv.innerText = "POSICIÓN";
-                            simDiv.style.display = "none"; // Ocultar $
+                            simDiv.style.display = "none"; 
                             montoDiv.innerText = "#" + (i + 1);
                         }
                         estado.div = nuevoDiv;
@@ -208,8 +228,7 @@
                 }
             } catch (e) { }
         }
-
-        setInterval(leerMarcador, 200); // Refresco muy rápido (no parpadea porque no toca el DOM si es igual)
+        setInterval(leerMarcador, 200);
     </script>
 </body>
 </html>
