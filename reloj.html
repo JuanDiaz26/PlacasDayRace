@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cronómetro TV GRANDE</title>
+    <style>
+        /* --- COLORES OFICIALES --- */
+        :root {
+            --verde: #257E77;
+            --naranja: #EF5B2B;
+            --blanco: #ffffff;
+        }
+
+        body {
+            /* TRUCO OBS: Fondo 1% visible para atrapar el clic del mouse */
+            background-color: rgba(0, 0, 0, 0.01); 
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            font-weight: 800;
+            
+            height: 100vh;
+            width: 100vw;
+            cursor: pointer; 
+        }
+
+        #pantalla-transmision {
+            position: absolute;
+            bottom: 20px;
+            left: 20px; 
+            right: 20px; 
+            display: flex;
+            justify-content: space-between; 
+            align-items: flex-end; 
+            pointer-events: none; 
+        }
+
+        /* --- IZQUIERDA: PARCIALES (AHORA MÁS GRANDES) --- */
+        #lista-parciales {
+            display: flex;
+            flex-direction: column;
+            gap: 4px; /* Un poco más separados */
+            min-width: 150px;
+            pointer-events: auto;
+        }
+
+        .fila-parcial {
+            /* CAMBIO: AUMENTADO DE 16px A 22px */
+            font-size: 22px; 
+            color: var(--blanco);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9); /* Sombra más fuerte */
+            background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+            padding: 4px 15px; /* Más relleno */
+            border-left: 5px solid var(--naranja); /* Borde más grueso */
+            border-radius: 0 6px 6px 0;
+            animation: entrarIzquierda 0.4s ease-out;
+            font-family: 'Consolas', 'Monaco', monospace; 
+        }
+        
+        .fila-final {
+            border-left: 5px solid #ff0000; 
+            background: linear-gradient(90deg, rgba(200, 0, 0, 0.8) 0%, rgba(0,0,0,0) 100%);
+            font-weight: 900;
+            color: #ffeb3b; 
+            font-size: 24px; /* El final un pelín más grande */
+        }
+
+        .distancia {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #ddd;
+            margin-right: 15px;
+            font-weight: 600;
+            font-size: 18px; /* CAMBIO: DE 14px A 18px */
+        }
+
+        /* --- DERECHA: RELOJ PRINCIPAL (GRANDE) --- */
+        #reloj-principal {
+            background-color: var(--verde);
+            padding: 8px 20px; /* Más gordito */
+            border-radius: 20px; 
+            border: 3px solid white; /* Borde más notorio */
+            border-bottom: 5px solid var(--naranja); 
+            
+            display: flex;
+            align-items: center;
+            justify-content: center; 
+            
+            box-shadow: 0 6px 12px rgba(0,0,0,0.5);
+            margin-left: auto; 
+            
+            pointer-events: auto;
+            transition: transform 0.1s;
+        }
+        
+        #reloj-principal:active {
+            transform: scale(0.95); 
+        }
+
+        #numeros-reloj {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace; 
+            
+            /* CAMBIO: AUMENTADO DE 26px A 42px (MUCHO MÁS VISIBLE) */
+            font-size: 42px; 
+            
+            color: white;
+            text-shadow: 2px 2px 0 #000;
+            
+            /* CAMBIO: CAJA MÁS ANCHA (DE 130px A 210px) */
+            width: 210px; 
+            
+            text-align: center; 
+            line-height: 1;
+            user-select: none; 
+        }
+
+        @keyframes entrarIzquierda {
+            from { opacity: 0; transform: translateX(-15px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="pantalla-transmision">
+        <div id="lista-parciales"></div>
+
+        <div id="reloj-principal" onclick="toggleRelojManual()">
+            <div id="numeros-reloj">00:00.00</div>
+        </div>
+    </div>
+
+    <script>
+        const hitos = ["400m", "800m", "1200m", "1600m", "2000m", "2400m"];
+        let indiceHito = 0;
+        let startTime, tInterval;
+        let running = false;
+        let distanciaRealDeLaCarrera = "Final"; 
+
+        const displayReloj = document.getElementById('numeros-reloj');
+        const listaParciales = document.getElementById('lista-parciales');
+
+        async function leerDistanciaDesdePython() {
+            try {
+                const respuesta = await fetch('datos.json?nocache=' + new Date().getTime()); 
+                const data = await respuesta.json();
+                if (data.distancia) {
+                    let distLimpia = data.distancia.toLowerCase().replace("metros", "m").replace("mts", "m").replace(" ", "");
+                    distanciaRealDeLaCarrera = distLimpia; 
+                }
+            } catch (error) {}
+        }
+        setInterval(leerDistanciaDesdePython, 1000);
+
+        function startTimer() {
+            if(!running){
+                startTime = new Date().getTime();
+                tInterval = setInterval(getShowTime, 10);
+                running = true;
+                listaParciales.innerHTML = "";
+                indiceHito = 0;
+                displayReloj.style.color = "#fff"; 
+            }
+        }
+
+        function stopTimer() {
+            if (running){
+                clearInterval(tInterval);
+                running = false;
+                displayReloj.style.color = "#ffeb3b"; 
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(tInterval);
+            running = false;
+            displayReloj.innerHTML = "00:00.00";
+            listaParciales.innerHTML = "";
+            indiceHito = 0;
+            displayReloj.style.color = "#fff";
+        }
+
+        function getShowTime(){
+            let updatedTime = new Date().getTime();
+            let difference = updatedTime - startTime;
+            let minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            let seconds = Math.floor((difference % (1000 * 60)) / 1000);
+            let milliseconds = Math.floor((difference % 1000) / 10);
+            minutes = (minutes < 10) ? "0" + minutes : minutes;
+            seconds = (seconds < 10) ? "0" + seconds : seconds;
+            milliseconds = (milliseconds < 10) ? "0" + milliseconds : milliseconds;
+            displayReloj.innerHTML = minutes + ':' + seconds + '.' + milliseconds;
+        }
+
+        function agregarParcial() {
+            if (running) {
+                let tiempoFoto = displayReloj.innerHTML;
+                let etiqueta = hitos[indiceHito] ? hitos[indiceHito] : "P.";
+                let nuevoRenglon = document.createElement("div");
+                nuevoRenglon.className = "fila-parcial";
+                nuevoRenglon.innerHTML = `<span class="distancia">${etiqueta}</span><span class="tiempo-parcial">${tiempoFoto}</span>`;
+                listaParciales.appendChild(nuevoRenglon);
+                indiceHito++;
+            }
+        }
+
+        function finalizarCarrera() {
+            if (running) {
+                stopTimer();
+                let tiempoFinalTexto = displayReloj.innerHTML;
+                let etiquetaFinal = distanciaRealDeLaCarrera; 
+                let nuevoRenglon = document.createElement("div");
+                nuevoRenglon.className = "fila-parcial fila-final"; 
+                nuevoRenglon.innerHTML = `<span class="distancia">${etiquetaFinal}</span><span class="tiempo-parcial">${tiempoFinalTexto}</span>`;
+                listaParciales.appendChild(nuevoRenglon);
+            }
+        }
+        
+        function toggleRelojManual() {
+            if (!running) startTimer();
+            else stopTimer();
+        }
+
+        // --- CONTROLES DE TECLADO ---
+        window.addEventListener("keydown", function(e) {
+            if (e.code === "Space" || e.key === "s" || e.key === "S") {
+                if (!running) startTimer();
+                else stopTimer();
+            }
+            if (e.key === "r" || e.key === "R") {
+                resetTimer();
+            }
+            if (e.key === "p" || e.key === "P") {
+                agregarParcial();
+            }
+            if (e.key === "f" || e.key === "F") {
+                finalizarCarrera();
+            }
+        });
+    </script>
+</body>
+</html>

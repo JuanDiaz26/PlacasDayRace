@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Placa Tucumán V11 FULL WIDE</title>
+    <style>
+        /* --- COLORES OFICIALES --- */
+        :root {
+            --verde-tucuman: #257E77;
+            --verde-oscuro: #1b5e59;
+            --naranja-tucuman: #EF5B2B;
+            --blanco: #ffffff;
+            --gris-texto: #333;
+        }
+
+        body {
+            background-color: transparent; 
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        /* --- CONTENEDOR PRINCIPAL --- */
+        #barra-contenedor {
+            position: absolute;
+            top: 40px; 
+            left: 50%;
+            transform: translateX(-50%);
+            
+            /* CAMBIO CLAVE: AHORA OCUPA CASI TODA LA PANTALLA */
+            width: 98%; 
+            max-width: 1850px; /* Antes era 1300px. Ahora llega casi a los bordes de 1920px */
+            
+            height: 65px; 
+            display: flex;
+            align-items: center;
+            justify-content: center; 
+            filter: drop-shadow(0px 8px 10px rgba(0,0,0,0.3));
+        }
+
+        /* --- LATERALES --- */
+        .bloque-lateral {
+            background-color: var(--blanco);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            /* Los mantenemos compactos para dejarle todo el espacio al verde */
+            flex: 0 0 180px; 
+            width: 180px; 
+            z-index: 2;
+        }
+
+        /* --- 1. BLOQUE IZQUIERDO --- */
+        .bloque-izq {
+            padding-left: 10px;
+            padding-right: 25px; 
+            border-radius: 6px 0 0 6px;
+            border-left: 6px solid var(--naranja-tucuman);
+            margin-right: -25px; 
+            clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%); 
+            justify-content: flex-start;
+        }
+
+        .img-hipo {
+            height: 45px; 
+            width: auto;
+            margin-right: 8px;
+        }
+
+        .info-carrera-div {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .txt-carrera {
+            color: var(--verde-tucuman);
+            font-size: 18px; 
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+            letter-spacing: -0.5px; 
+        }
+        .txt-distancia {
+            color: #555;
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 3px;
+        }
+
+        /* --- 2. BLOQUE CENTRAL (Verde - AHORA GIGANTE) --- */
+        .bloque-centro {
+            background: linear-gradient(90deg, var(--verde-tucuman) 10%, var(--verde-oscuro) 100%);
+            flex-grow: 1; /* Se estira todo lo posible */
+            height: 100%;
+            display: flex;
+            align-items: center;
+            
+            padding-left: 40px; 
+            padding-right: 40px; 
+            
+            z-index: 1;
+            position: relative;
+        }
+
+        .grupo-datos-carrera {
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center; 
+            text-align: center; 
+            overflow: hidden; 
+        }
+
+        #titulo-premio {
+            color: var(--blanco);
+            font-size: 26px;
+            font-weight: 800;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            line-height: 1;
+            margin-bottom: 4px;
+            white-space: nowrap;
+        }
+
+        .sub-datos {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px; /* Más separación entre condición y pista */
+            width: 100%;
+        }
+
+        #condicion-txt {
+            color: #e6e6e6;
+            
+            /* CAMBIO: Agrandamos la letra porque ahora hay espacio */
+            font-size: 14px; 
+            font-weight: 600; 
+            
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; 
+            
+            /* CAMBIO: Permitimos que ocupe mucho más ancho antes de cortarse */
+            max-width: 900px; 
+        }
+
+        .pista-badge {
+            background-color: rgba(0,0,0,0.4);
+            color: var(--blanco);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 4px;
+            border-left: 2px solid var(--naranja-tucuman);
+            text-transform: uppercase;
+            white-space: nowrap; 
+            flex-shrink: 0; 
+        }
+
+        /* GRUPO RELOJ */
+        .grupo-reloj {
+            text-align: right;
+            border-left: 1px solid rgba(255,255,255,0.3);
+            padding-left: 15px;
+            min-width: 70px;
+            flex-shrink: 0; 
+            margin-left: 15px;
+        }
+        
+        #reloj-hora {
+            display: block;
+            color: var(--blanco);
+            font-size: 20px;
+            font-weight: 900;
+            line-height: 1;
+        }
+        #reloj-fecha {
+            display: block;
+            color: #ddd;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* --- 3. BLOQUE DERECHO --- */
+        .bloque-der {
+            padding-left: 30px; 
+            padding-right: 15px;
+            border-radius: 0 6px 6px 0;
+            border-right: 6px solid var(--naranja-tucuman);
+            margin-left: -25px; 
+            clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
+            justify-content: center;
+        }
+
+        .img-caja {
+            height: 40px; 
+            width: auto;
+            max-width: 90%; 
+            object-fit: contain;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="barra-contenedor">
+        <div class="bloque-lateral bloque-izq">
+            <img src="logo-hipo.png" class="img-hipo" alt="Hipo Tucumán">
+            <div class="info-carrera-div">
+                <span id="num-carrera" class="txt-carrera">1ª CARRERA</span>
+                <span id="distancia-carrera" class="txt-distancia">1200 METROS</span>
+            </div>
+        </div>
+
+        <div class="bloque-centro">
+            <div class="grupo-datos-carrera">
+                <span id="titulo-premio">PREMIO APERTURA</span>
+                <div class="sub-datos">
+                    <span id="condicion-txt">Yeguas 4 años ganadoras de 1</span>
+                    <span id="estado-pista" class="pista-badge">PISTA: NORMAL</span>
+                </div>
+            </div>
+            
+            <div class="grupo-reloj">
+                <span id="reloj-hora">--:--</span>
+                <span id="reloj-fecha">--/--/--</span>
+            </div>
+        </div>
+
+        <div class="bloque-lateral bloque-der">
+            <img src="logo-caja.png" class="img-caja" alt="Caja Popular">
+        </div>
+    </div>
+
+    <script>
+        async function leerDatosDesdePython() {
+            try {
+                const respuesta = await fetch('datos.json?nocache=' + new Date().getTime()); 
+                const data = await respuesta.json();
+
+                document.getElementById('num-carrera').innerText = data.num_carrera;
+                document.getElementById('distancia-carrera').innerText = data.distancia;
+                document.getElementById('titulo-premio').innerText = data.premio;
+                document.getElementById('condicion-txt').innerText = data.condicion;
+                document.getElementById('estado-pista').innerText = "PISTA: " + data.estado_pista;
+
+                const badge = document.getElementById('estado-pista');
+                const pista = data.estado_pista.toUpperCase();
+                
+                if (pista.includes("HÚMEDA") || pista.includes("HUMEDA")) {
+                    badge.style.backgroundColor = "#d35400"; 
+                } else if (pista.includes("PESADA") || pista.includes("FANGOSA") || pista.includes("BARROSA")) {
+                    badge.style.backgroundColor = "#c0392b"; 
+                } else {
+                    badge.style.backgroundColor = "rgba(0,0,0,0.4)"; 
+                }
+            } catch (error) { console.log("Esperando datos..."); }
+        }
+
+        function reloj() {
+            const d = new Date();
+            document.getElementById('reloj-hora').innerText = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+            document.getElementById('reloj-fecha').innerText = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
+        }
+        setInterval(reloj, 1000); reloj();
+        setInterval(leerDatosDesdePython, 1000);
+    </script>
+</body>
+</html>
