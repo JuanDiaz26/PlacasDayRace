@@ -3,5 +3,6 @@
     "distancia": "1200 METROS",
     "premio": "PREMIO \"CLARA AMIGA 2023\"",
     "condicion": "Para todo spc de 4 años y más edad perdedor en todas las categorías. peso 56 kilos.",
-    "estado_pista": "NORMAL"
+    "estado_pista": " NORMALr ",
+    "visible": false
 }

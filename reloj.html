@@ -2,163 +2,47 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cronómetro TV SPORT PRO</title>
+    <title>Cronómetro TV SPORT PRO (Remoto)</title>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
     <style>
         /* --- COLORES OFICIALES --- */
-        :root {
-            --verde: #257E77;
-            --verde-oscuro: #1b5e59;
-            --naranja: #EF5B2B;
-            --blanco: #ffffff;
-            --negro-trans: rgba(0,0,0,0.85);
-        }
-
-        body {
+        :root { --verde: #257E77; --verde-oscuro: #1b5e59; --naranja: #EF5B2B; --blanco: #ffffff; --negro-trans: rgba(0,0,0,0.85); }
+        
+        body { 
             background-color: rgba(0, 0, 0, 0.01); 
-            margin: 0; padding: 0; overflow: hidden;
-            height: 100vh; width: 100vw;
-            /* Usamos una fuente de Google con estilo "Deportivo/Tech" */
+            margin: 0; padding: 0; overflow: hidden; height: 100vh; width: 100vw; 
             font-family: 'Roboto', sans-serif; 
-        }
-
-        #pantalla-transmision {
-            position: absolute;
-            bottom: 30px;
-            left: 30px; 
-            right: 30px; 
-            display: flex;
-            justify-content: space-between; 
-            align-items: flex-end; 
-            pointer-events: none; 
-        }
-
-        /* --- IZQUIERDA: PARCIALES (ESTILO SPORT) --- */
-        #lista-parciales {
-            display: flex;
-            flex-direction: column;
-            gap: 5px; 
-            min-width: 200px;
-            pointer-events: auto;
-            /* Inclinamos todo el contenedor de parciales */
-            transform: skewX(-10deg); 
-        }
-
-        .fila-parcial {
-            font-size: 20px; 
-            color: var(--blanco);
-            /* Fondo negro semitransparente degradado */
-            background: linear-gradient(90deg, var(--negro-trans) 0%, rgba(0,0,0,0) 100%);
-            padding: 6px 20px; 
-            border-left: 6px solid var(--naranja); 
             
-            /* Sombra para despegar del fondo */
-            box-shadow: 2px 2px 0px rgba(0,0,0,0.3);
-            
-            animation: entrarIzquierda 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efecto rebote */
-            display: flex;
-            align-items: center;
+            /* --- FIX VISIBILIDAD --- */
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out; 
         }
         
-        /* Contrarestrar la inclinación del texto para que se lea recto */
+        /* Clase para ocultar todo */
+        body.oculto {
+            opacity: 0 !important;
+        }
+
+        #pantalla-transmision { position: absolute; bottom: 30px; left: 30px; right: 30px; display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none; }
+        #lista-parciales { display: flex; flex-direction: column; gap: 5px; min-width: 200px; pointer-events: auto; transform: skewX(-10deg); }
+        .fila-parcial { font-size: 20px; color: var(--blanco); background: linear-gradient(90deg, var(--negro-trans) 0%, rgba(0,0,0,0) 100%); padding: 6px 20px; border-left: 6px solid var(--naranja); box-shadow: 2px 2px 0px rgba(0,0,0,0.3); animation: entrarIzquierda 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; }
         .fila-parcial span { transform: skewX(10deg); }
-
-        .fila-final {
-            background: linear-gradient(90deg, #b71c1c 0%, rgba(183, 28, 28, 0) 100%);
-            border-left: 6px solid #ffeb3b; 
-            color: #ffeb3b; 
-        }
-
-        .distancia {
-            color: #ccc;
-            margin-right: 15px;
-            font-weight: 700;
-            font-size: 16px; 
-            text-transform: uppercase;
-            width: 60px; /* Ancho fijo para alinear */
-        }
-        .tiempo-parcial {
-            font-weight: 900;
-            letter-spacing: 1px;
-            /* EL TRUCO MAGICO: Números tabulares en fuente normal */
-            font-variant-numeric: tabular-nums; 
-        }
-
-        /* --- DERECHA: RELOJ PRINCIPAL (DISEÑO F1) --- */
-        #contenedor-reloj {
-            pointer-events: auto;
-            /* Inclinación para velocidad */
-            transform: skewX(-10deg); 
-            box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
-            transition: transform 0.1s;
-        }
-        #contenedor-reloj:active { transform: skewX(-10deg) scale(0.98); }
-
-        /* Parte SUPERIOR del reloj (Verde) */
-        #caja-tiempo {
-            background: linear-gradient(135deg, var(--verde) 0%, var(--verde-oscuro) 100%);
-            padding: 5px 30px;
-            display: flex;
-            align-items: baseline; /* Alineamos por la base de los números */
-            justify-content: center;
-            border-top: 2px solid rgba(255,255,255,0.3);
-            border-left: 2px solid rgba(255,255,255,0.3);
-        }
-
-        /* Parte INFERIOR (Barra Naranja decorativa) */
-        #barra-deco {
-            height: 8px;
-            background-color: var(--naranja);
-            width: 100%;
-            background-image: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 5px,
-                rgba(0,0,0,0.2) 5px,
-                rgba(0,0,0,0.2) 10px
-            ); /* Efecto rallado "racing" */
-        }
-
-        /* NÚMEROS */
-        #numeros-reloj {
-            color: white;
-            font-family: 'Roboto', sans-serif; /* Fuente moderna */
-            font-weight: 900;
-            font-size: 52px; 
-            line-height: 1;
-            text-shadow: 3px 3px 0 rgba(0,0,0,0.4);
-            
-            /* TRUCO CLAVE: Mantiene el ancho fijo sin usar fuente fea */
-            font-variant-numeric: tabular-nums; 
-            
-            /* Contrarrestar inclinación */
-            transform: skewX(10deg); 
-            display: flex;
-            align-items: baseline;
-        }
-
-        /* Los milisegundos más chicos */
-        #milisegundos {
-            font-size: 32px;
-            color: #a7ffeb; /* Un verde agua clarito para diferenciar */
-            margin-left: 2px;
-        }
-        
-        .punto-sep { margin: 0 2px; color: rgba(255,255,255,0.6); }
-
-        @keyframes entrarIzquierda {
-            from { opacity: 0; transform: translateX(-30px) skewX(-10deg); }
-            to { opacity: 1; transform: translateX(0) skewX(-10deg); }
-        }
-
+        .fila-final { background: linear-gradient(90deg, #b71c1c 0%, rgba(183, 28, 28, 0) 100%); border-left: 6px solid #ffeb3b; color: #ffeb3b; }
+        .distancia { color: #ccc; margin-right: 15px; font-weight: 700; font-size: 16px; text-transform: uppercase; width: 60px; }
+        .tiempo-parcial { font-weight: 900; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+        #contenedor-reloj { pointer-events: auto; transform: skewX(-10deg); box-shadow: 4px 4px 10px rgba(0,0,0,0.5); transition: transform 0.1s; }
+        #caja-tiempo { background: linear-gradient(135deg, var(--verde) 0%, var(--verde-oscuro) 100%); padding: 5px 30px; display: flex; align-items: baseline; justify-content: center; border-top: 2px solid rgba(255,255,255,0.3); border-left: 2px solid rgba(255,255,255,0.3); }
+        #barra-deco { height: 8px; background-color: var(--naranja); width: 100%; background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.2) 5px, rgba(0,0,0,0.2) 10px); }
+        #numeros-reloj { color: white; font-family: 'Roboto', sans-serif; font-weight: 900; font-size: 52px; line-height: 1; text-shadow: 3px 3px 0 rgba(0,0,0,0.4); font-variant-numeric: tabular-nums; transform: skewX(10deg); display: flex; align-items: baseline; }
+        #milisegundos { font-size: 32px; color: #a7ffeb; margin-left: 2px; }
+        @keyframes entrarIzquierda { from { opacity: 0; transform: translateX(-30px) skewX(-10deg); } to { opacity: 1; transform: translateX(0) skewX(-10deg); } }
     </style>
 </head>
 <body>
 
     <div id="pantalla-transmision">
         <div id="lista-parciales"></div>
-
-        <div id="contenedor-reloj" onclick="toggleRelojManual()">
+        <div id="contenedor-reloj">
             <div id="caja-tiempo">
                 <div id="numeros-reloj">
                     <span id="min-sec">00:00</span>
@@ -174,32 +58,67 @@
         let indiceHito = 0;
         let startTime, tInterval;
         let running = false;
-        let distanciaRealDeLaCarrera = "Final"; 
+        let distanciaRealDeLaCarrera = "Final";
+        let ultimoComandoID = 0; // Para no repetir comandos
 
         const displayMinSec = document.getElementById('min-sec');
         const displayMili = document.getElementById('milisegundos');
         const listaParciales = document.getElementById('lista-parciales');
+        const numerosReloj = document.getElementById('numeros-reloj');
 
-        async function leerDistanciaDesdePython() {
+        // --- 1. LEER DISTANCIA (Igual que antes) ---
+        async function leerDistancia() {
             try {
-                const respuesta = await fetch('datos.json?nocache=' + new Date().getTime()); 
-                const data = await respuesta.json();
-                if (data.distancia) {
-                    let distLimpia = data.distancia.toLowerCase().replace("metros", "m").replace("mts", "m").replace(" ", "");
-                    distanciaRealDeLaCarrera = distLimpia; 
-                }
-            } catch (error) {}
+                const r = await fetch('datos.json?nocache=' + Date.now()); 
+                const d = await r.json();
+                if (d.distancia) distanciaRealDeLaCarrera = d.distancia.replace(/metros|mts/iy, "m").replace(" ", "");
+            } catch (e) {}
         }
-        setInterval(leerDistanciaDesdePython, 1000);
 
+        // --- 2. CEREBRO NUEVO: LEER COMANDOS DESDE PYTHON ---
+        async function escucharComandos() {
+            try {
+                const response = await fetch('comando_reloj.json?nocache=' + Date.now());
+                const data = await response.json();
+                
+                // Si el ID del comando es nuevo, lo ejecutamos
+                if (data.id && data.id !== ultimoComandoID) {
+                    ultimoComandoID = data.id; // Marcamos como leído
+                    ejecutarAccion(data.accion);
+                }
+            } catch (e) {}
+        }
+
+        function ejecutarAccion(accion) {
+            console.log("Comando recibido:", accion);
+            if (accion === "START") startTimer();
+            if (accion === "STOP") stopTimer();
+            if (accion === "RESET") resetTimer();
+            if (accion === "PARCIAL") agregarParcial();
+            if (accion === "FINALIZAR") finalizarCarrera();
+            
+            // --- FIX VISIBILIDAD (Usando clase CSS robusta) ---
+            if (accion === "OCULTAR") {
+                document.body.classList.add('oculto');
+            }
+            if (accion === "MOSTRAR") {
+                document.body.classList.remove('oculto');
+            }
+        }
+
+        // --- FUNCIONES DEL RELOJ (Lógica interna) ---
         function startTimer() {
             if(!running){
-                startTime = new Date().getTime();
+                if(displayMinSec.innerHTML === "00:00" && displayMili.innerHTML === ".00") {
+                     startTime = new Date().getTime();
+                } else {
+                    let partes = displayMinSec.innerHTML.split(":");
+                    let msActuales = (parseInt(partes[0])*60000) + (parseInt(partes[1])*1000) + (parseInt(displayMili.innerHTML.replace(".",""))*10);
+                    startTime = new Date().getTime() - msActuales;
+                }
                 tInterval = setInterval(getShowTime, 10);
                 running = true;
-                listaParciales.innerHTML = "";
-                indiceHito = 0;
-                document.getElementById('numeros-reloj').style.color = "#fff"; 
+                numerosReloj.style.color = "#fff"; 
             }
         }
 
@@ -207,7 +126,7 @@
             if (running){
                 clearInterval(tInterval);
                 running = false;
-                document.getElementById('numeros-reloj').style.color = "#ffeb3b"; 
+                numerosReloj.style.color = "#ffeb3b"; 
             }
         }
 
@@ -218,7 +137,7 @@
             displayMili.innerHTML = ".00";
             listaParciales.innerHTML = "";
             indiceHito = 0;
-            document.getElementById('numeros-reloj').style.color = "#fff";
+            numerosReloj.style.color = "#fff";
         }
 
         function getShowTime(){
@@ -232,7 +151,6 @@
             seconds = (seconds < 10) ? "0" + seconds : seconds;
             milliseconds = (milliseconds < 10) ? "0" + milliseconds : milliseconds;
             
-            // Separamos visualmente
             displayMinSec.innerHTML = minutes + ':' + seconds;
             displayMili.innerHTML = '.' + milliseconds;
         }
@@ -241,10 +159,8 @@
             if (running) {
                 let tiempoFoto = displayMinSec.innerHTML + displayMili.innerHTML;
                 let etiqueta = hitos[indiceHito] ? hitos[indiceHito] : "P.";
-                
                 let nuevoRenglon = document.createElement("div");
                 nuevoRenglon.className = "fila-parcial";
-                // Span interno para corregir la inclinación
                 nuevoRenglon.innerHTML = `<span><span class="distancia">${etiqueta}</span><span class="tiempo-parcial">${tiempoFoto}</span></span>`;
                 listaParciales.appendChild(nuevoRenglon);
                 indiceHito++;
@@ -262,28 +178,10 @@
                 listaParciales.appendChild(nuevoRenglon);
             }
         }
-        
-        function toggleRelojManual() {
-            if (!running) startTimer();
-            else stopTimer();
-        }
 
-        // --- CONTROLES DE TECLADO ---
-        window.addEventListener("keydown", function(e) {
-            if (e.code === "Space" || e.key === "s" || e.key === "S") {
-                if (!running) startTimer();
-                else stopTimer();
-            }
-            if (e.key === "r" || e.key === "R") {
-                resetTimer();
-            }
-            if (e.key === "p" || e.key === "P") {
-                agregarParcial();
-            }
-            if (e.key === "f" || e.key === "F") {
-                finalizarCarrera();
-            }
-        });
+        setInterval(leerDistancia, 2000); 
+        setInterval(escucharComandos, 100); 
+
     </script>
 </body>
 </html>

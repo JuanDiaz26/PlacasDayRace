@@ -4,262 +4,413 @@ import json
 import pandas as pd
 import re
 import os
+import time
 
-# Archivos JSON
+# --- ARCHIVOS ---
 ARCHIVO_DATOS = "datos.json"
 ARCHIVO_MARCADOR = "marcador.json"
+ARCHIVO_COMANDO = "comando_reloj.json"
 
+# --- VARIABLES GLOBALES ---
 carreras_cargadas = []
 carrera_actual_data = None 
 dividendos_memoria = {} 
+reloj_corriendo = False 
+# Estados de visibilidad
+visibilidad_placa = True
+visibilidad_reloj = True
+visibilidad_marcador = True # NUEVA VARIABLE GLOBAL
 
-# --- 1. LÓGICA DE LECTURA INTELIGENTE ---
+# =============================================================================
+# 1. FUNCIONES DE LIMPIEZA Y COMUNICACIÓN
+# =============================================================================
+
+def inicializar_sistema():
+    """Limpia todo al arrancar el programa"""
+    print("--- INICIALIZANDO SISTEMA DE TV ---")
+    # Inicializamos marcador visible pero vacío
+    guardar_json(ARCHIVO_MARCADOR, []) 
+    enviar_comando_reloj("RESET")
+    # Datos vacíos pero visibles por defecto
+    datos_vacios = {"num_carrera": "", "distancia": "", "premio": "", "condicion": "", "estado_pista": "", "visible": False}
+    guardar_json(ARCHIVO_DATOS, datos_vacios)
+
+def guardar_json(archivo, data):
+    try:
+        with open(archivo, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Error guardando {archivo}: {e}")
+
+def enviar_comando_reloj(accion):
+    comando = { "id": time.time(), "accion": accion }
+    guardar_json(ARCHIVO_COMANDO, comando)
+    print(f"📡 COMANDO RELOJ: {accion}")
+
+# =============================================================================
+# 2. LÓGICA DE EXCEL (CORREGIDA PARA PUNTOS EN METROS)
+# =============================================================================
 def analizar_excel(ruta_archivo):
     print(f"--- ANALIZANDO: {ruta_archivo} ---")
     try:
-        if ruta_archivo.endswith('.csv'):
-             df = pd.read_csv(ruta_archivo, header=None, sep=None, engine='python')
-        else:
-             df = pd.read_excel(ruta_archivo, header=None)
+        if ruta_archivo.endswith('.csv'): df = pd.read_csv(ruta_archivo, header=None, sep=None, engine='python')
+        else: df = pd.read_excel(ruta_archivo, header=None)
         
-        carreras_detectadas = []
-        carrera_actual = None
-        buscando_distancia = False 
-        condicion_cerrada = False
-        buscando_caballos = False
-        col_idx_numero = -1
-        col_idx_nombre = -1
+        carreras = []
+        carrera_act = None
+        buscando_dist = False; cond_cerrada = False
+        buscando_cab = False; col_num = -1; col_nom = -1
 
-        n_filas = len(df)
-        for i in range(n_filas):
-            fila_vals_raw = [str(val).strip() for val in df.iloc[i].values]
-            fila_texto = " ".join([v for v in fila_vals_raw if v != 'nan' and v != 'None' and v != ''])
-            texto_mayus = fila_texto.upper()
+        for i in range(len(df)):
+            fila_vals = [str(val).strip() for val in df.iloc[i].values]
+            texto = " ".join([v for v in fila_vals if v not in ['nan', 'None', '']])
+            texto_upper = texto.upper()
             
-            match_titulo = re.search(r'^(\d+)[º°aª]\s*CARRERA', texto_mayus)
-            if match_titulo:
-                if carrera_actual is not None: carreras_detectadas.append(carrera_actual)
-                carrera_actual = { "id": "", "distancia": "DISTANCIA NO HALLADA", "premio": "", "condicion": "", "pista": "NORMAL", "caballos": [] }
-                condicion_cerrada = False 
-                palabras_clave = ["GRAN PREMIO", "PREMIO", "CLÁSICO", "CLASICO", "ESPECIAL", "HANDICAP"]
-                regex_corte = r'(' + '|'.join(palabras_clave) + r')'
-                match_corte = re.search(regex_corte, texto_mayus)
+            # Detectar Carrera
+            match_tit = re.search(r'^(\d+)[º°aª]\s*CARRERA', texto_upper)
+            if match_tit:
+                if carrera_act: carreras.append(carrera_act)
+                carrera_act = { "id": "", "distancia": "---", "premio": "", "condicion": "", "pista": "NORMAL", "caballos": [] }
+                cond_cerrada = False
+                
+                regex_premio = r'(GRAN PREMIO|PREMIO|CLÁSICO|CLASICO|ESPECIAL|HANDICAP)'
+                match_corte = re.search(regex_premio, texto_upper)
                 if match_corte:
-                    idx = match_corte.start()
-                    carrera_actual["id"] = fila_texto[:idx].strip()
+                    carrera_act["id"] = texto[:match_corte.start()].strip()
                     tipo = match_corte.group(1).upper()
-                    resto = fila_texto[match_corte.end():].strip()
-                    resto = re.split(r'\d{1,2}:\d{2}', resto)[0].strip()
-                    resto = resto.replace(":", "").replace('"', '').replace("'", "").strip()
-                    carrera_actual["premio"] = f'{tipo} "{resto}"'
+                    resto = texto[match_corte.end():].split("1")[0].split(":")[0].strip().replace('"', '')
+                    carrera_act["premio"] = f'{tipo} "{resto}"'
                 else:
-                    carrera_actual["id"] = fila_texto
-                buscando_distancia = True; buscando_caballos = True; col_idx_numero = -1; continue
+                    carrera_act["id"] = texto
+                
+                buscando_dist = True; buscando_cab = True; col_num = -1; continue
 
-            if carrera_actual is not None and buscando_distancia:
-                match_mts = re.search(r'(\d{1,2}\.?\d{3}|\d{3})\s*(METROS|MTS)', texto_mayus)
+            # Detectar Distancia (CORREGIDO: ACEPTA PUNTOS Y COMAS)
+            if carrera_act and buscando_dist:
+                match_mts = re.search(r'(\d{1,2}[.,]?\d{3}|\d{3})\s*(METROS|MTS)', texto_upper)
                 if match_mts:
-                    num = match_mts.group(1).replace(".", "")
-                    carrera_actual["distancia"] = num + " METROS"
-                    buscando_distancia = False 
-            
-            if carrera_actual is not None and buscando_caballos:
-                if col_idx_numero == -1:
-                    for idx, val in enumerate(fila_vals_raw):
-                        val_upper = val.upper()
-                        if val_upper in ["Nº", "N°", "NO.", "NRO", "NRO."]: col_idx_numero = idx
-                        elif "CABALLO" in val_upper: col_idx_nombre = idx
-                    if col_idx_numero != -1 and col_idx_nombre != -1: continue 
-                else:
+                    raw_num = match_mts.group(1)
+                    num_limpio = raw_num.replace(".", "").replace(",", "")
+                    carrera_act["distancia"] = num_limpio + " METROS"
+                    buscando_dist = False
+
+            # Detectar Caballos
+            if carrera_act and buscando_cab:
+                if col_num == -1: 
+                    for idx, val in enumerate(fila_vals):
+                        vup = val.upper()
+                        if vup in ["Nº", "N°", "NO.", "NRO"]: col_num = idx
+                        elif "CABALLO" in vup: col_nom = idx
+                else: 
                     try:
-                        posible_numero = fila_vals_raw[col_idx_numero]
-                        posible_nombre = fila_vals_raw[col_idx_nombre]
-                        if re.match(r'^\d+[A-Za-z]?$', posible_numero) and posible_nombre != '' and posible_nombre != 'nan':
-                            carrera_actual["caballos"].append({ "numero": posible_numero, "nombre": posible_nombre })
+                        p_num = fila_vals[col_num]
+                        p_nom = fila_vals[col_nom]
+                        if re.match(r'^\d+[A-Za-z]?$', p_num) and p_nom not in ['', 'nan']:
+                            carrera_act["caballos"].append({ "numero": p_num, "nombre": p_nom })
                     except: pass
 
-            if carrera_actual is not None:
-                if condicion_cerrada: continue
-                palabras_freno = ["NO COMPUTABLE", "PREMIOS", "APUESTA", "INCREMENTO", "RECORD", "CAT.", "AP.", "4 ULT.", "Nº"]
-                activar_freno = False
-                for palabra in palabras_freno:
-                    if texto_mayus.startswith(palabra): activar_freno = True; break
-                if col_idx_numero != -1: activar_freno = True
-                if activar_freno: condicion_cerrada = True; continue
-                es_inicio = re.match(r'^(PARA|TODO|YEGUAS|PRODUCTOS|CABALLOS)', texto_mayus.strip())
-                es_continuacion = (carrera_actual["condicion"] != "" and "CARRERA" not in texto_mayus)
-                if (es_inicio or es_continuacion) and "CARRERA" not in texto_mayus[:15]:
-                     if carrera_actual["condicion"] == "": carrera_actual["condicion"] = fila_texto
-                     else: carrera_actual["condicion"] += " " + fila_texto; carrera_actual["condicion"] = re.sub(' +', ' ', carrera_actual["condicion"])
-                     carrera_actual["condicion"] = carrera_actual["condicion"].capitalize()
-
-        if carrera_actual is not None: carreras_detectadas.append(carrera_actual)
-        return carreras_detectadas
-    except Exception as e: return []
-
-# --- 2. VENTANA DE PRECIOS ---
-def abrir_ventana_dividendos():
-    global dividendos_memoria
-    if not carrera_actual_data: messagebox.showwarning("Error", "Selecciona una carrera."); return
-    caballos = carrera_actual_data.get("caballos", [])
-    if not caballos: caballos = [{"numero": str(i), "nombre": "Competidor"} for i in range(1, 17)]
-
-    ventana_div = tk.Toplevel(root); ventana_div.title(f"Cargar Pagos - {carrera_actual_data['id']}"); ventana_div.geometry("450x500"); ventana_div.configure(bg="#f0f0f0")
-    tk.Label(ventana_div, text="CARGAR PAGOS A GANADOR", font=("bold", 12), bg="#f0f0f0", fg="#257E77").pack(pady=10)
-    
-    frame_scroll = tk.Frame(ventana_div); frame_scroll.pack(fill="both", expand=True, padx=10, pady=5)
-    canvas = tk.Canvas(frame_scroll, bg="#f0f0f0"); scrollbar = tk.Scrollbar(frame_scroll, orient="vertical", command=canvas.yview)
-    scrollable_frame = tk.Frame(canvas, bg="#f0f0f0")
-    scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw"); canvas.configure(yscrollcommand=scrollbar.set)
-    canvas.pack(side="left", fill="both", expand=True); scrollbar.pack(side="right", fill="y")
-
-    entradas_div = []
-    for cab in caballos:
-        num = cab["numero"]; nom = cab["nombre"]
-        f = tk.Frame(scrollable_frame, bg="#f0f0f0"); f.pack(fill="x", pady=2)
-        tk.Label(f, text=f"{num}", width=4, font=("bold", 11), bg="#ddd").pack(side="left")
-        tk.Label(f, text=f"{nom[:20]}", width=20, font=("Segoe UI", 9), anchor="w").pack(side="left", padx=5)
-        entry = tk.Entry(f, width=8, font=("bold", 10)); entry.pack(side="left")
-        if num in dividendos_memoria: entry.insert(0, dividendos_memoria[num])
-        entradas_div.append((num, entry))
-
-    def guardar_en_memoria():
-        global dividendos_memoria; dividendos_memoria = {}
-        for num, entry in entradas_div:
-            val = entry.get().strip()
-            if val: dividendos_memoria[num] = val
-        messagebox.showinfo("Guardado", f"Datos guardados en memoria."); ventana_div.destroy()
-
-    tk.Button(ventana_div, text="💾 GUARDAR EN MEMORIA", command=guardar_en_memoria, bg="#27ae60", fg="white", font=("bold", 11), height=2).pack(fill="x", pady=10, padx=10)
-
-# --- 3. VENTANA MARCADOR VIVO (CON NOMBRES AUTOMÁTICOS) ---
-def abrir_ventana_marcador():
-    ventana_mar = tk.Toplevel(root); ventana_mar.title("Marcador EN VIVO"); ventana_mar.geometry("300x350"); ventana_mar.configure(bg="#2c3e50")
-    
-    max_caballos = 16 
-    lista_caballos_obj = [] # Aquí guardamos la info completa de los caballos
-    
-    if carrera_actual_data and carrera_actual_data.get("caballos"):
-        lista_caballos_obj = carrera_actual_data["caballos"]
-        max_caballos = len(lista_caballos_obj)
-
-    tk.Label(ventana_mar, text="MARCADOR VIVO", font=("Segoe UI", 14, "bold"), bg="#2c3e50", fg="#f1c40f").pack(pady=5)
-    tk.Label(ventana_mar, text=f"Carrera con {max_caballos} caballos", font=("Segoe UI", 10, "bold"), bg="#2c3e50", fg="#00ffcc").pack(pady=0)
-
-    entradas_pos = []
-    frame_grid = tk.Frame(ventana_mar, bg="#2c3e50"); frame_grid.pack(pady=10)
-
-    for i in range(4):
-        tk.Label(frame_grid, text=f"{i+1}°", font=("bold", 14), fg="white", bg="#2c3e50").grid(row=i, column=0, padx=10, pady=5)
-        entry = tk.Entry(frame_grid, width=5, font=("bold", 16), justify="center"); entry.grid(row=i, column=1, padx=10, pady=5)
-        entradas_pos.append(entry)
-
-    def enviar_al_aire():
-        datos_json = []
-        errores = []
-
-        for i, entry in enumerate(entradas_pos):
-            num_mandil = entry.get().strip()
-            if num_mandil:
-                # 1. Validación de Rango
-                solo_num_str = "".join(filter(str.isdigit, num_mandil))
-                es_valido = False
-                if solo_num_str:
-                    # Usamos un rango seguro (hasta 25) por si las dudas con yuntas, pero validamos que sea numero
-                    if 1 <= int(solo_num_str) <= 30: 
-                        es_valido = True
+            # Condición
+            if carrera_act:
+                if cond_cerrada: continue
+                if any(texto_upper.startswith(k) for k in ["NO COMPUTABLE", "PREMIOS", "APUESTA", "INCREMENTO"]) or (col_num != -1):
+                    cond_cerrada = True; continue
                 
-                if not es_valido:
-                    errores.append(f"Posición {i+1}: Número '{num_mandil}' inválido")
-                    continue
+                es_inicio = re.match(r'^(PARA|TODO|YEGUAS|PRODUCTOS|CABALLOS)', texto_upper)
+                if (es_inicio or (carrera_act["condicion"] and "CARRERA" not in texto_upper)) and "CARRERA" not in texto_upper[:15]:
+                    carrera_act["condicion"] += " " + texto
+                    carrera_act["condicion"] = re.sub(' +', ' ', carrera_act["condicion"]).strip().capitalize()
 
-                # 2. BÚSQUEDA DEL NOMBRE (La magia nueva)
-                nombre_caballo = "COMPETIDOR" # Valor por defecto
-                
-                # Buscamos en la lista de la carrera actual
-                for cab in lista_caballos_obj:
-                    # Comparamos strings para que "1" sea igual a "1"
-                    if str(cab["numero"]) == str(num_mandil):
-                        nombre_caballo = cab["nombre"]
-                        break
-                
-                # 3. Precio
-                precio = dividendos_memoria.get(num_mandil, "")
-                
-                # 4. Empaquetamos todo
-                datos_json.append({ 
-                    "posicion": i+1, 
-                    "numero": num_mandil, 
-                    "nombre": nombre_caballo, # Campo nuevo
-                    "dividendo": precio 
-                })
-        
-        if errores:
-            msg = "\n".join(errores)
-            messagebox.showwarning("Error de Validación", f"No se envió nada:\n\n{msg}")
-            return 
+        if carrera_act: carreras.append(carrera_act)
+        return carreras
+    except Exception as e: print(e); return []
 
-        with open(ARCHIVO_MARCADOR, "w", encoding="utf-8") as f: json.dump(datos_json, f)
-        lbl_feed.config(text="✅ EN AIRE (Con Nombres)", fg="#2ecc71")
+# =============================================================================
+# 3. INTERFAZ GRÁFICA (GUI)
+# =============================================================================
 
-    def limpiar_pantalla():
-        with open(ARCHIVO_MARCADOR, "w", encoding="utf-8") as f: json.dump([], f)
-        for entry in entradas_pos: entry.delete(0, tk.END)
-        lbl_feed.config(text="🗑️ OFF", fg="#e74c3c")
-
-    tk.Button(ventana_mar, text="🚀 ACTUALIZAR TV", command=enviar_al_aire, bg="#f39c12", fg="white", font=("bold", 12), height=2).pack(fill="x", padx=20, pady=5)
-    tk.Button(ventana_mar, text="APAGAR / LIMPIAR", command=limpiar_pantalla, bg="#7f8c8d", fg="white", font=("bold", 9)).pack(fill="x", padx=20, pady=5)
-    lbl_feed = tk.Label(ventana_mar, text="...", bg="#2c3e50", fg="white", font=("bold", 10)); lbl_feed.pack(pady=5)
-
-# --- 4. FUNCIONES PRINCIPALES ---
 def cargar_excel():
     global carreras_cargadas
-    archivo = filedialog.askopenfilename(filetypes=[("Archivos Excel", "*.xlsx *.xls *.csv")])
+    archivo = filedialog.askopenfilename(filetypes=[("Excel", "*.xlsx *.xls *.csv")])
     if archivo:
         datos = analizar_excel(archivo)
         if datos:
             carreras_cargadas = datos
-            lista_nombres = [c['id'] for c in carreras_cargadas]
-            combo_selector['values'] = lista_nombres
+            combo_selector['values'] = [c['id'] for c in carreras_cargadas]
             combo_selector.current(0)
-            seleccionar_carrera_de_lista(None)
-            lbl_status.config(text=f"✅ {len(datos)} carreras cargadas", fg="blue")
-        else: messagebox.showwarning("Atención", "No se detectaron carreras.")
+            seleccionar_carrera(None)
+            lbl_status.config(text=f"✅ LISTO: {len(datos)} Carreras", fg="#2ecc71")
+        else: messagebox.showwarning("Error", "No se encontraron carreras.")
 
-def seleccionar_carrera_de_lista(event):
+def seleccionar_carrera(event):
     global carrera_actual_data, dividendos_memoria
-    indice = combo_selector.current()
-    if indice >= 0:
-        carrera_actual_data = carreras_cargadas[indice]
-        dividendos_memoria = {} 
+    idx = combo_selector.current()
+    if idx >= 0:
+        carrera_actual_data = carreras_cargadas[idx]
+        dividendos_memoria = {} # Reset pagos
+        
         entry_num.delete(0, tk.END); entry_num.insert(0, carrera_actual_data['id'])
         entry_dist.delete(0, tk.END); entry_dist.insert(0, carrera_actual_data['distancia'])
-        entry_premio.delete(0, tk.END); entry_premio.insert(0, carrera_actual_data.get('premio', ''))
-        txt_condicion.delete("1.0", tk.END); txt_condicion.insert("1.0", carrera_actual_data.get('condicion', ''))
+        entry_premio.delete(0, tk.END); entry_premio.insert(0, carrera_actual_data.get('premio',''))
+        txt_cond.delete("1.0", tk.END); txt_cond.insert("1.0", carrera_actual_data.get('condicion',''))
+        lbl_vivo_carrera.config(text=carrera_actual_data['id'])
 
-def guardar_datos():
-    condicion_texto = txt_condicion.get("1.0", "end-1c").replace("\n", " ").strip()
-    datos = { "num_carrera": entry_num.get(), "distancia": entry_dist.get(), "premio": entry_premio.get(), "condicion": condicion_texto, "estado_pista": combo_pista.get() }
-    with open(ARCHIVO_DATOS, "w", encoding="utf-8") as f: json.dump(datos, f, ensure_ascii=False, indent=4)
-    lbl_status.config(text="✅ PLACA CARRERA ACTUALIZADA", fg="green")
+# --- CONTROL PLACA INFO ---
+def enviar_placa_info():
+    global visibilidad_placa
+    visibilidad_placa = True # Al enviar, forzamos que se vea
+    guardar_placa_json()
+    btn_placa_toggle.config(text="👁️ OCULTAR", bg="#7f8c8d")
+    
+    btn_placa.config(bg="#27ae60", text="✅ PLACA ENVIADA")
+    root.after(2000, lambda: btn_placa.config(bg="#d35400", text="📡 ACTUALIZAR DATOS"))
 
-# --- 5. INTERFAZ GRÁFICA ---
-root = tk.Tk(); root.title("Controlador TV - Hipódromo Tucumán"); root.geometry("650x650"); root.configure(bg="#f0f0f0")
-tk.Label(root, text="PANEL DE CONTROL VIVO", font=("Segoe UI", 16, "bold"), bg="#257E77", fg="white", pady=10).pack(fill="x")
-frame_auto = tk.LabelFrame(root, text="Carga Automática", bg="#e8f6f3", padx=10, pady=10, font=("Segoe UI", 9, "bold")); frame_auto.pack(fill="x", padx=20, pady=10)
-tk.Button(frame_auto, text="📂 CARGAR EXCEL", command=cargar_excel, bg="#2ecc71", fg="white").pack(side="left", padx=5)
-combo_selector = ttk.Combobox(frame_auto, state="readonly", width=30); combo_selector.pack(side="left", padx=5); combo_selector.bind("<<ComboboxSelected>>", seleccionar_carrera_de_lista)
-frame = tk.Frame(root, bg="#f0f0f0", padx=20, pady=5); frame.pack(fill="both", expand=True)
-tk.Label(frame, text="N° Carrera:", bg="#f0f0f0").grid(row=0, column=0, sticky="w", pady=5); entry_num = tk.Entry(frame, font=("Segoe UI", 11), width=40); entry_num.grid(row=0, column=1, pady=5)
-tk.Label(frame, text="Distancia:", bg="#f0f0f0").grid(row=1, column=0, sticky="w", pady=5); entry_dist = tk.Entry(frame, font=("Segoe UI", 11), width=40); entry_dist.grid(row=1, column=1, pady=5)
-tk.Label(frame, text="Premio:", bg="#f0f0f0").grid(row=2, column=0, sticky="w", pady=5); entry_premio = tk.Entry(frame, font=("Segoe UI", 11), width=40); entry_premio.grid(row=2, column=1, pady=5)
-tk.Label(frame, text="Condición:", bg="#f0f0f0").grid(row=3, column=0, sticky="nw", pady=5); frame_cond = tk.Frame(frame); frame_cond.grid(row=3, column=1, pady=5, sticky="w")
-txt_condicion = tk.Text(frame_cond, font=("Segoe UI", 10), width=40, height=5, wrap="word"); txt_condicion.pack(side="left", fill="both"); scrollbar = tk.Scrollbar(frame_cond, command=txt_condicion.yview); scrollbar.pack(side="right", fill="y"); txt_condicion.config(yscrollcommand=scrollbar.set)
-tk.Label(frame, text="Pista (VIVO):", bg="#f0f0f0", fg="#d35400", font=("bold")).grid(row=4, column=0, sticky="w", pady=5); combo_pista = ttk.Combobox(frame, values=["NORMAL", "HÚMEDA", "PESADA", "FANGOSA", "BARROSA"], state="readonly", font=("Segoe UI", 11), width=38); combo_pista.current(0); combo_pista.grid(row=4, column=1, pady=5)
-btn_frame = tk.Frame(root, bg="#f0f0f0"); btn_frame.pack(fill="x", padx=20, pady=10)
-btn_update = tk.Button(btn_frame, text="🔴 ENVIAR PLACA", command=guardar_datos, bg="#EF5B2B", fg="white", font=("Segoe UI", 12, "bold"), width=18); btn_update.pack(side="left", padx=5)
-btn_div = tk.Button(btn_frame, text="1. CARGAR PAGOS", command=abrir_ventana_dividendos, bg="#3498db", fg="white", font=("bold", 10), width=15); btn_div.pack(side="left", padx=5)
-btn_vivo = tk.Button(btn_frame, text="2. MARCADOR VIVO", command=abrir_ventana_marcador, bg="#8e44ad", fg="white", font=("bold", 10), width=15); btn_vivo.pack(side="left", padx=5)
-lbl_status = tk.Label(root, text="Esperando...", bd=1, relief=tk.SUNKEN, anchor=tk.W); lbl_status.pack(side=tk.BOTTOM, fill=tk.X)
+def toggle_placa():
+    global visibilidad_placa
+    visibilidad_placa = not visibilidad_placa
+    guardar_placa_json()
+    if visibilidad_placa:
+        btn_placa_toggle.config(text="👁️ OCULTAR", bg="#7f8c8d")
+    else:
+        btn_placa_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+
+def guardar_placa_json():
+    data = {
+        "num_carrera": entry_num.get(),
+        "distancia": entry_dist.get(),
+        "premio": entry_premio.get(),
+        "condicion": txt_cond.get("1.0", "end-1c").replace("\n", " ").strip(),
+        "estado_pista": combo_pista.get(),
+        "visible": visibilidad_placa # CAMPO NUEVO PARA HTML
+    }
+    guardar_json(ARCHIVO_DATOS, data)
+
+# --- VENTANA DE PAGOS (FIX UI) ---
+def abrir_pagos():
+    if not carrera_actual_data: messagebox.showwarning("!","Selecciona carrera"); return
+    
+    win = tk.Toplevel(root); win.title("Cargar Dividendos"); win.geometry("450x600")
+    
+    # Header
+    tk.Label(win, text="TABLA DE PAGOS", font=("bold", 12), pady=10).pack()
+
+    # Frame Scrollable (Para los caballos)
+    frame_main = tk.Frame(win)
+    frame_main.pack(fill="both", expand=True, padx=10)
+    
+    canvas = tk.Canvas(frame_main); scroll = tk.Scrollbar(frame_main, command=canvas.yview)
+    frm_list = tk.Frame(canvas); canvas.create_window((0,0), window=frm_list, anchor="nw")
+    canvas.configure(yscrollcommand=scroll.set); canvas.pack(side="left", fill="both", expand=True); scroll.pack(side="right", fill="y")
+    frm_list.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+    entries = []
+    caballos = carrera_actual_data.get("caballos", [{"numero":str(i),"nombre":"--"} for i in range(1,17)])
+    
+    for c in caballos:
+        row = tk.Frame(frm_list); row.pack(fill="x", pady=2)
+        tk.Label(row, text=f"{c['numero']}", width=4, font=("bold",11)).pack(side="left")
+        tk.Label(row, text=f"{c['nombre'][:22]}", width=25, anchor="w").pack(side="left")
+        e = tk.Entry(row, width=10); e.pack(side="left")
+        if c['numero'] in dividendos_memoria: e.insert(0, dividendos_memoria[c['numero']])
+        entries.append((c['numero'], e))
+    
+    # BOTÓN FIJO AL FINAL (Fuera del scroll para que siempre se vea)
+    frame_btn = tk.Frame(win, pady=10, bg="#ecf0f1")
+    frame_btn.pack(fill="x", side="bottom")
+    
+    def guardar():
+        global dividendos_memoria
+        dividendos_memoria = {n: e.get().strip() for n, e in entries if e.get().strip()}
+        win.destroy(); messagebox.showinfo("OK", "Pagos guardados en memoria")
+    
+    tk.Button(frame_btn, text="💾 GUARDAR Y CERRAR", command=guardar, bg="#27ae60", fg="white", font=("bold",12), height=2).pack(fill="x", padx=20)
+
+# =============================================================================
+# 4. CONTROLES DE VIVO
+# =============================================================================
+
+# --- CONTROL RELOJ ---
+def btn_start():
+    global reloj_corriendo
+    if not reloj_corriendo:
+        enviar_comando_reloj("START")
+        reloj_corriendo = True
+        actualizar_estado_reloj()
+    else:
+        enviar_comando_reloj("STOP") # Pausa
+        reloj_corriendo = False
+        actualizar_estado_reloj()
+
+def btn_parcial(): enviar_comando_reloj("PARCIAL")
+
+def btn_final():
+    global reloj_corriendo
+    enviar_comando_reloj("FINALIZAR")
+    reloj_corriendo = False
+    actualizar_estado_reloj()
+
+def btn_reset():
+    global reloj_corriendo
+    enviar_comando_reloj("RESET")
+    reloj_corriendo = False
+    actualizar_estado_reloj()
+
+def toggle_reloj_visible():
+    global visibilidad_reloj
+    visibilidad_reloj = not visibilidad_reloj
+    if visibilidad_reloj:
+        enviar_comando_reloj("MOSTRAR")
+        btn_reloj_toggle.config(text="👁️ OCULTAR", bg="#7f8c8d")
+    else:
+        enviar_comando_reloj("OCULTAR")
+        btn_reloj_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+
+def actualizar_estado_reloj():
+    if reloj_corriendo:
+        lbl_reloj_status.config(text="⏱ CARRERA EN CURSO", bg="#27ae60", fg="white")
+        btn_larga.config(text="⏸ PAUSAR (F1)", bg="#f1c40f", fg="black")
+    else:
+        lbl_reloj_status.config(text="⏹ RELOJ DETENIDO", bg="#34495e", fg="#bbb")
+        btn_larga.config(text="▶ LARGARON (F1)", bg="#27ae60", fg="white")
+
+# --- CONTROL MARCADOR ---
+# Esta funcion construye los datos a guardar en el JSON
+def construir_datos_marcador(visible):
+    datos = []
+    caballos_obj = carrera_actual_data.get("caballos", []) if carrera_actual_data else []
+
+    # Si NO es visible, guardamos una lista VACIA para que el HTML la detecte y se oculte
+    if not visible:
+        return []
+
+    # Si ES visible, construimos la lista con los datos actuales
+    for i in range(4):
+        entry = entradas_marcador[i]
+        num_str = entry.get().strip()
+        if num_str:
+            nombre = "COMPETIDOR"
+            for c in caballos_obj:
+                if str(c["numero"]) == num_str: nombre = c["nombre"]; break
+            precio = dividendos_memoria.get(num_str, "")
+            datos.append({ "posicion": i+1, "numero": num_str, "nombre": nombre, "dividendo": precio })
+    return datos
+
+def actualizar_marcador_vivo():
+    global visibilidad_marcador
+    visibilidad_marcador = True # Al actualizar forzamos mostrar
+    
+    datos = construir_datos_marcador(True)
+    guardar_json(ARCHIVO_MARCADOR, datos)
+    
+    btn_act_marcador.config(bg="#2ecc71", text="✅ EN AIRE")
+    btn_mar_toggle.config(text="👁️ OCULTAR", bg="#7f8c8d")
+
+def toggle_marcador_tv():
+    global visibilidad_marcador
+    visibilidad_marcador = not visibilidad_marcador
+    
+    datos = construir_datos_marcador(visibilidad_marcador)
+    guardar_json(ARCHIVO_MARCADOR, datos)
+    
+    if visibilidad_marcador:
+        btn_mar_toggle.config(text="👁️ OCULTAR", bg="#7f8c8d")
+        btn_act_marcador.config(bg="#2ecc71", text="✅ EN AIRE")
+    else:
+        btn_mar_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+        btn_act_marcador.config(bg="#8e44ad", text="🚀 ENVIAR A TV (Oculto)")
+
+# --- ATAJOS ---
+def key_handler(event):
+    if event.keysym == 'F1': btn_start()
+    if event.keysym == 'F2': btn_parcial()
+    if event.keysym == 'F3': btn_final()
+    if event.keysym == 'F4': btn_reset()
+
+
+# =============================================================================
+# 5. VENTANA PRINCIPAL
+# =============================================================================
+root = tk.Tk()
+root.title("CONSOLA DE MANDO V13 - HIPÓDROMO")
+root.geometry("1100x700") 
+root.configure(bg="#2c3e50") 
+
+# --- PANEL IZQUIERDO ---
+p_izq = tk.Frame(root, bg="#ecf0f1", padx=10, pady=10)
+p_izq.place(relx=0, rely=0, relwidth=0.4, relheight=1)
+
+tk.Label(p_izq, text="1. CONFIGURACIÓN", font=("Segoe UI", 14, "bold"), bg="#ecf0f1", fg="#7f8c8d").pack(anchor="w")
+
+# Carga
+fr_carga = tk.LabelFrame(p_izq, text="Archivo", bg="#ecf0f1"); fr_carga.pack(fill="x", pady=5)
+tk.Button(fr_carga, text="📂 ABRIR EXCEL", command=cargar_excel, bg="#bdc3c7").pack(side="left", padx=5, pady=5)
+combo_selector = ttk.Combobox(fr_carga, state="readonly"); combo_selector.pack(side="left", fill="x", expand=True, padx=5)
+combo_selector.bind("<<ComboboxSelected>>", seleccionar_carrera)
+
+# Datos
+fr_datos = tk.Frame(p_izq, bg="#ecf0f1"); fr_datos.pack(fill="x", pady=10)
+tk.Label(fr_datos, text="Carrera:", bg="#ecf0f1").grid(row=0, column=0, sticky="w"); entry_num = tk.Entry(fr_datos, width=30); entry_num.grid(row=0, column=1, pady=2)
+tk.Label(fr_datos, text="Distancia:", bg="#ecf0f1").grid(row=1, column=0, sticky="w"); entry_dist = tk.Entry(fr_datos, width=30); entry_dist.grid(row=1, column=1, pady=2)
+tk.Label(fr_datos, text="Premio:", bg="#ecf0f1").grid(row=2, column=0, sticky="w"); entry_premio = tk.Entry(fr_datos, width=30); entry_premio.grid(row=2, column=1, pady=2)
+tk.Label(fr_datos, text="Condición:", bg="#ecf0f1").grid(row=3, column=0, sticky="nw"); txt_cond = tk.Text(fr_datos, width=30, height=4); txt_cond.grid(row=3, column=1, pady=2)
+tk.Label(fr_datos, text="Pista:", bg="#ecf0f1").grid(row=4, column=0, sticky="w"); combo_pista = ttk.Combobox(fr_datos, values=["NORMAL", "HÚMEDA", "PESADA", "FANGOSA"], width=27); combo_pista.current(0); combo_pista.grid(row=4, column=1, pady=2)
+
+# Control Placa
+fr_placa_ctrl = tk.Frame(p_izq, bg="#ecf0f1"); fr_placa_ctrl.pack(fill="x", pady=5)
+btn_placa = tk.Button(fr_placa_ctrl, text="📡 ACTUALIZAR DATOS", command=enviar_placa_info, bg="#d35400", fg="white", font=("bold", 11), height=2)
+btn_placa.pack(side="left", fill="x", expand=True)
+btn_placa_toggle = tk.Button(fr_placa_ctrl, text="👁️ OCULTAR", command=toggle_placa, bg="#7f8c8d", fg="white", font=("bold", 10), width=12, height=2)
+btn_placa_toggle.pack(side="right", padx=5)
+
+tk.Button(p_izq, text="💰 CARGAR PAGOS", command=abrir_pagos, bg="#2980b9", fg="white", font=("bold", 10)).pack(fill="x", pady=5)
+lbl_status = tk.Label(p_izq, text="Esperando archivo...", bg="#ecf0f1", fg="#95a5a6"); lbl_status.pack(side="bottom")
+
+
+# --- PANEL DERECHO ---
+p_der = tk.Frame(root, bg="#34495e", padx=20, pady=20)
+p_der.place(relx=0.4, rely=0, relwidth=0.6, relheight=1)
+
+tk.Label(p_der, text="2. CONSOLA DE VIVO", font=("Segoe UI", 16, "bold"), bg="#34495e", fg="#f1c40f").pack()
+lbl_vivo_carrera = tk.Label(p_der, text="---", font=("Segoe UI", 12), bg="#34495e", fg="#ecf0f1"); lbl_vivo_carrera.pack()
+
+# RELOJ
+fr_reloj = tk.LabelFrame(p_der, text="CONTROL RELOJ", font=("bold", 10), bg="#34495e", fg="white", padx=10, pady=10)
+fr_reloj.pack(fill="x", pady=15)
+
+# Fila status + toggle
+fr_sts_reloj = tk.Frame(fr_reloj, bg="#34495e"); fr_sts_reloj.pack(fill="x")
+lbl_reloj_status = tk.Label(fr_sts_reloj, text="⏹ RELOJ DETENIDO", font=("Arial", 18, "bold"), bg="#2c3e50", fg="#bbb", pady=5)
+lbl_reloj_status.pack(side="left", fill="x", expand=True)
+btn_reloj_toggle = tk.Button(fr_sts_reloj, text="👁️ OCULTAR", command=toggle_reloj_visible, bg="#7f8c8d", fg="white", font=("bold", 9))
+btn_reloj_toggle.pack(side="right", padx=5)
+
+fr_btns_reloj = tk.Frame(fr_reloj, bg="#34495e"); fr_btns_reloj.pack(pady=5)
+btn_larga = tk.Button(fr_btns_reloj, text="▶ LARGARON (F1)", command=btn_start, bg="#27ae60", fg="white", font=("bold", 12), width=20, height=2)
+btn_larga.grid(row=0, column=0, padx=5, pady=5)
+tk.Button(fr_btns_reloj, text="📷 PARCIAL (F2)", command=btn_parcial, bg="#e67e22", fg="white", font=("bold", 10), width=15, height=2).grid(row=0, column=1, padx=5)
+
+fr_btns_reloj2 = tk.Frame(fr_reloj, bg="#34495e"); fr_btns_reloj2.pack(pady=5)
+tk.Button(fr_btns_reloj2, text="🏁 FINALIZAR (F3)", command=btn_final, bg="#c0392b", fg="white", font=("bold", 10), width=18).pack(side="left", padx=5)
+tk.Button(fr_btns_reloj2, text="🔄 RESET (F4)", command=btn_reset, bg="#7f8c8d", fg="white", font=("bold", 10), width=18).pack(side="left", padx=5)
+
+
+# MARCADOR
+fr_mar = tk.LabelFrame(p_der, text="MARCADOR VIVO (Mandiles)", font=("bold", 10), bg="#34495e", fg="white", padx=10, pady=10)
+fr_mar.pack(fill="x", pady=10)
+
+entradas_marcador = []
+fr_grid_mar = tk.Frame(fr_mar, bg="#34495e"); fr_grid_mar.pack()
+
+for i in range(4):
+    tk.Label(fr_grid_mar, text=f"{i+1}°", font=("bold", 14), bg="#34495e", fg="white").grid(row=0, column=i, padx=10)
+    e = tk.Entry(fr_grid_mar, width=4, font=("bold", 24), justify="center"); e.grid(row=1, column=i, padx=10, pady=5)
+    entradas_marcador.append(e)
+
+fr_btn_mar = tk.Frame(fr_mar, bg="#34495e"); fr_btn_mar.pack(fill="x", pady=10)
+btn_act_marcador = tk.Button(fr_btn_mar, text="🚀 ENVIAR A TV", command=actualizar_marcador_vivo, bg="#8e44ad", fg="white", font=("bold", 14), height=2)
+btn_act_marcador.pack(side="left", fill="x", expand=True)
+btn_mar_toggle = tk.Button(fr_btn_mar, text="👁️ OCULTAR", command=toggle_marcador_tv, bg="#7f8c8d", fg="white", font=("bold", 10), width=12, height=2)
+btn_mar_toggle.pack(side="right", padx=5)
+
+root.bind('<Key>', key_handler)
+inicializar_sistema()
 root.mainloop()

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Placa Tucumán V11 FULL WIDE</title>
+    <title>Placa Tucumán V13 (Visible/Ocultable)</title>
     <style>
         /* --- COLORES OFICIALES --- */
         :root {
@@ -19,6 +19,15 @@
             padding: 0;
             font-family: 'Segoe UI', Roboto, Arial, sans-serif;
             overflow: hidden;
+            
+            /* CLAVE: Transición suave de opacidad */
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        /* Clase para ocultar */
+        body.oculto {
+            opacity: 0 !important;
         }
 
         /* --- CONTENEDOR PRINCIPAL --- */
@@ -27,11 +36,8 @@
             top: 40px; 
             left: 50%;
             transform: translateX(-50%);
-            
-            /* CAMBIO CLAVE: AHORA OCUPA CASI TODA LA PANTALLA */
             width: 93%; 
-            max-width: 1850px; /* Antes era 1300px. Ahora llega casi a los bordes de 1920px */
-            
+            max-width: 1850px; 
             height: 65px; 
             display: flex;
             align-items: center;
@@ -45,7 +51,6 @@
             height: 100%;
             display: flex;
             align-items: center;
-            /* Los mantenemos compactos para dejarle todo el espacio al verde */
             flex: 0 0 180px; 
             width: 180px; 
             z-index: 2;
@@ -62,148 +67,77 @@
             justify-content: flex-start;
         }
 
-        .img-hipo {
-            height: 45px; 
-            width: auto;
-            margin-right: 8px;
-        }
+        .img-hipo { height: 45px; width: auto; margin-right: 8px; }
 
         .info-carrera-div {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            line-height: 1;
+            display: flex; flex-direction: column; justify-content: center; line-height: 1;
         }
 
         .txt-carrera {
-            color: var(--verde-tucuman);
-            font-size: 18px; 
-            font-weight: 900;
-            text-transform: uppercase;
-            white-space: nowrap;
-            letter-spacing: -0.5px; 
+            color: var(--verde-tucuman); font-size: 18px; font-weight: 900;
+            text-transform: uppercase; white-space: nowrap; letter-spacing: -0.5px; 
         }
         .txt-distancia {
-            color: #555;
-            font-size: 14px;
-            font-weight: 700;
-            margin-top: 3px;
+            color: #555; font-size: 14px; font-weight: 700; margin-top: 3px;
         }
 
-        /* --- 2. BLOQUE CENTRAL (Verde - AHORA GIGANTE) --- */
+        /* --- 2. BLOQUE CENTRAL --- */
         .bloque-centro {
             background: linear-gradient(90deg, var(--verde-tucuman) 10%, var(--verde-oscuro) 100%);
-            flex-grow: 1; /* Se estira todo lo posible */
+            flex-grow: 1; 
             height: 100%;
             display: flex;
             align-items: center;
-            
-            padding-left: 40px; 
-            padding-right: 40px; 
-            
-            z-index: 1;
-            position: relative;
+            padding-left: 40px; padding-right: 40px; 
+            z-index: 1; position: relative;
         }
 
         .grupo-datos-carrera {
-            flex-grow: 1; 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center; 
-            text-align: center; 
-            overflow: hidden; 
+            flex-grow: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; overflow: hidden; 
         }
 
         #titulo-premio {
-            color: var(--blanco);
-            font-size: 26px;
-            font-weight: 800;
-            text-transform: uppercase;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-            line-height: 1;
-            margin-bottom: 4px;
-            white-space: nowrap;
+            color: var(--blanco); font-size: 26px; font-weight: 800;
+            text-transform: uppercase; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            line-height: 1; margin-bottom: 4px; white-space: nowrap;
         }
 
         .sub-datos {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px; /* Más separación entre condición y pista */
-            width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%;
         }
 
         #condicion-txt {
-            color: #e6e6e6;
-            
-            /* CAMBIO: Agrandamos la letra porque ahora hay espacio */
-            font-size: 14px; 
-            font-weight: 600; 
-            
-            text-transform: uppercase;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis; 
-            
-            /* CAMBIO: Permitimos que ocupe mucho más ancho antes de cortarse */
-            max-width: 900px; 
+            color: #e6e6e6; font-size: 14px; font-weight: 600; 
+            text-transform: uppercase; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis; max-width: 900px; 
         }
 
         .pista-badge {
-            background-color: rgba(0,0,0,0.4);
-            color: var(--blanco);
-            font-size: 12px;
-            font-weight: 700;
-            padding: 2px 10px;
-            border-radius: 4px;
+            background-color: rgba(0,0,0,0.4); color: var(--blanco); font-size: 12px;
+            font-weight: 700; padding: 2px 10px; border-radius: 4px;
             border-left: 2px solid var(--naranja-tucuman);
-            text-transform: uppercase;
-            white-space: nowrap; 
-            flex-shrink: 0; 
+            text-transform: uppercase; white-space: nowrap; flex-shrink: 0; 
         }
 
         /* GRUPO RELOJ */
         .grupo-reloj {
-            text-align: right;
-            border-left: 1px solid rgba(255,255,255,0.3);
-            padding-left: 15px;
-            min-width: 70px;
-            flex-shrink: 0; 
-            margin-left: 15px;
+            text-align: right; border-left: 1px solid rgba(255,255,255,0.3);
+            padding-left: 15px; min-width: 70px; flex-shrink: 0; margin-left: 15px;
         }
         
-        #reloj-hora {
-            display: block;
-            color: var(--blanco);
-            font-size: 20px;
-            font-weight: 900;
-            line-height: 1;
-        }
-        #reloj-fecha {
-            display: block;
-            color: #ddd;
-            font-size: 11px;
-            font-weight: 600;
-        }
+        #reloj-hora { display: block; color: var(--blanco); font-size: 20px; font-weight: 900; line-height: 1; }
+        #reloj-fecha { display: block; color: #ddd; font-size: 11px; font-weight: 600; }
 
         /* --- 3. BLOQUE DERECHO --- */
         .bloque-der {
-            padding-left: 30px; 
-            padding-right: 15px;
-            border-radius: 0 6px 6px 0;
-            border-right: 6px solid var(--naranja-tucuman);
-            margin-left: -25px; 
-            clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
+            padding-left: 30px; padding-right: 15px;
+            border-radius: 0 6px 6px 0; border-right: 6px solid var(--naranja-tucuman);
+            margin-left: -25px; clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
             justify-content: center;
         }
 
-        .img-caja {
-            height: 40px; 
-            width: auto;
-            max-width: 90%; 
-            object-fit: contain;
-        }
+        .img-caja { height: 40px; width: auto; max-width: 90%; object-fit: contain; }
 
     </style>
 </head>
@@ -244,6 +178,14 @@
                 const respuesta = await fetch('datos.json?nocache=' + new Date().getTime()); 
                 const data = await respuesta.json();
 
+                // --- NUEVO: CONTROL DE VISIBILIDAD (USANDO CLASE CSS) ---
+                if (data.visible === false) {
+                    document.body.classList.add('oculto');
+                } else {
+                    document.body.classList.remove('oculto');
+                }
+
+                // Actualizar textos
                 document.getElementById('num-carrera').innerText = data.num_carrera;
                 document.getElementById('distancia-carrera').innerText = data.distancia;
                 document.getElementById('titulo-premio').innerText = data.premio;
@@ -269,7 +211,7 @@
             document.getElementById('reloj-fecha').innerText = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
         }
         setInterval(reloj, 1000); reloj();
-        setInterval(leerDatosDesdePython, 1000);
+        setInterval(leerDatosDesdePython, 500); 
     </script>
 </body>
 </html>
