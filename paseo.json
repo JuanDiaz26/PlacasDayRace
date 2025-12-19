@@ -1,3 +1,10 @@
 {
-    "visible": false
+    "visible": true,
+    "numero": "5",
+    "nombre": "IMPETUOSA",
+    "jockey": "Bethencourt Julian E.",
+    "stud": "EL PILI",
+    "cuidador": "Jaime Alexis J.",
+    "cambio_monta": false,
+    "retirado": false
 }
