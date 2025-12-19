@@ -1,8 +1,8 @@
 {
-    "num_carrera": "10º Carrera",
-    "distancia": "1200 METROS",
-    "premio": "PREMIO \"STREAP MUSIC 20\"",
-    "condicion": "Para todo spc de 4 años y más edad perdedor yeguas ganadoras de 1 carrera. peso 56 kilos.",
+    "num_carrera": "8º Carrera",
+    "distancia": "1600 METROS",
+    "premio": "ESPECIAL \"EDUARDO DIP\"",
+    "condicion": "Para todo spc de 3 años y más edad. peso 52 kilos. recargo de 1 kilo por carrera ganada. descargo de 1 kilo por cada año cumplido a partir de los 6 años. descargo de 2 kilos a los que no se hayan clasificado hasta el 3er puesto, en sus 3 últimas actuaciones en tucumán. aprendices sin descargo.",
     "estado_pista": "NORMAL",
     "visible": true
 }

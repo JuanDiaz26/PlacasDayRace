@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Placa Paseo V6 - Logic Retirado</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@900&family=Segoe+UI:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        /* --- COLORES OFICIALES --- */
+        :root {
+            --verde-tucuman: #257E77;
+            --verde-oscuro: #1b5e59;
+            --naranja-tucuman: #EF5B2B;
+            --blanco-hueso: #ecf0f1;
+            --rojo-retirado: #c0392b;
+        }
+
+        body { 
+            margin: 0; padding: 0; background: transparent; overflow: hidden; 
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            opacity: 1; transition: opacity 0.4s ease-in-out;
+        }
+
+        body.oculto { opacity: 0 !important; }
+
+        /* --- CONTENEDOR PRINCIPAL --- */
+        #contenedor-paseo {
+            position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
+            display: flex; width: 82%; max-width: 1100px; height: 125px; 
+            filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.7));
+        }
+
+        /* --- MANDIL --- */
+        #caja-mandil {
+            width: 125px; display: flex; justify-content: center; align-items: center;
+            font-size: 75px; font-weight: 900; color: white; text-shadow: 4px 4px 0px rgba(0,0,0,0.3);
+            border-radius: 8px 0 0 8px; position: relative; z-index: 2;
+            box-shadow: inset -5px 0 15px rgba(0,0,0,0.4);
+        }
+
+        /* --- DATOS --- */
+        #caja-datos {
+            flex-grow: 1; background: linear-gradient(90deg, var(--verde-tucuman) 0%, var(--verde-oscuro) 100%);
+            border-radius: 0 8px 8px 0; border-top: 5px solid var(--naranja-tucuman);
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 0 25px; color: white; border-left: 1px solid rgba(0,0,0,0.2);
+            position: relative; /* Para posicionar el cartel de retirado */
+        }
+
+        /* --- FILAS NORMALES --- */
+        .fila-superior {
+             display: flex; align-items: center; justify-content: space-between;
+             height: 50%; border-bottom: 2px solid rgba(255,255,255,0.1);
+             transition: opacity 0.3s;
+        }
+        .fila-inferior {
+            display: flex; align-items: center; justify-content: space-between;
+            height: 50%; padding-top: 4px;
+            transition: opacity 0.3s;
+        }
+
+        #nombre-caballo {
+            font-size: 42px; font-weight: 900; text-transform: uppercase;
+            letter-spacing: -0.5px; text-shadow: 3px 3px 5px rgba(0,0,0,0.5);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 62%;
+        }
+
+        /* --- CARTEL RETIRADO (Oculto por defecto) --- */
+        #cartel-retirado {
+            display: none; /* Se activa con JS */
+            position: absolute;
+            right: 0; top: 0; bottom: 0; width: 40%;
+            background: var(--rojo-retirado);
+            align-items: center; justify-content: center;
+            font-size: 36px; font-weight: 900; color: white;
+            text-transform: uppercase; letter-spacing: 2px;
+            box-shadow: -10px 0 20px rgba(0,0,0,0.5);
+            clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%); /* Efecto diagonal */
+            animation: alertaRoja 2s infinite alternate;
+        }
+
+        @keyframes alertaRoja { from { background-color: #c0392b; } to { background-color: #e74c3c; } }
+
+        /* Estilos Generales Datos */
+        .bloque-dato { display: flex; align-items: baseline; white-space: nowrap; }
+        .alinear-derecha { justify-content: flex-end; width: 38%; }
+        .alinear-izquierda { justify-content: flex-start; width: 62%; }
+
+        .etiqueta {
+            color: rgba(255,255,255,0.6); font-size: 25px; font-weight: 700;
+            margin-right: 6px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .etiqueta::after { content: ":"; }
+
+        .valor { 
+            color: var(--blanco-hueso); font-size: 25px; font-weight: 800;
+            letter-spacing: -0.5px; text-transform: uppercase;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .valor-stud { font-size: 25px; } 
+
+        .jockey-cambio { color: #ffeb3b !important; font-weight: 900; text-shadow: 0 0 8px rgba(255, 235, 59, 0.7); }
+        
+        /* Colores Mandil */
+        .m1 { background-color: #d32f2f; color: #fff !important; } .m2 { background-color: #ffffff; color: #000 !important; text-shadow: none !important; } .m3 { background-color: #1565c0; color: #fff !important; } .m4 { background-color: #fdd835; color: #000 !important; text-shadow: none !important; } .m5 { background-color: #2e7d32; color: #fff !important; } .m6 { background-color: #000000; color: #fff200 !important; border: 1px solid #555; } .m7 { background-color: #ef6c00; color: #000 !important; text-shadow: none !important; } .m8 { background-color: #f48fb1; color: #000 !important; text-shadow: none !important; } .m9 { background-color: #00bcd4; color: #000 !important; text-shadow: none !important; } .m10 { background-color: #7b1fa2; color: #fff !important; } .m11 { background-color: #9e9e9e; color: #da2128 !important; } .m12 { background-color: #71bf44; color: #000 !important; text-shadow: none !important; } .m13 { background-color: #a05b09; color: #fff200 !important; } .m14 { background-color: #b71c1c; color: #fff !important; } .m15 { background-color: #f3d19c; color: #000 !important; text-shadow: none !important; } .m0 { background-color: #333; } 
+    </style>
+</head>
+<body>
+
+    <div id="contenedor-paseo">
+        <div id="caja-mandil" class="m0"><span id="num-mandil">-</span></div>
+
+        <div id="caja-datos">
+            <div id="cartel-retirado">RETIRADO</div>
+
+            <div class="fila-superior" id="row-top">
+                <div id="nombre-caballo">CABALLO</div>
+                <div class="bloque-dato alinear-derecha" id="box-stud">
+                    <span class="etiqueta">STUD</span>
+                    <span class="valor valor-stud" id="val-stud">---</span>
+                </div>
+            </div>
+
+            <div class="fila-inferior" id="row-bottom">
+                <div class="bloque-dato alinear-izquierda">
+                    <span class="etiqueta">JOCKEY</span>
+                    <span class="valor" id="val-jockey">---</span>
+                </div>
+                <div class="bloque-dato alinear-derecha">
+                    <span class="etiqueta">ENTR</span>
+                    <span class="valor" id="val-entr">---</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function leerPaseo() {
+            try {
+                const response = await fetch('paseo.json?nocache=' + new Date().getTime());
+                const data = await response.json();
+
+                if (data.visible === false) {
+                    document.body.classList.add('oculto'); return;
+                } else {
+                    document.body.classList.remove('oculto');
+                }
+
+                // Datos básicos
+                document.getElementById('num-mandil').innerText = data.numero;
+                document.getElementById('nombre-caballo').innerText = data.nombre;
+                let numLimpio = data.numero.replace(/\D/g, '') || "0"; 
+                document.getElementById('caja-mandil').className = `m${numLimpio}`;
+
+                // --- LOGICA RETIRADO ---
+                const divRetirado = document.getElementById('cartel-retirado');
+                const rowBottom = document.getElementById('row-bottom');
+                const boxStud = document.getElementById('box-stud');
+                
+                if (data.retirado === true) {
+                    // MODO RETIRADO: Mostrar cartel, ocultar detalles
+                    divRetirado.style.display = "flex"; // Aparece el bloque rojo
+                    rowBottom.style.opacity = "0"; // Desaparece la fila de abajo
+                    boxStud.style.opacity = "0"; // Desaparece el Stud
+                } else {
+                    // MODO NORMAL
+                    divRetirado.style.display = "none";
+                    rowBottom.style.opacity = "1";
+                    boxStud.style.opacity = "1";
+
+                    // Solo llenamos datos si no está retirado para ahorrar recursos
+                    document.getElementById('val-jockey').innerText = data.jockey;
+                    document.getElementById('val-stud').innerText = data.stud;
+                    document.getElementById('val-entr').innerText = data.cuidador;
+                    
+                    const valJockey = document.getElementById('val-jockey');
+                    if (data.cambio_monta === true) valJockey.classList.add('jockey-cambio');
+                    else valJockey.classList.remove('jockey-cambio');
+                }
+
+            } catch (error) { console.log("Esperando datos..."); }
+        }
+        setInterval(leerPaseo, 400);
+    </script>
+</body>
+</html>
