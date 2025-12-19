@@ -1,8 +1,8 @@
 {
-    "num_carrera": "1º Carrera",
+    "num_carrera": "10º Carrera",
     "distancia": "1200 METROS",
-    "premio": "PREMIO \"CLARA AMIGA 2023\"",
-    "condicion": "Para todo spc de 4 años y más edad perdedor en todas las categorías. peso 56 kilos.",
-    "estado_pista": " NORMALr ",
-    "visible": false
+    "premio": "PREMIO \"STREAP MUSIC 20\"",
+    "condicion": "Para todo spc de 4 años y más edad perdedor yeguas ganadoras de 1 carrera. peso 56 kilos.",
+    "estado_pista": "NORMAL",
+    "visible": true
 }

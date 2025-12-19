@@ -1,1 +1,26 @@
-[]
+[
+    {
+        "posicion": 1,
+        "numero": "5",
+        "nombre": "PIU RIMOUT",
+        "dividendo": "4,20"
+    },
+    {
+        "posicion": 2,
+        "numero": "4",
+        "nombre": "ELLA DICE",
+        "dividendo": "6,10"
+    },
+    {
+        "posicion": 3,
+        "numero": "1",
+        "nombre": "CARTA ESCONDIDA",
+        "dividendo": "5,30"
+    },
+    {
+        "posicion": 4,
+        "numero": "10",
+        "nombre": "BLESSED AGAIN",
+        "dividendo": "110,20"
+    }
+]

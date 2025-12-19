@@ -58,32 +58,37 @@
         let indiceHito = 0;
         let startTime, tInterval;
         let running = false;
-        let distanciaRealDeLaCarrera = "Final";
-        let ultimoComandoID = 0; // Para no repetir comandos
+        let distanciaRealDeLaCarrera = "FINAL"; // Valor por defecto
+        let ultimoComandoID = 0; 
 
         const displayMinSec = document.getElementById('min-sec');
         const displayMili = document.getElementById('milisegundos');
         const listaParciales = document.getElementById('lista-parciales');
         const numerosReloj = document.getElementById('numeros-reloj');
 
-        // --- 1. LEER DISTANCIA (Igual que antes) ---
+        // --- 1. LEER DISTANCIA (AJUSTADO PARA "M") ---
         async function leerDistancia() {
             try {
                 const r = await fetch('datos.json?nocache=' + Date.now()); 
                 const d = await r.json();
-                if (d.distancia) distanciaRealDeLaCarrera = d.distancia.replace(/metros|mts/iy, "m").replace(" ", "");
+                if (d.distancia) {
+                    // Limpieza total: 1200 METROS -> 1200M
+                    let texto = d.distancia.toUpperCase(); // Todo a mayusculas
+                    texto = texto.replace("METROS", "M").replace("MTS", "M"); // Reemplazo palabras
+                    texto = texto.replace(/\s/g, ""); // Borro espacios (1200 M -> 1200M)
+                    distanciaRealDeLaCarrera = texto;
+                }
             } catch (e) {}
         }
 
-        // --- 2. CEREBRO NUEVO: LEER COMANDOS DESDE PYTHON ---
+        // --- 2. LEER COMANDOS ---
         async function escucharComandos() {
             try {
                 const response = await fetch('comando_reloj.json?nocache=' + Date.now());
                 const data = await response.json();
                 
-                // Si el ID del comando es nuevo, lo ejecutamos
                 if (data.id && data.id !== ultimoComandoID) {
-                    ultimoComandoID = data.id; // Marcamos como leído
+                    ultimoComandoID = data.id; 
                     ejecutarAccion(data.accion);
                 }
             } catch (e) {}
@@ -97,7 +102,7 @@
             if (accion === "PARCIAL") agregarParcial();
             if (accion === "FINALIZAR") finalizarCarrera();
             
-            // --- FIX VISIBILIDAD (Usando clase CSS robusta) ---
+            // --- FIX VISIBILIDAD ---
             if (accion === "OCULTAR") {
                 document.body.classList.add('oculto');
             }
@@ -106,7 +111,7 @@
             }
         }
 
-        // --- FUNCIONES DEL RELOJ (Lógica interna) ---
+        // --- FUNCIONES DEL RELOJ ---
         function startTimer() {
             if(!running){
                 if(displayMinSec.innerHTML === "00:00" && displayMili.innerHTML === ".00") {
@@ -171,7 +176,7 @@
             if (running) {
                 stopTimer();
                 let tiempoFinalTexto = displayMinSec.innerHTML + displayMili.innerHTML;
-                let etiquetaFinal = distanciaRealDeLaCarrera; 
+                let etiquetaFinal = distanciaRealDeLaCarrera; // Aquí ya viene corregido como "1200M"
                 let nuevoRenglon = document.createElement("div");
                 nuevoRenglon.className = "fila-parcial fila-final"; 
                 nuevoRenglon.innerHTML = `<span><span class="distancia">${etiquetaFinal}</span><span class="tiempo-parcial">${tiempoFinalTexto}</span></span>`;
