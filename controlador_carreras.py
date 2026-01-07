@@ -162,8 +162,81 @@ def guardar_placa_json():
     data = { "num_carrera": entry_num.get(), "distancia": entry_dist.get(), "premio": entry_premio.get(), "condicion": txt_cond.get("1.0", "end-1c").replace("\n", " ").strip(), "estado_pista": combo_pista.get(), "visible": visibilidad_placa }
     guardar_json(ARCHIVO_DATOS, data)
 def abrir_pagos():
-    if not carrera_actual_data: return
-    win = tk.Toplevel(root); win.title("Cargar Dividendos"); win.geometry("450x600")
+    if not carrera_actual_data: 
+        messagebox.showwarning("Atención", "Primero seleccioná una carrera.")
+        return
+    
+    # Crear ventana emergente
+    win = tk.Toplevel(root)
+    win.title(f"Cargar Dividendos - {carrera_actual_data['id']}")
+    win.geometry("400x600")
+    win.configure(bg="#ecf0f1")
+    
+    # Títulos
+    tk.Label(win, text="N° - CABALLO", font=("bold", 10), bg="#ecf0f1").grid(row=0, column=0, padx=10, pady=10, sticky="w")
+    tk.Label(win, text="PAGO ($)", font=("bold", 10), bg="#ecf0f1").grid(row=0, column=1, padx=10, pady=10)
+
+    entradas_pagos = {} # Para guardar referencia a los Entry
+
+    # Frame con scroll para que entren todos los caballos
+    canvas = tk.Canvas(win, bg="#ecf0f1", highlightthickness=0)
+    scrollbar = tk.Scrollbar(win, orient="vertical", command=canvas.yview)
+    scrollable_frame = tk.Frame(canvas, bg="#ecf0f1")
+
+    scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    canvas.configure(yscrollcommand=scrollbar.set)
+
+    canvas.grid(row=1, column=0, columnspan=2, sticky="nsew")
+    scrollbar.grid(row=1, column=2, sticky="ns")
+    
+    # Configurar peso del grid para que expanda
+    win.grid_rowconfigure(1, weight=1)
+    win.grid_columnconfigure(0, weight=1)
+
+    # Generar campos
+    caballos = carrera_actual_data.get('caballos', [])
+    for idx, cab in enumerate(caballos):
+        num_str = str(cab['numero'])
+        
+        # Etiqueta Nombre
+        lbl = tk.Label(scrollable_frame, text=f"{num_str} - {cab['nombre']}", bg="#ecf0f1", anchor="w")
+        lbl.grid(row=idx, column=0, padx=10, pady=2, sticky="w")
+        
+        # Input Pago
+        entry = tk.Entry(scrollable_frame, width=10, justify="center")
+        # Si ya existe en memoria, cargarlo
+        valor_actual = dividendos_memoria.get(num_str, "")
+        entry.insert(0, valor_actual)
+        entry.grid(row=idx, column=1, padx=10, pady=2)
+        
+        entradas_pagos[num_str] = entry
+
+    # Función interna para guardar
+    def guardar_y_cerrar():
+        global dividendos_memoria
+        cambios = False
+        for n, ent in entradas_pagos.items():
+            val = ent.get().strip()
+            if val:
+                dividendos_memoria[n] = val
+                cambios = True
+            elif n in dividendos_memoria:
+                # Si borraron el dato, lo sacamos de memoria
+                del dividendos_memoria[n]
+                cambios = True
+        
+        if cambios:
+            print("Dividendos actualizados en memoria.")
+            # Si el marcador está visible, forzar actualización en vivo
+            if visibilidad_marcador:
+                actualizar_marcador_vivo()
+        
+        win.destroy()
+
+    # Botón Guardar
+    btn_save = tk.Button(win, text="💾 GUARDAR Y CERRAR", command=guardar_y_cerrar, bg="#27ae60", fg="white", font=("bold", 12), height=2)
+    btn_save.grid(row=2, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
 
 # =============================================================================
 # CONTROLES VIVO
