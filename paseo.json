@@ -1,10 +1,10 @@
 {
     "visible": true,
-    "numero": "1",
-    "nombre": "BUENOS MUCHACHOS",
-    "jockey": "",
-    "stud": "LA POROTA",
-    "cuidador": "Nieva Pedro A.",
+    "numero": "9",
+    "nombre": "LAST JEDI",
+    "jockey": "Villagra Raul E.",
+    "stud": "DANIEL Y EL CONTA",
+    "cuidador": "Nieva Sergio R.",
     "cambio_monta": false,
-    "retirado": false
+    "retirado": true
 }

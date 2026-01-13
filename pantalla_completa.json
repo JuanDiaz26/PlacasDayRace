@@ -1,3 +1,109 @@
 {
-    "visible": false
+    "visible": true,
+    "favoritos": "",
+    "carrera_info": {
+        "numero": "4º Carrera",
+        "distancia": "1200 METROS",
+        "hora": "15:45",
+        "pista": "NORMAL"
+    },
+    "pozos": {
+        "gan": "",
+        "exa": "",
+        "tri": "",
+        "extra": "",
+        "label_extra": "CADENA:"
+    },
+    "incremento": {
+        "label": "EXACTA",
+        "monto": "1"
+    },
+    "retirados_global": [
+        "1ª:CORREN TODOS",
+        "2ª:CORREN TODOS",
+        "3ª:CORREN TODOS",
+        "4ª:4,CHICA DE BLANCO|6,SUPREMO PRIZE|8,TIERNO DE ALMA|9,LAST JEDI",
+        "5ª:CORREN TODOS",
+        "6ª:CORREN TODOS",
+        "7ª:CORREN TODOS",
+        "8ª:CORREN TODOS",
+        "9ª:CORREN TODOS",
+        "10ª:CORREN TODOS",
+        "11ª:CORREN TODOS",
+        "12ª:CORREN TODOS"
+    ],
+    "tabla_apuestas": [
+        {
+            "numero": "1",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": ""
+        },
+        {
+            "numero": "2",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": ""
+        },
+        {
+            "numero": "3",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": ""
+        },
+        {
+            "numero": "4",
+            "ganador": "RET",
+            "exacta": "RET",
+            "trifecta": "RET"
+        },
+        {
+            "numero": "5",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": ""
+        },
+        {
+            "numero": "6",
+            "ganador": "RET",
+            "exacta": "RET",
+            "trifecta": "RET"
+        },
+        {
+            "numero": "7",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": ""
+        },
+        {
+            "numero": "8",
+            "ganador": "RET",
+            "exacta": "RET",
+            "trifecta": "RET"
+        },
+        {
+            "numero": "9",
+            "ganador": "RET",
+            "exacta": "RET",
+            "trifecta": "RET"
+        },
+        {
+            "numero": "10",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": ""
+        },
+        {
+            "numero": "11",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": ""
+        },
+        {
+            "numero": "12",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": ""
+        }
+    ]
 }

@@ -19,6 +19,8 @@ carrera_actual_data = None
 dividendos_memoria = {} 
 memoria_paseo = {} 
 memoria_retirados = {} 
+memoria_global_gui = {} # Memoria maestra de la GUI
+
 reloj_corriendo = False 
 visibilidad_placa = True
 visibilidad_reloj = True
@@ -30,7 +32,7 @@ visibilidad_pantalla = False
 # FUNCIONES SISTEMA
 # =============================================================================
 def inicializar_sistema():
-    print("--- INICIANDO SISTEMA V11 ---")
+    print("--- INICIANDO SISTEMA V12 (SYNC RETIRADOS) ---")
     guardar_json(ARCHIVO_MARCADOR, []) 
     guardar_json(ARCHIVO_PASEO, {"visible": False})
     guardar_json(ARCHIVO_PANTALLA, {"visible": False})
@@ -118,13 +120,14 @@ def analizar_excel(ruta_archivo):
 # INTERFAZ
 # =============================================================================
 def cargar_excel():
-    global carreras_cargadas, memoria_retirados
+    global carreras_cargadas, memoria_retirados, memoria_global_gui
     archivo = filedialog.askopenfilename(filetypes=[("Excel", "*.xlsx *.xls *.csv")])
     if archivo:
         datos = analizar_excel(archivo)
         if datos:
             carreras_cargadas = datos; combo_selector['values'] = [c['id'] for c in carreras_cargadas]; combo_selector.current(0)
             memoria_retirados = {}
+            memoria_global_gui = {} 
             for i, c in enumerate(carreras_cargadas):
                 num_real = str(i + 1)
                 memoria_retirados[num_real] = "CORREN TODOS"
@@ -132,8 +135,35 @@ def cargar_excel():
             lbl_status.config(text=f"✅ LISTO: {len(datos)} Carreras", fg="#2ecc71")
         else: messagebox.showwarning("Error", "No se encontraron carreras.")
 
+# --- FUNCIÓN AUXILIAR PARA GUARDAR ESTADO ANTES DE CAMBIAR ---
+def guardar_estado_carrera_anterior():
+    if not carrera_actual_data: return
+    c_id = carrera_actual_data['id']
+    
+    # 1. Guardar Dividendos (Grid)
+    grid_data = {}
+    for item in entradas_pantalla:
+        grid_data[str(item["num"])] = {
+            "gan": item["gan"].get(),
+            "exa": item["exa"].get(),
+            "tri": item["tri"].get()
+        }
+    
+    # 2. Guardar Checkboxes (Retirados Locales - Pantalla Completa)
+    ret_data = []
+    for item in checklist_vars:
+        if item["var"].get():
+            ret_data.append(str(item["num"]))
+            
+    memoria_global_gui[c_id] = { "grid": grid_data, "retirados": ret_data }
+
 def seleccionar_carrera(event):
     global carrera_actual_data, dividendos_memoria, memoria_paseo
+    
+    # === GUARDAMOS ANTES DE CAMBIAR ===
+    if carrera_actual_data:
+        guardar_estado_carrera_anterior()
+    
     idx = combo_selector.current()
     if idx >= 0:
         carrera_actual_data = carreras_cargadas[idx]
@@ -148,6 +178,8 @@ def seleccionar_carrera(event):
         lista_caballos = [f"{c['numero']} - {c['nombre']}" for c in carrera_actual_data['caballos']]
         combo_paseo['values'] = lista_caballos
         if lista_caballos: combo_paseo.current(0); seleccionar_caballo_paseo(None)
+        
+        # Actualizamos la grilla y checkboxes (ahora leen de memoria si existe)
         actualizar_grilla_pantalla()
         cargar_checklist_retirados()
 
@@ -161,82 +193,31 @@ def toggle_placa():
 def guardar_placa_json():
     data = { "num_carrera": entry_num.get(), "distancia": entry_dist.get(), "premio": entry_premio.get(), "condicion": txt_cond.get("1.0", "end-1c").replace("\n", " ").strip(), "estado_pista": combo_pista.get(), "visible": visibilidad_placa }
     guardar_json(ARCHIVO_DATOS, data)
+
 def abrir_pagos():
     if not carrera_actual_data: 
         messagebox.showwarning("Atención", "Primero seleccioná una carrera.")
         return
-    
-    # Crear ventana emergente
-    win = tk.Toplevel(root)
-    win.title(f"Cargar Dividendos - {carrera_actual_data['id']}")
-    win.geometry("400x600")
-    win.configure(bg="#ecf0f1")
-    
-    # Títulos
+    win = tk.Toplevel(root); win.title(f"Cargar Dividendos - {carrera_actual_data['id']}"); win.geometry("400x600"); win.configure(bg="#ecf0f1")
     tk.Label(win, text="N° - CABALLO", font=("bold", 10), bg="#ecf0f1").grid(row=0, column=0, padx=10, pady=10, sticky="w")
     tk.Label(win, text="PAGO ($)", font=("bold", 10), bg="#ecf0f1").grid(row=0, column=1, padx=10, pady=10)
-
-    entradas_pagos = {} # Para guardar referencia a los Entry
-
-    # Frame con scroll para que entren todos los caballos
-    canvas = tk.Canvas(win, bg="#ecf0f1", highlightthickness=0)
-    scrollbar = tk.Scrollbar(win, orient="vertical", command=canvas.yview)
-    scrollable_frame = tk.Frame(canvas, bg="#ecf0f1")
-
-    scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-    canvas.configure(yscrollcommand=scrollbar.set)
-
-    canvas.grid(row=1, column=0, columnspan=2, sticky="nsew")
-    scrollbar.grid(row=1, column=2, sticky="ns")
-    
-    # Configurar peso del grid para que expanda
-    win.grid_rowconfigure(1, weight=1)
-    win.grid_columnconfigure(0, weight=1)
-
-    # Generar campos
+    entradas_pagos = {} 
+    canvas = tk.Canvas(win, bg="#ecf0f1", highlightthickness=0); scrollbar = tk.Scrollbar(win, orient="vertical", command=canvas.yview); scrollable_frame = tk.Frame(canvas, bg="#ecf0f1")
+    scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all"))); canvas.create_window((0, 0), window=scrollable_frame, anchor="nw"); canvas.configure(yscrollcommand=scrollbar.set)
+    canvas.grid(row=1, column=0, columnspan=2, sticky="nsew"); scrollbar.grid(row=1, column=2, sticky="ns"); win.grid_rowconfigure(1, weight=1); win.grid_columnconfigure(0, weight=1)
     caballos = carrera_actual_data.get('caballos', [])
     for idx, cab in enumerate(caballos):
-        num_str = str(cab['numero'])
-        
-        # Etiqueta Nombre
-        lbl = tk.Label(scrollable_frame, text=f"{num_str} - {cab['nombre']}", bg="#ecf0f1", anchor="w")
-        lbl.grid(row=idx, column=0, padx=10, pady=2, sticky="w")
-        
-        # Input Pago
-        entry = tk.Entry(scrollable_frame, width=10, justify="center")
-        # Si ya existe en memoria, cargarlo
-        valor_actual = dividendos_memoria.get(num_str, "")
-        entry.insert(0, valor_actual)
-        entry.grid(row=idx, column=1, padx=10, pady=2)
-        
-        entradas_pagos[num_str] = entry
-
-    # Función interna para guardar
+        num_str = str(cab['numero']); lbl = tk.Label(scrollable_frame, text=f"{num_str} - {cab['nombre']}", bg="#ecf0f1", anchor="w"); lbl.grid(row=idx, column=0, padx=10, pady=2, sticky="w")
+        entry = tk.Entry(scrollable_frame, width=10, justify="center"); valor_actual = dividendos_memoria.get(num_str, ""); entry.insert(0, valor_actual); entry.grid(row=idx, column=1, padx=10, pady=2); entradas_pagos[num_str] = entry
     def guardar_y_cerrar():
-        global dividendos_memoria
-        cambios = False
+        global dividendos_memoria; cambios = False
         for n, ent in entradas_pagos.items():
             val = ent.get().strip()
-            if val:
-                dividendos_memoria[n] = val
-                cambios = True
-            elif n in dividendos_memoria:
-                # Si borraron el dato, lo sacamos de memoria
-                del dividendos_memoria[n]
-                cambios = True
-        
-        if cambios:
-            print("Dividendos actualizados en memoria.")
-            # Si el marcador está visible, forzar actualización en vivo
-            if visibilidad_marcador:
-                actualizar_marcador_vivo()
-        
+            if val: dividendos_memoria[n] = val; cambios = True
+            elif n in dividendos_memoria: del dividendos_memoria[n]; cambios = True
+        if cambios and visibilidad_marcador: actualizar_marcador_vivo()
         win.destroy()
-
-    # Botón Guardar
-    btn_save = tk.Button(win, text="💾 GUARDAR Y CERRAR", command=guardar_y_cerrar, bg="#27ae60", fg="white", font=("bold", 12), height=2)
-    btn_save.grid(row=2, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
+    tk.Button(win, text="💾 GUARDAR Y CERRAR", command=guardar_y_cerrar, bg="#27ae60", fg="white", font=("bold", 12), height=2).grid(row=2, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
 
 # =============================================================================
 # CONTROLES VIVO
@@ -275,17 +256,48 @@ def toggle_marcador_tv():
 def guardar_cambios_paseo_actual():
     idx = combo_paseo.current(); 
     if idx < 0 or not carrera_actual_data: return
-    caballo = carrera_actual_data['caballos'][idx]; num_cab = caballo['numero']
+    caballo = carrera_actual_data['caballos'][idx]; num_cab = str(caballo['numero'])
+    
+    # Guardamos en memoria Paseo
     memoria_paseo[num_cab] = { "jockey": entry_jockey.get(), "stud": entry_stud.get(), "cuidador": entry_cuid.get(), "cambio_monta": chk_cambio_var.get(), "retirado": chk_retirado_var.get() }
+    
+    # --- SINCRONIZACIÓN A PANTALLA COMPLETA ---
+    # Si marcamos retirado aquí, actualizamos la memoria global de la carrera
+    c_id = carrera_actual_data['id']
+    if c_id not in memoria_global_gui: memoria_global_gui[c_id] = {"grid": {}, "retirados": []}
+    lista_ret = memoria_global_gui[c_id].get("retirados", [])
+    
+    if chk_retirado_var.get():
+        if num_cab not in lista_ret: lista_ret.append(num_cab)
+    else:
+        if num_cab in lista_ret: lista_ret.remove(num_cab)
+    
+    memoria_global_gui[c_id]["retirados"] = lista_ret
+    # Refrescamos los checkboxes de la otra pestaña por si estamos viendolo
+    cargar_checklist_retirados()
+
 def seleccionar_caballo_paseo(event):
     if not carrera_actual_data: return
     idx = combo_paseo.current()
     if idx >= 0:
-        caballo = carrera_actual_data['caballos'][idx]; num_cab = caballo['numero']; datos_memo = memoria_paseo.get(num_cab, {})
+        caballo = carrera_actual_data['caballos'][idx]; num_cab = str(caballo['numero']); datos_memo = memoria_paseo.get(num_cab, {})
+        
         entry_jockey.delete(0, tk.END); entry_jockey.insert(0, datos_memo.get("jockey", caballo.get('jockey', '')))
         entry_stud.delete(0, tk.END); entry_stud.insert(0, datos_memo.get("stud", caballo.get('stud', '')))
         entry_cuid.delete(0, tk.END); entry_cuid.insert(0, datos_memo.get("cuidador", caballo.get('cuidador', '')))
-        chk_cambio_var.set(datos_memo.get("cambio_monta", False)); chk_retirado_var.set(datos_memo.get("retirado", False))
+        chk_cambio_var.set(datos_memo.get("cambio_monta", False))
+        
+        # --- SINCRONIZACIÓN DESDE PANTALLA COMPLETA ---
+        # Verificamos si en la lista global figura retirado
+        c_id = carrera_actual_data['id']
+        lista_ret_global = memoria_global_gui.get(c_id, {}).get("retirados", [])
+        
+        esta_retirado_global = num_cab in lista_ret_global
+        esta_retirado_local = datos_memo.get("retirado", False)
+        
+        # Si está retirado en cualquiera de los dos lados, marcamos TRUE
+        chk_retirado_var.set(esta_retirado_global or esta_retirado_local)
+
 def enviar_placa_paseo():
     global visibilidad_paseo; visibilidad_paseo = True; idx = combo_paseo.current(); 
     if idx < 0: return
@@ -317,34 +329,77 @@ def actualizar_grilla_pantalla():
     for widget in fr_grilla_scroll.winfo_children(): widget.destroy()
     global entradas_pantalla; entradas_pantalla = []
     if not carrera_actual_data: return
+    
+    # Intentar recuperar datos de memoria
+    c_id = carrera_actual_data['id']
+    datos_guardados = memoria_global_gui.get(c_id, {}).get("grid", {})
+
     headers = ["Nº", "GAN ($)", "EXACTA ($)", "TRIFECTA ($)"]
     for col, h in enumerate(headers): tk.Label(fr_grilla_scroll, text=h, font=("Arial", 9, "bold"), bg="#bdc3c7", relief="ridge").grid(row=0, column=col, sticky="nsew", ipadx=5)
     caballos = carrera_actual_data.get('caballos', [])
     for i, cab in enumerate(caballos):
-        row = i + 1; tk.Label(fr_grilla_scroll, text=cab['numero'], bg="white", relief="sunken", width=6).grid(row=row, column=0, sticky="nsew")
+        num = str(cab['numero'])
+        row = i + 1; tk.Label(fr_grilla_scroll, text=num, bg="white", relief="sunken", width=6).grid(row=row, column=0, sticky="nsew")
+        
+        # Recuperar valores si existen
+        vals = datos_guardados.get(num, {})
+        
         e_gan = tk.Entry(fr_grilla_scroll, width=10, justify="center"); e_gan.grid(row=row, column=1, padx=1)
+        e_gan.insert(0, vals.get("gan", ""))
+        
         e_exa = tk.Entry(fr_grilla_scroll, width=10, justify="center"); e_exa.grid(row=row, column=2, padx=1)
+        e_exa.insert(0, vals.get("exa", ""))
+        
         e_tri = tk.Entry(fr_grilla_scroll, width=10, justify="center"); e_tri.grid(row=row, column=3, padx=1)
-        entradas_pantalla.append({ "num": cab['numero'], "gan": e_gan, "exa": e_exa, "tri": e_tri })
+        e_tri.insert(0, vals.get("tri", ""))
+        
+        entradas_pantalla.append({ "num": num, "gan": e_gan, "exa": e_exa, "tri": e_tri })
 
 def cargar_checklist_retirados():
     for widget in fr_check_ret.winfo_children(): widget.destroy()
     global checklist_vars; checklist_vars = []
     if not carrera_actual_data: return
+    
+    # Recuperar marcados
+    c_id = carrera_actual_data['id']
+    retirados_guardados = memoria_global_gui.get(c_id, {}).get("retirados", [])
+
     caballos = carrera_actual_data.get('caballos', [])
     for cab in caballos:
-        var = tk.BooleanVar(); c = tk.Checkbutton(fr_check_ret, text=f"{cab['numero']} - {cab['nombre']}", var=var, bg="#ecf0f1", anchor="w")
-        c.pack(fill="x"); checklist_vars.append({"num": cab['numero'], "nom": cab['nombre'], "var": var})
+        var = tk.BooleanVar()
+        num_str = str(cab['numero'])
+        if num_str in retirados_guardados:
+            var.set(True)
+            
+        c = tk.Checkbutton(fr_check_ret, text=f"{num_str} - {cab['nombre']}", var=var, bg="#ecf0f1", anchor="w")
+        c.pack(fill="x"); checklist_vars.append({"num": num_str, "nom": cab['nombre'], "var": var})
 
 def cerrar_carrera_retirados():
+    # Aseguramos guardar en memoria GUI tambien al darle cerrar
+    guardar_estado_carrera_anterior()
+    
     carrera_id = carrera_actual_data.get('id', '??'); num_car = "".join(filter(str.isdigit, carrera_id))
     if not num_car: num_car = "1"
     lista_ret = []
+    
+    # --- SINCRONIZACIÓN HACIA PASEO ---
+    # Al cerrar carrera, actualizamos también la memoria de Paseo para cada caballo
     for item in checklist_vars:
-        if item["var"].get(): lista_ret.append(f"{item['num']},{item['nom']}")
+        num = item['num']
+        is_ret = item["var"].get()
+        if is_ret: lista_ret.append(f"{num},{item['nom']}")
+        
+        # Sync a paseo
+        if num not in memoria_paseo: memoria_paseo[num] = {}
+        memoria_paseo[num]["retirado"] = is_ret
+
     if not lista_ret: memoria_retirados[num_car] = "CORREN TODOS"
     else: memoria_retirados[num_car] = "|".join(lista_ret)
-    messagebox.showinfo("OK", f"Retirados guardados para Carrera {num_car}")
+    
+    # Refrescar vista actual de paseo si coincide el caballo seleccionado
+    seleccionar_caballo_paseo(None)
+    
+    messagebox.showinfo("OK", f"Retirados guardados y sincronizados para Carrera {num_car}")
 
 def calcular_favoritos_interno():
     try:
@@ -353,7 +408,7 @@ def calcular_favoritos_interno():
             val_str = item["gan"].get().replace("$","").replace(",",".")
             is_ret = False
             for check in checklist_vars:
-                if check["num"] == item["num"] and check["var"].get(): is_ret = True; break
+                if str(check["num"]) == str(item["num"]) and check["var"].get(): is_ret = True; break
             if val_str and not is_ret:
                 try: val = float(val_str); lista_ganadores.append( (val, item["num"]) )
                 except: pass
@@ -361,6 +416,9 @@ def calcular_favoritos_interno():
     except: return ""
 
 def enviar_pantalla_completa():
+    # Al enviar, aseguramos guardar estado por las dudas
+    guardar_estado_carrera_anterior()
+    
     global visibilidad_pantalla; visibilidad_pantalla = True
     fav_auto = calcular_favoritos_interno()
     if fav_auto: entry_favoritos.delete(0, tk.END); entry_favoritos.insert(0, fav_auto)
@@ -368,7 +426,7 @@ def enviar_pantalla_completa():
     for item in entradas_pantalla:
         is_ret = False
         for check in checklist_vars:
-            if check["num"] == item["num"] and check["var"].get(): is_ret = True; break
+            if str(check["num"]) == str(item["num"]) and check["var"].get(): is_ret = True; break
         val_gan = "RET" if is_ret else item["gan"].get()
         val_exa = "RET" if is_ret else item["exa"].get()
         val_tri = "RET" if is_ret else item["tri"].get()

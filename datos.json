@@ -1,8 +1,8 @@
 {
-    "num_carrera": "1º Carrera",
-    "distancia": "1300 METROS",
-    "premio": "PREMIO \"MILIONE 2021\"",
-    "condicion": "Para todo spc de 4 años y más edad perdedor. peso 56 kilos. descargo de 2 kilos a los de 6 años y más edad.",
-    "estado_pista": "NORMAL",
-    "visible": true
+    "num_carrera": "",
+    "distancia": "",
+    "premio": "",
+    "condicion": "",
+    "estado_pista": "",
+    "visible": false
 }
