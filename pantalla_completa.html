@@ -2,11 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Pantalla Oficial V26 - Estructura Final Limpia</title>
+    <title>Pantalla Oficial V35 - Tabla Optimizada</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@900&family=Chakra+Petch:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* TEMA VISUAL */
             --verde-tucuman: #00665c; 
             --verde-oscuro: #004d45;
             --naranja-oficial: #EF5B2B;
@@ -17,60 +16,24 @@
             --gris-card: rgba(0, 0, 0, 0.6);
         }
 
-        body {
-            margin: 0; padding: 0; width: 1920px; height: 1080px;
-            background: transparent; font-family: 'Roboto', sans-serif; overflow: hidden;
-            opacity: 1; transition: opacity 0.5s;
-        }
+        body { margin: 0; padding: 0; width: 1920px; height: 1080px; background: transparent; font-family: 'Roboto', sans-serif; overflow: hidden; opacity: 1; transition: opacity 0.5s; }
         body.oculto { opacity: 0; }
 
-        /* FONDO GENERAL */
-        #layout-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-            background: linear-gradient(160deg, var(--azul-fondo) 0%, var(--azul-oscuro) 100%);
-        }
+        #layout-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: linear-gradient(160deg, var(--azul-fondo) 0%, var(--azul-oscuro) 100%); }
+        #main-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 
-        #main-wrapper { 
-            width: 100%; height: 100%; 
-            display: flex; flex-direction: column; 
-        }
-
-        /* --- 1. CABECERA PRINCIPAL (Top) --- */
-        #top-header { 
-            height: 150px; 
-            background: linear-gradient(90deg, var(--verde-tucuman) 0%, var(--verde-oscuro) 100%);
-            border-bottom: 5px solid var(--naranja-oficial); 
-            display: flex; align-items: center; padding: 0 30px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7); z-index: 100; 
-        }
-
-        /* MAPA */
-        .mapa-container { 
-            width: 480px; height: 100%; position: relative; 
-            display: flex; align-items: center; justify-content: center;
-            margin-right: 20px;
-        }
+        /* HEADER */
+        #top-header { height: 150px; flex-shrink: 0; background: linear-gradient(90deg, var(--verde-tucuman) 0%, var(--verde-oscuro) 100%); border-bottom: 5px solid var(--naranja-oficial); display: flex; align-items: center; padding: 0 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); z-index: 100; }
+        .mapa-container { width: 480px; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; margin-right: 20px; }
         #track-svg { width: 100%; height: 100%; filter: drop-shadow(0 0 5px rgba(0,0,0,0.6)); transform: scale(1.15); }
         .track-base { fill: none; stroke: rgba(0,0,0,0.3); stroke-width: 20; stroke-linecap: round; }
         .track-main { fill: none; stroke: white; stroke-width: 12; stroke-linecap: round; }
         .finish-line { stroke: #c0392b; stroke-width: 12; }
         .start-dot { fill: var(--amarillo-oficial); stroke: black; stroke-width: 2; animation: blink 0.8s infinite alternate; }
         @keyframes blink { from { r:10; } to { r:14; box-shadow: 0 0 15px white; } }
-        
-        #dist-overlay { 
-            position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); 
-            font-size: 42px; font-weight: 900; color: white; 
-            text-shadow: 3px 3px 0 #000; z-index: 5;
-        }
-
-        /* TARJETAS DE DATOS */
+        #dist-overlay { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); font-size: 42px; font-weight: 900; color: white; text-shadow: 3px 3px 0 #000; z-index: 5; }
         .data-grid { flex-grow: 1; display: flex; justify-content: space-around; align-items: center; height: 80%; }
-        .data-card {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: var(--gris-card); border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px; padding: 5px 10px; min-width: 140px; height: 90px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; overflow: hidden;
-        }
+        .data-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--gris-card); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 5px 10px; min-width: 140px; height: 90px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
         .data-card::before { content:''; position: absolute; top:0; left:0; width:100%; height:5px; }
         .card-carrera::before { background: var(--amarillo-oficial); }
         .card-hora::before { background: #3498db; }
@@ -79,123 +42,84 @@
         .card-fav { background: linear-gradient(135deg, #f1c40f 0%, #d35400 100%); border: 2px solid white; min-width: 220px; }
         .card-fav .lbl { color: #2c3e50 !important; font-size: 16px; } 
         .card-fav .val { font-size: 30px; text-shadow: none; color: white; letter-spacing: 1px; }
-
         .lbl { font-size: 14px; font-weight: 800; color: rgba(255,255,255,0.9); text-transform: uppercase; margin-top: 4px; }
         .val { font-size: 36px; font-weight: 900; color: white; line-height: 1; text-transform: uppercase; margin-top: 2px; }
         #val-carrera { font-size: 55px; color: var(--amarillo-oficial); }
 
+        /* CONTENIDO */
+        #content-area { display: flex; height: calc(100% - 150px); width: 100%; }
 
-        /* --- 2. CONTENIDO PRINCIPAL (Dividido en Columna Izq y Cuerpo Derecho) --- */
-        #content-area {
-            display: flex;
-            height: calc(100% - 150px); /* Resto de altura disponible */
-        }
+        /* COLUMNA IZQUIERDA */
+        #left-sidebar { width: 680px; min-width: 680px; background: rgba(0, 20, 35, 0.95); display: flex; flex-direction: column; border-right: 2px solid rgba(255,255,255,0.1); padding: 20px; box-sizing: border-box; z-index: 50; }
+        
+        #inc-box { background: linear-gradient(90deg, var(--naranja-oficial), #d35400); padding: 10px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; border: 2px solid white; box-shadow: 0 5px 10px rgba(0,0,0,0.4); min-height: 60px; flex-shrink: 0; }
+        #inc-lbl { font-size: 24px; font-weight: 900; color: white; margin-right: 15px; }
+        #inc-monto { font-size: 38px; font-weight: 900; color: var(--amarillo-oficial); text-shadow: 1px 1px 2px black; }
 
-        /* --- COLUMNA IZQUIERDA (TABLA + LOGO) --- */
-        #left-sidebar {
-            width: 600px; /* Más ancha para que la tabla respire */
-            background: rgba(0, 20, 35, 0.95);
-            display: flex; flex-direction: column;
-            border-right: 2px solid rgba(255,255,255,0.1);
-            padding: 20px;
-            box-sizing: border-box;
-            z-index: 50;
-        }
-
-        /* Incremento */
-        #inc-box {
-            background: linear-gradient(90deg, var(--naranja-oficial), #d35400);
-            padding: 10px; border-radius: 6px; margin-bottom: 15px;
-            display: flex; justify-content: center; align-items: center;
-            border: 2px solid white; box-shadow: 0 5px 10px rgba(0,0,0,0.4);
-        }
-        #inc-lbl { font-size: 22px; font-weight: 900; color: white; margin-right: 10px; }
-        #inc-monto { font-size: 34px; font-weight: 900; color: var(--amarillo-oficial); text-shadow: 1px 1px 2px black; }
-
-        /* Tabla */
-        .table-container {
-            flex-grow: 1; /* Ocupa todo el espacio hasta el logo */
-            background: rgba(0,0,0,0.3);
-            border-radius: 8px; overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
-            display: flex; flex-direction: column;
-            margin-bottom: 20px;
-        }
+        /* TABLA (Espacio fijo para 10 filas) */
+        .table-container { flex-grow: 1; background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; margin-bottom: 10px; }
+        
+        /* --- CABECERA DE TABLA REDISTRIBUIDA --- */
         .tbl-head { 
             background: var(--verde-tucuman); color: white; 
-            display: grid; grid-template-columns: 80px 1fr 1fr; 
-            padding: 12px; font-size: 24px; font-weight: 900; 
-            text-align: center; border-bottom: 3px solid var(--amarillo-oficial); 
+            display: grid; 
+            /* AQUI ESTA LA MAGIA: 70px (N) | 110px (GAN) | 1fr (RESTO PARA COMBINADA) */
+            grid-template-columns: 70px 110px 1fr; 
+            padding: 12px; font-size: 26px; font-weight: 900; 
+            text-align: center; border-bottom: 3px solid var(--amarillo-oficial); flex-shrink: 0; 
         }
-        #tbl-body { flex-grow: 1; overflow: hidden; }
-
+        #tbl-body { flex-grow: 1; overflow: hidden; position: relative; }
+        
+        /* --- FILAS REDISTRIBUIDAS --- */
         .tbl-row { 
-            display: grid; grid-template-columns: 80px 1fr 1fr; padding: 0 10px; align-items: center; 
-            border-bottom: 1px solid rgba(255,255,255,0.1); font-family: 'Chakra Petch', sans-serif; height: 55px; 
+            display: grid; 
+            grid-template-columns: 70px 110px 1fr; /* Misma proporcion que header */
+            padding: 0 15px; align-items: center; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); font-family: 'Chakra Petch', sans-serif; 
+            height: 52px; 
         }
         .tbl-row:nth-child(even) { background: rgba(255,255,255,0.03); }
-        .mandil-box { width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: 900; color: white; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); text-shadow: 1px 1px 0 #000; margin: 0 auto; }
-        .price-val { font-size: 30px; font-weight: 900; text-align: center; color: white; letter-spacing: 1px; }
+        
+        /* MANDIL */
+        .mandil-box { width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: 900; color: white; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); text-shadow: 1px 1px 0 #000; margin: 0 auto; }
+        
+        /* PRECIO GANADOR (Centrado) */
+        .price-val-gan { font-size: 32px; font-weight: 900; text-align: center; color: white; letter-spacing: 1px; }
+        
+        /* PRECIO COMBINADO (Alineado a la derecha, un poco mas chico para que entre texto) */
+        .price-val-comb { 
+            font-size: 28px; /* Un poco mas chico para combinaciones largas */
+            font-weight: 700; text-align: right; /* Alineado a derecha */
+            padding-right: 20px; /* Margen para no pegar al borde */
+            color: var(--amarillo-oficial); letter-spacing: 0.5px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* Puntos suspensivos si es larguisimo */
+        }
+
         .val-ret { color: #e74c3c !important; text-decoration: line-through; opacity: 0.6; }
 
-        /* Logo */
-        #logo-container {
-            height: 150px; /* Altura fija para el logo */
-            display: flex; justify-content: center; align-items: flex-end;
-        }
-        #logo-img { max-height: 100%; max-width: 100%; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
-        
-        #page-indicator { text-align: center; color: #aaa; font-size: 14px; margin-top: 5px; font-weight: bold; }
+        /* LOGO ABAJO IZQUIERDA */
+        #logo-container-left { display: flex; justify-content: center; align-items: flex-end; height: 160px; flex-shrink: 0; padding-bottom: 20px; }
+        #logo-img-left { max-height: 140px; max-width: 90%; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
 
-
-        /* --- COLUMNA DERECHA (INFO + VIDEO HOLE) --- */
-        #right-column {
-            flex-grow: 1;
-            display: flex; flex-direction: column;
-        }
-
-        /* 1. TICKER RETIRADOS (Arriba) */
-        #ticker-strip {
-            height: 45px;
-            background: linear-gradient(90deg, #c0392b 0%, #e74c3c 100%);
-            display: flex; align-items: center;
-            border-bottom: 1px solid white;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.5); z-index: 40;
-        }
-        #ticker-label {
-            background: #900; color: white; font-weight: 900; padding: 0 30px; height: 100%;
-            display: flex; align-items: center; font-size: 20px; letter-spacing: 1px;
-        }
+        /* COLUMNA DERECHA */
+        #right-column { flex-grow: 1; width: 0; display: flex; flex-direction: column; position: relative; }
+        #ticker-strip { height: 45px; min-height: 45px; background: linear-gradient(90deg, #c0392b 0%, #e74c3c 100%); display: flex; align-items: center; border-bottom: 1px solid white; box-shadow: 0 5px 10px rgba(0,0,0,0.5); z-index: 40; width: 100%; }
+        #ticker-label { background: #900; color: white; font-weight: 900; padding: 0 30px; height: 100%; display: flex; align-items: center; font-size: 20px; letter-spacing: 1px; white-space: nowrap; }
         #ticker-area { flex-grow: 1; overflow: hidden; height: 100%; display: flex; align-items: center; }
         #ticker-text { display: flex; white-space: nowrap; animation: infinite-scroll 30s linear infinite; }
         .ticker-part { display: flex; align-items: center; padding-right: 50px; }
         @keyframes infinite-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        /* Items del ticker */
         .ret-race-tag { color: var(--amarillo-oficial); margin-right: 10px; font-weight: 900; text-transform: uppercase; font-size: 20px; margin-left: 20px; }
         .ret-horse-box { display: inline-flex; align-items: center; background: white; padding: 2px 10px; border-radius: 4px; margin-right: 20px; }
         .ret-mandil { width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; font-weight: 900; margin-right: 8px; border-radius: 3px; font-size: 16px; color:white; text-shadow:1px 1px 0 #000; }
-        .ret-sep { color:white; opacity:0.5; margin:0 20px; }
         .ret-all-run { color: white; font-weight: 900; text-transform: uppercase; font-size: 20px; }
+        .ret-sep { color:white; opacity:0.5; margin:0 20px; }
 
-        /* 2. POZOS (Debajo del Ticker) */
-        #pozos-strip {
-            height: 90px; /* BIEN ALTO */
-            background: var(--azul-oscuro);
-            border-bottom: 4px solid var(--naranja-oficial);
-            display: flex; align-items: center; justify-content: space-around;
-            padding: 0 40px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.6); z-index: 30;
-        }
-        .pozo-item { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
-        .pozo-lbl { font-size: 16px; color: #a3e4d7; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-        .pozo-val { font-size: 40px; color: var(--amarillo-oficial); font-weight: 900; text-shadow: 0 0 15px rgba(241, 196, 15, 0.4); }
-
-        /* 3. ESPACIO VIDEO (Resto de la pantalla transparente) */
-        #video-hole {
-            flex-grow: 1;
-            background: transparent;
-            /* border: 2px dashed yellow; /* Solo para debug */
-        }
+        #pozos-strip { height: 90px; min-height: 90px; background: var(--azul-oscuro); border-bottom: 4px solid var(--naranja-oficial); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.6); z-index: 30; width: 100%; box-sizing: border-box; }
+        .pozo-item { display: flex; flex-direction: column; align-items: center; line-height: 1.1; flex: 1; }
+        .pozo-lbl { font-size: 18px; color: #a3e4d7; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+        .pozo-val { font-size: 42px; color: var(--amarillo-oficial); font-weight: 900; text-shadow: 0 0 15px rgba(241, 196, 15, 0.4); white-space: nowrap; }
+        #video-hole { flex-grow: 1; background: transparent; position: relative; }
 
         /* Colores Mandiles */
         .m1 { background-color: #d32f2f; } .m2 { background-color: #ffffff; color: black !important; } .m3 { background-color: #1565c0; } .m4 { background-color: #fdd835; color: black !important; } .m5 { background-color: #2e7d32; } .m6 { background-color: #000000; color: #f1c40f !important; border: 1px solid #888; } .m7 { background-color: #ef6c00; } .m8 { background-color: #f48fb1; color: black !important; } .m9 { background-color: #00bcd4; color: black !important; } .m10 { background-color: #7b1fa2; } .m11 { background-color: #9e9e9e; color: #da2128 !important; } .m12 { background-color: #71bf44; color: black !important; } .m13 { background-color: #a05b09; color: #f1c40f !important; } .m14 { background-color: #b71c1c; } .m15 { background-color: #f3d19c; color: black !important; } 
@@ -209,129 +133,85 @@
             <div class="mapa-container">
                 <svg id="track-svg" viewBox="0 0 500 200">
                     <path class="track-base" d="M 120,60 L 380,60 A 50,50 0 0,1 380,160 L 120,160 A 50,50 0 0,1 120,60 Z" />
-                    <line class="track-base" x1="40" y1="160" x2="120" y2="160" /> 
-                    <line class="track-base" x1="380" y1="60" x2="460" y2="60" /> 
+                    <line class="track-base" x1="40" y1="160" x2="120" y2="160" /> <line class="track-base" x1="380" y1="60" x2="460" y2="60" /> 
                     <path class="track-main" d="M 120,60 L 380,60 A 50,50 0 0,1 380,160 L 120,160 A 50,50 0 0,1 120,60 Z" />
-                    <line class="track-main" x1="40" y1="160" x2="120" y2="160" />
-                    <line class="track-main" x1="380" y1="60" x2="460" y2="60" />
+                    <line class="track-main" x1="40" y1="160" x2="120" y2="160" /> <line class="track-main" x1="380" y1="60" x2="460" y2="60" />
                     <line class="finish-line" x1="350" y1="140" x2="350" y2="190" />
                     <circle id="start-dot" class="start-dot" cx="280" cy="160" r="10" />
                 </svg>
                 <div id="dist-overlay">---</div>
             </div>
-
             <div class="data-grid">
-                <div class="data-card card-carrera">
-                    <span class="lbl">CARRERA</span><span class="val" id="val-carrera">1</span>
-                </div>
-                <div class="data-card card-hora">
-                    <span class="lbl">HORA</span><span class="val" id="val-hora">--:--</span>
-                </div>
-                <div class="data-card card-faltan">
-                    <span class="lbl">FALTAN</span><span class="val" id="val-timer" style="color:#e74c3c;">-</span>
-                </div>
-                <div class="data-card card-pista">
-                    <span class="lbl">PISTA</span><span class="val" id="val-pista">NORMAL</span>
-                </div>
-                <div class="data-card card-fav">
-                    <span class="lbl">FAVORITOS</span>
-                    <span class="val" id="val-fav">---</span>
-                </div>
+                <div class="data-card card-carrera"><span class="lbl">CARRERA</span><span class="val" id="val-carrera">1</span></div>
+                <div class="data-card card-hora"><span class="lbl">HORA</span><span class="val" id="val-hora">--:--</span></div>
+                <div class="data-card card-faltan"><span class="lbl">FALTAN</span><span class="val" id="val-timer" style="color:#e74c3c;">-</span></div>
+                <div class="data-card card-pista"><span class="lbl">PISTA</span><span class="val" id="val-pista">NORMAL</span></div>
+                <div class="data-card card-fav"><span class="lbl">FAVORITOS</span><span class="val" id="val-fav">---</span></div>
             </div>
         </div>
 
         <div id="content-area">
-            
             <div id="left-sidebar">
-                <div id="inc-box">
-                    <span id="inc-lbl">INCREMENTO:</span>
-                    <span id="inc-monto">$ ---</span>
-                </div>
-
+                <div id="inc-box"><span id="inc-lbl">INCREMENTO:</span><span id="inc-monto">$ ---</span></div>
+                
                 <div class="table-container">
                     <div class="tbl-head"><span>Nº</span><span>GAN</span><span id="rot-head">EXA</span></div>
                     <div id="tbl-body"></div>
-                    <div id="page-indicator" style="display:none;"></div>
                 </div>
-
-                <div id="logo-container">
-                    <img src="logo-hipo.png" id="logo-img" alt="Logo">
+                
+                <div id="logo-container-left">
+                    <img src="logo-hipo.png" id="logo-img-left" alt="Logo">
                 </div>
             </div>
 
             <div id="right-column">
-                
                 <div id="ticker-strip">
                     <div id="ticker-label">RETIRADOS</div>
-                    <div id="ticker-area">
-                        <div id="ticker-text">
-                            </div>
-                    </div>
+                    <div id="ticker-area"><div id="ticker-text"></div></div>
                 </div>
-
                 <div id="pozos-strip">
-                    <div class="pozo-item">
-                        <span class="pozo-lbl">GANADOR</span>
-                        <span class="pozo-val" id="pz-gan">$---</span>
-                    </div>
-                    <div class="pozo-item">
-                        <span class="pozo-lbl">EXACTA</span>
-                        <span class="pozo-val" id="pz-exa">$---</span>
-                    </div>
-                    <div class="pozo-item">
-                        <span class="pozo-lbl">TRIFECTA</span>
-                        <span class="pozo-val" id="pz-tri">$---</span>
-                    </div>
-                    <div class="pozo-item">
-                        <span class="pozo-lbl" id="pz-extra-lbl">EXTRA</span>
-                        <span class="pozo-val" id="pz-extra">$---</span>
-                    </div>
+                    <div class="pozo-item"><span class="pozo-lbl">GANADOR</span><span class="pozo-val" id="pz-gan">$---</span></div>
+                    <div class="pozo-item"><span class="pozo-lbl">EXACTA</span><span class="pozo-val" id="pz-exa">$---</span></div>
+                    <div class="pozo-item"><span class="pozo-lbl">TRIFECTA</span><span class="pozo-val" id="pz-tri">$---</span></div>
+                    <div class="pozo-item"><span class="pozo-lbl" id="pz-extra-lbl">EXTRA</span><span class="pozo-val" id="pz-extra">$---</span></div>
                 </div>
-
                 <div id="video-hole"></div>
             </div>
-
         </div>
     </div>
 
     <script>
-        let showExacta = true;
-        let tablePage = 0; 
-        const ROWS_PER_PAGE = 12; // Ajustado para el nuevo alto
-        let globalData = null;
+        const ROWS_PER_PAGE = 10; 
+        const PAGE_DURATION = 15000;
+        const BET_DURATION = 5000;
 
-        const dotPositions = {
-            "700": {cx: 60, cy: 160}, "800": {cx: 40, cy: 160}, "1000": {cx: 120, cy: 60}, "1100": {cx: 180, cy: 60}, "1200": {cx: 250, cy: 60}, "1300": {cx: 320, cy: 60}, "1400": {cx: 360, cy: 60}, "1500": {cx: 450, cy: 60}, "1600": {cx: 430, cy: 110}, "1800": {cx: 390, cy: 160}, "2000": {cx: 240, cy: 160}, "2200": {cx: 180, cy: 160}, "2400": {cx: 80, cy: 110}   
-        };
+        let globalData = null;
+        let horsePageIndex = 0;
+        let betModeIndex = 0;
+
+        const dotPositions = { "700": {cx: 60, cy: 160}, "800": {cx: 40, cy: 160}, "1000": {cx: 120, cy: 60}, "1100": {cx: 180, cy: 60}, "1200": {cx: 250, cy: 60}, "1300": {cx: 320, cy: 60}, "1400": {cx: 360, cy: 60}, "1500": {cx: 450, cy: 60}, "1600": {cx: 430, cy: 110}, "1800": {cx: 390, cy: 160}, "2000": {cx: 240, cy: 160}, "2200": {cx: 180, cy: 160}, "2400": {cx: 80, cy: 110} };
 
         async function update() {
             try {
                 const r = await fetch('pantalla_completa.json?nc=' + Date.now());
                 const d = await r.json();
-                globalData = d; 
-                
                 if (!d.visible) { document.body.classList.add('oculto'); return; }
                 document.body.classList.remove('oculto');
+                globalData = d;
 
-                // HEADER
                 document.getElementById('val-carrera').innerText = d.carrera_info.numero.replace(/\D/g,'');
                 document.getElementById('dist-overlay').innerText = d.carrera_info.distancia.replace(/\D/g,'') + "m";
                 document.getElementById('val-hora').innerText = d.carrera_info.hora;
                 document.getElementById('val-pista').innerText = d.carrera_info.pista;
                 document.getElementById('val-fav').innerText = d.favoritos || "---";
-                
-                // INCREMENTO
                 document.getElementById('inc-lbl').innerText = (d.incremento.label || "INC.") + ":";
                 document.getElementById('inc-monto').innerText = "$ " + (d.incremento.monto || "0");
-
-                // POZOS (Derecha)
                 document.getElementById('pz-gan').innerText = "$" + d.pozos.gan; 
                 document.getElementById('pz-exa').innerText = "$" + d.pozos.exa; 
                 document.getElementById('pz-tri').innerText = "$" + d.pozos.tri;
                 document.getElementById('pz-extra-lbl').innerText = d.pozos.label_extra || "EXTRA";
                 document.getElementById('pz-extra').innerText = "$" + d.pozos.extra;
 
-                // TIMER
                 const hora = d.carrera_info.hora;
                 if(hora) {
                     const now = new Date(); const [h, m] = hora.split(':');
@@ -341,30 +221,17 @@
                     if(diff > 0) { tm.innerText = diff + " MIN"; tm.style.color = "#2ecc71"; }
                     else { tm.innerText = Math.abs(diff) + " ATRASO"; tm.style.color = "#e74c3c"; }
                 }
-
-                // MAPA
                 const distNum = d.carrera_info.distancia.replace(/\D/g,'');
                 let coords = dotPositions["1200"]; 
                 for(let k in dotPositions) if(distNum.includes(k)) coords = dotPositions[k];
                 const dot = document.getElementById('start-dot'); 
                 dot.setAttribute("cx", coords.cx); dot.setAttribute("cy", coords.cy);
 
-                // TICKER
                 let tickHtml = "";
                 if(d.retirados_global) {
-                    d.retirados_global.forEach((txt, idx) => {
-                        let parts = txt.split(':'); let raceNum = parts[0]; let content = parts[1];
-                        tickHtml += `<span class="ret-sep">//</span><span class="ret-race-tag">${raceNum} Carrera:</span>`;
-                        if(content.includes("CORREN TODOS")) {
-                            tickHtml += '<span class="ret-all-run">CORREN TODOS</span>';
-                        } else {
-                            let horses = content.split('|');
-                            horses.forEach(h => {
-                                let hData = h.split(','); 
-                                let mandilNum = hData[0].replace(/\D/g,'') || '0';
-                                tickHtml += `<span class="ret-horse-box"><div class="ret-mandil m${mandilNum}">${hData[0]}</div><span style="font-weight:700; color:#333;">${hData[1]}</span></span>`;
-                            });
-                        }
+                    d.retirados_global.forEach((txt) => {
+                        let parts = txt.split(':'); 
+                        tickHtml += `<span class="ret-sep">//</span><span class="ret-race-tag">${parts[0]} Carrera:</span><span class="ret-all-run">${parts[1]}</span>`;
                     });
                 }
                 const tEl = document.getElementById('ticker-text'); 
@@ -372,54 +239,69 @@
                     tEl.setAttribute('data-raw', tickHtml);
                     tEl.innerHTML = `<div class="ticker-part">${tickHtml}</div><div class="ticker-part">${tickHtml}</div>`;
                 }
-
-                // TABLA
-                renderTable();
-
             } catch(e) {}
         }
 
         function renderTable() {
             if(!globalData) return;
             const d = globalData;
-            document.getElementById('rot-head').innerText = showExacta ? "EXA" : "TRI";
-            const tbody = document.getElementById('tbl-body'); 
+            const tbody = document.getElementById('tbl-body');
+            const headLabel = document.getElementById('rot-head');
+            const configNames = d.config_nombres || {};
+
+            let colKey = 'exacta'; 
+            let colName = 'EXA';
             
+            if(betModeIndex === 0) { colName = configNames.col2 || "EXACTA"; colKey = "exacta"; }
+            else if (betModeIndex === 1) { colName = configNames.col3 || "TRIFECTA"; colKey = "trifecta"; }
+            else if (betModeIndex === 2) { colName = configNames.col4 || "DOBLE"; colKey = "doble"; }
+
+            if(colName.length > 9) colName = colName.substring(0,9);
+            headLabel.innerText = colName;
+
             const totalHorses = d.tabla_apuestas.length;
-            const start = tablePage * ROWS_PER_PAGE;
-            const end = start + ROWS_PER_PAGE;
+            let start = horsePageIndex * ROWS_PER_PAGE;
+            let end = start + ROWS_PER_PAGE;
+            
+            if (start >= totalHorses) { horsePageIndex = 0; start = 0; end = ROWS_PER_PAGE; }
             const pageItems = d.tabla_apuestas.slice(start, end);
             
-            if(pageItems.length === 0 && tablePage > 0) { tablePage = 0; renderTable(); return; }
-
             let html = "";
             pageItems.forEach(cab => {
-                let extra = showExacta ? cab.exacta : cab.trifecta;
                 let num = cab.numero.replace(/\D/g,'') || '0';
-                let ganClass = cab.ganador === "RET" ? "price-val val-ret" : "price-val";
-                let exClass = extra === "RET" ? "price-val val-ret" : "price-val";
-                html += `<div class="tbl-row"><div class="mandil-box m${num}">${cab.numero}</div><div class="${ganClass}">${cab.ganador||'-'}</div><div class="${exClass}">${extra||'-'}</div></div>`;
+                let ganVal = cab.ganador === "RET" ? "RET" : cab.ganador;
+                let extraVal = cab[colKey]; 
+                if (!extraVal) extraVal = "-"; 
+                if (extraVal === "RET") extraVal = "RET";
+                let styleRet = cab.ganador === "RET" ? "color:#e74c3c; text-decoration:line-through;" : "";
+
+                // CLASES DIFERENCIADAS: PRICE-VAL-GAN (Centrado) vs PRICE-VAL-COMB (Derecha)
+                html += `
+                <div class="tbl-row">
+                    <div class="mandil-box m${num}">${cab.numero}</div>
+                    <div class="price-val-gan" style="${styleRet}">${ganVal}</div>
+                    <div class="price-val-comb" style="${styleRet}">${extraVal}</div>
+                </div>`;
             });
             tbody.innerHTML = html;
-
-            const indicator = document.getElementById('page-indicator');
-            if(totalHorses > ROWS_PER_PAGE) {
-                indicator.style.display = "block";
-                indicator.innerText = `Pág ${tablePage + 1}/${Math.ceil(totalHorses/ROWS_PER_PAGE)}`;
-            } else {
-                indicator.style.display = "none";
-            }
         }
 
         setInterval(update, 500); 
-        setInterval(() => { showExacta = !showExacta; renderTable(); }, 10000);
+
+        setInterval(() => {
+            betModeIndex = (betModeIndex + 1) % 3; 
+            renderTable();
+        }, BET_DURATION);
+
         setInterval(() => {
             if(globalData && globalData.tabla_apuestas.length > ROWS_PER_PAGE) {
                 const maxPages = Math.ceil(globalData.tabla_apuestas.length / ROWS_PER_PAGE);
-                tablePage = (tablePage + 1) % maxPages;
+                horsePageIndex = (horsePageIndex + 1) % maxPages;
                 renderTable();
             }
-        }, 10000); 
+        }, PAGE_DURATION);
+
+        setInterval(renderTable, 1000); 
     </script>
 </body>
 </html>

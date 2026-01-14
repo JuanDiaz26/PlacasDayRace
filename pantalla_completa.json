@@ -15,14 +15,14 @@
         "label_extra": "CADENA:"
     },
     "incremento": {
-        "label": "EXACTA",
-        "monto": "1"
+        "label": "CUATERNA",
+        "monto": "500"
     },
     "retirados_global": [
         "1ª:CORREN TODOS",
         "2ª:CORREN TODOS",
         "3ª:CORREN TODOS",
-        "4ª:4,CHICA DE BLANCO|6,SUPREMO PRIZE|8,TIERNO DE ALMA|9,LAST JEDI",
+        "4ª:CORREN TODOS",
         "5ª:CORREN TODOS",
         "6ª:CORREN TODOS",
         "7ª:CORREN TODOS",
@@ -37,73 +37,90 @@
             "numero": "1",
             "ganador": "",
             "exacta": "",
-            "trifecta": ""
+            "trifecta": "",
+            "doble": ""
         },
         {
             "numero": "2",
             "ganador": "",
             "exacta": "",
-            "trifecta": ""
+            "trifecta": "",
+            "doble": ""
         },
         {
             "numero": "3",
             "ganador": "",
             "exacta": "",
-            "trifecta": ""
+            "trifecta": "",
+            "doble": ""
         },
         {
             "numero": "4",
-            "ganador": "RET",
-            "exacta": "RET",
-            "trifecta": "RET"
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
         },
         {
             "numero": "5",
             "ganador": "",
             "exacta": "",
-            "trifecta": ""
+            "trifecta": "",
+            "doble": ""
         },
         {
             "numero": "6",
-            "ganador": "RET",
-            "exacta": "RET",
-            "trifecta": "RET"
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
         },
         {
             "numero": "7",
             "ganador": "",
             "exacta": "",
-            "trifecta": ""
+            "trifecta": "",
+            "doble": ""
         },
         {
             "numero": "8",
-            "ganador": "RET",
-            "exacta": "RET",
-            "trifecta": "RET"
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
         },
         {
             "numero": "9",
-            "ganador": "RET",
-            "exacta": "RET",
-            "trifecta": "RET"
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
         },
         {
             "numero": "10",
             "ganador": "",
             "exacta": "",
-            "trifecta": ""
+            "trifecta": "",
+            "doble": ""
         },
         {
             "numero": "11",
             "ganador": "",
             "exacta": "",
-            "trifecta": ""
+            "trifecta": "",
+            "doble": ""
         },
         {
             "numero": "12",
             "ganador": "",
             "exacta": "",
-            "trifecta": ""
+            "trifecta": "",
+            "doble": ""
         }
-    ]
+    ],
+    "config_nombres": {
+        "col2": "IMPERFECTA",
+        "col3": "CUATRIFECTA",
+        "col4": "DOBLE"
+    }
 }
