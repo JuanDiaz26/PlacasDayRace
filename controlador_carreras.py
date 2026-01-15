@@ -8,11 +8,11 @@ import time
 
 # --- ARCHIVOS ---
 ARCHIVO_DATOS = "datos.json"
-ARCHIVO_MARCADOR = "marcador.json" # Marcador vivo (chico)
+ARCHIVO_MARCADOR = "marcador.json" 
 ARCHIVO_COMANDO = "comando_reloj.json"
 ARCHIVO_PASEO = "paseo.json"
 ARCHIVO_PANTALLA = "pantalla_completa.json"
-ARCHIVO_RESULTADOS = "marcador_oficial.json" # Placa final grande
+ARCHIVO_RESULTADOS = "marcador_oficial.json"
 
 # --- GLOBALES ---
 carreras_cargadas = []
@@ -21,7 +21,7 @@ dividendos_memoria = {}
 memoria_paseo = {} 
 memoria_retirados = {} 
 memoria_global_gui = {} 
-memoria_resultados = {} # Nueva memoria para resultados finales
+memoria_resultados = {} 
 
 reloj_corriendo = False 
 visibilidad_placa = True
@@ -35,14 +35,15 @@ visibilidad_resultados = False
 combo_head_2 = None; combo_head_3 = None; combo_head_4 = None
 entry_res_tiempo = None
 combo_res_ganador = None
-entries_res_datos = {} # Para datos del ganador (jockey, stud, etc)
-filas_marcador_oficial = [] # Lista de dicts con los widgets de las 6 filas
+entries_res_datos = {} 
+filas_marcador_oficial = [] 
+btn_res_toggle = None # Declarado aqui
 
 # =============================================================================
 # FUNCIONES SISTEMA
 # =============================================================================
 def inicializar_sistema():
-    print("--- INICIANDO SISTEMA V23 (CON PLACA RESULTADOS) ---")
+    print("--- INICIANDO SISTEMA V26 (DISTANCIAS LIMITADAS A 3) ---")
     guardar_json(ARCHIVO_MARCADOR, []) 
     guardar_json(ARCHIVO_PASEO, {"visible": False})
     guardar_json(ARCHIVO_PANTALLA, {"visible": False})
@@ -62,7 +63,7 @@ def enviar_comando_reloj(accion):
     guardar_json(ARCHIVO_COMANDO, comando)
 
 # =============================================================================
-# LÓGICA EXCEL (Igual que antes)
+# LÓGICA EXCEL
 # =============================================================================
 def analizar_excel(ruta_archivo):
     try:
@@ -160,7 +161,7 @@ def guardar_estado_carrera_anterior():
     
     memoria_global_gui[c_id] = { "grid": grid_data, "retirados": ret_data, "headers": headers }
     
-    # GUARDAR ESTADO DE RESULTADOS (Nueva Pestaña)
+    # GUARDAR ESTADO DE RESULTADOS
     res_data = {
         "ganador_num": combo_res_ganador.get().split(" - ")[0] if combo_res_ganador.get() else "",
         "ganador_nom": entries_res_datos["nombre"].get(),
@@ -173,7 +174,7 @@ def guardar_estado_carrera_anterior():
     for fila in filas_marcador_oficial:
         res_data["marcador"].append({
             "numero": fila["combo_cab"].get().split(" - ")[0],
-            "distancia": fila["combo_dist"].get()
+            "distancia": fila["combo_dist"].get() if fila["combo_dist"] else ""
         })
     memoria_resultados[c_id] = res_data
 
@@ -197,7 +198,7 @@ def seleccionar_carrera(event):
         
         actualizar_grilla_pantalla()
         cargar_checklist_retirados()
-        actualizar_pestana_resultados() # Cargar datos en la nueva pestaña
+        actualizar_pestana_resultados() 
 
 def enviar_placa_info():
     global visibilidad_placa; visibilidad_placa = True; guardar_placa_json()
@@ -321,7 +322,7 @@ def ciclo_automatico_paseo():
     root.after(20000, ciclo_automatico_paseo)
 
 # =============================================================================
-# PANTALLA COMPLETA
+# PANTALLA COMPLETA (MODIFICADO PARA 4 COLUMNAS)
 # =============================================================================
 entradas_pantalla = []; checklist_vars = []
 
@@ -411,12 +412,10 @@ def enviar_pantalla_completa():
         is_ret = False
         for check in checklist_vars:
             if str(check["num"]) == str(item["num"]) and check["var"].get(): is_ret = True; break
-        
         val_gan = "RET" if is_ret else item["gan"].get()
         val_col2 = "RET" if is_ret else item["col2"].get()
         val_col3 = "RET" if is_ret else item["col3"].get()
         val_col4 = "RET" if is_ret else item["col4"].get()
-        
         dividendos.append({ "numero": item["num"], "ganador": val_gan, "exacta": val_col2, "trifecta": val_col3, "doble": val_col4 })
 
     lista_final_retirados = []
@@ -452,7 +451,6 @@ def key_handler(event):
 # NUEVO MODULO: RESULTADOS Y MARCADOR FINAL
 # =============================================================================
 def actualizar_pestana_resultados():
-    # Limpiar y recargar pestaña de resultados con datos de memoria o nuevos
     if not carrera_actual_data: return
     c_id = carrera_actual_data['id']
     datos_res = memoria_resultados.get(c_id, {
@@ -463,12 +461,10 @@ def actualizar_pestana_resultados():
     lista_cab = [f"{c['numero']} - {c['nombre']}" for c in carrera_actual_data['caballos']]
     combo_res_ganador['values'] = lista_cab
     if datos_res["ganador_num"]:
-        # Buscar en combo para setear
         for val in lista_cab:
             if val.startswith(datos_res["ganador_num"] + " -"):
                 combo_res_ganador.set(val); break
-    else:
-        combo_res_ganador.set("")
+    else: combo_res_ganador.set("")
 
     entries_res_datos["nombre"].delete(0, tk.END); entries_res_datos["nombre"].insert(0, datos_res["ganador_nom"])
     entries_res_datos["jockey"].delete(0, tk.END); entries_res_datos["jockey"].insert(0, datos_res["ganador_joc"])
@@ -478,29 +474,54 @@ def actualizar_pestana_resultados():
 
     # Llenar filas del 1 al 6
     marcador_data = datos_res.get("marcador", [])
+    
+    # 1. Primero limpiamos todas las listas para evitar mezclas
     for i in range(6):
         fila_widgets = filas_marcador_oficial[i]
-        fila_widgets["combo_cab"]['values'] = lista_cab
-        # Setear valores si existen en memoria
+        fila_widgets["combo_cab"]['values'] = lista_cab # Reload full list first
+        
+    for i in range(6):
+        fila_widgets = filas_marcador_oficial[i]
         if i < len(marcador_data):
             num_guardado = marcador_data[i]["numero"]
             dist_guardada = marcador_data[i]["distancia"]
-            
-            # Set combo caballo
             if num_guardado:
                 for val in lista_cab:
                     if val.startswith(num_guardado + " -"):
                         fila_widgets["combo_cab"].set(val); break
             else: fila_widgets["combo_cab"].set("")
             
-            # Set combo distancia
-            fila_widgets["combo_dist"].set(dist_guardada)
+            # Solo seteamos si existe el combo (los 4,5,6 no tienen combo_dist ahora)
+            if fila_widgets["combo_dist"]:
+                fila_widgets["combo_dist"].set(dist_guardada)
         else:
             fila_widgets["combo_cab"].set("")
-            fila_widgets["combo_dist"].set("")
+            if fila_widgets["combo_dist"]: fila_widgets["combo_dist"].set("")
+    
+    actualizar_listas_inteligentes()
+
+def actualizar_listas_inteligentes():
+    if not carrera_actual_data: return
+    lista_base = [f"{c['numero']} - {c['nombre']}" for c in carrera_actual_data['caballos']]
+    
+    seleccionados = []
+    for i in range(6):
+        val = filas_marcador_oficial[i]["combo_cab"].get()
+        if val: seleccionados.append(val)
+        
+    for i in range(6):
+        combo = filas_marcador_oficial[i]["combo_cab"]
+        val_actual = combo.get()
+        disponibles = []
+        for cab in lista_base:
+            if cab == val_actual or cab not in seleccionados:
+                disponibles.append(cab)
+        combo['values'] = disponibles
+
+def al_seleccionar_caballo_marcador(event):
+    actualizar_listas_inteligentes()
 
 def al_seleccionar_ganador(event):
-    # Autocompletar datos del ganador desde la info de la carrera
     if not carrera_actual_data: return
     val = combo_res_ganador.get()
     if not val: return
@@ -512,17 +533,16 @@ def al_seleccionar_ganador(event):
         entries_res_datos["entrenador"].delete(0, tk.END); entries_res_datos["entrenador"].insert(0, cab["cuidador"])
         entries_res_datos["stud"].delete(0, tk.END); entries_res_datos["stud"].insert(0, cab["stud"])
         
-        # Tambien ponerlo 1ro en el marcador
-        filas_marcador_oficial[0]["combo_cab"].current(idx)
+        filas_marcador_oficial[0]["combo_cab"].set(val)
+        actualizar_listas_inteligentes()
 
 def enviar_resultados_oficiales():
     global visibilidad_resultados; visibilidad_resultados = True
-    guardar_estado_carrera_anterior()
+    guardar_estado_carrera_anterior() 
     
     num_car = "".join(filter(str.isdigit, carrera_actual_data['id']))
     if not num_car: num_car = "1"
     
-    # --- CAMBIO AQUI: OBTENER EL NOMBRE DEL PREMIO ---
     nombre_premio = carrera_actual_data.get('premio', '').replace('PREMIO', '').replace('"', '').strip()
     
     marcador_export = []
@@ -530,13 +550,14 @@ def enviar_resultados_oficiales():
         val_cab = fila["combo_cab"].get()
         if val_cab:
             num = val_cab.split(" - ")[0]
-            dist = fila["combo_dist"].get()
+            # Si tiene combo_dist (1,2,3) lo usa, sino vacio
+            dist = fila["combo_dist"].get() if fila["combo_dist"] else ""
             marcador_export.append({"numero": num, "distancia": dist})
             
     data = {
         "visible": True,
         "carrera": num_car,
-        "premio": nombre_premio, # <--- DATO NUEVO
+        "premio": nombre_premio, 
         "ganador": {
             "nombre": entries_res_datos["nombre"].get(),
             "jockey": entries_res_datos["jockey"].get(),
@@ -558,7 +579,7 @@ def toggle_resultados():
 # =============================================================================
 # VENTANA PRINCIPAL
 # =============================================================================
-root = tk.Tk(); root.title("CONSOLA DE MANDO V23 - FULL SUITE"); root.geometry("1300x850"); root.configure(bg="#2c3e50") 
+root = tk.Tk(); root.title("CONSOLA DE MANDO V26 - LIMITED DISTANCES"); root.geometry("1300x850"); root.configure(bg="#2c3e50") 
 p_izq = tk.Frame(root, bg="#ecf0f1", padx=10, pady=10); p_izq.place(relx=0, rely=0, relwidth=0.30, relheight=1)
 tk.Label(p_izq, text="1. CONFIGURACIÓN", font=("Segoe UI", 14, "bold"), bg="#ecf0f1", fg="#7f8c8d").pack(anchor="w")
 fr_carga = tk.LabelFrame(p_izq, text="Archivo", bg="#ecf0f1"); fr_carga.pack(fill="x", pady=5); tk.Button(fr_carga, text="📂 EXCEL", command=cargar_excel, bg="#bdc3c7").pack(side="left", padx=5, pady=5); combo_selector = ttk.Combobox(fr_carga, state="readonly"); combo_selector.pack(side="left", fill="x", expand=True, padx=5); combo_selector.bind("<<ComboboxSelected>>", seleccionar_carrera)
@@ -589,17 +610,29 @@ tk.Label(fr_ganador_res, text="Stud:", bg="#34495e", fg="white").grid(row=4, col
 tk.Label(fr_ganador_res, text="TIEMPO OFICIAL:", bg="#34495e", fg="#f1c40f", font=("bold",10)).grid(row=0, column=2, sticky="e", padx=20); entry_res_tiempo = tk.Entry(fr_ganador_res, width=15, font=("bold",14)); entry_res_tiempo.grid(row=0, column=3, pady=5)
 
 fr_marcador_of = tk.LabelFrame(tab_resultados, text="Marcador Oficial (1 al 6)", bg="#34495e", fg="white", padx=10, pady=10); fr_marcador_of.pack(fill="both", expand=True, pady=10)
-# Cabeceras Marcador
 tk.Label(fr_marcador_of, text="Puesto", bg="#34495e", fg="white", font=("bold",9)).grid(row=0, column=0)
 tk.Label(fr_marcador_of, text="Caballo", bg="#34495e", fg="white", font=("bold",9)).grid(row=0, column=1)
 tk.Label(fr_marcador_of, text="Distancia al Anterior", bg="#34495e", fg="white", font=("bold",9)).grid(row=0, column=2)
 
-distancias_opciones = ["", "1 CPO", "1 1/2 CPOS", "2 CPOS", "2 1/2 CPOS", "3 CPOS", "4 CPOS", "VARIOS CPOS", "CZA", "1/2 CZA", "PZO", "1/2 PZO", "HOCICO", "V.M.", "S.A."]
+distancias_opciones = [
+    "", "1 CPO", "1 1/2 CPOS", 
+    "2 CPOS", "2 1/2 CPOS", 
+    "3 CPOS", "3 1/2 CPOS",  # <-- AGREGADO
+    "4 CPOS", "VARIOS CPOS", 
+    "CZA", "1/2 CZA", "PZO", "1/2 PZO", 
+    "HOCICO", "V.M.", "S.A."
+]
 
 for i in range(6):
     tk.Label(fr_marcador_of, text=f"{i+1}°", font=("bold", 12), bg="#34495e", fg="white").grid(row=i+1, column=0, padx=5, pady=5)
-    cb_cab = ttk.Combobox(fr_marcador_of, state="readonly", width=25); cb_cab.grid(row=i+1, column=1, padx=5, pady=5)
-    cb_dist = ttk.Combobox(fr_marcador_of, values=distancias_opciones, state="readonly", width=15); cb_dist.grid(row=i+1, column=2, padx=5, pady=5)
+    cb_cab = ttk.Combobox(fr_marcador_of, state="readonly", width=25); cb_cab.grid(row=i+1, column=1, padx=5, pady=5); cb_cab.bind("<<ComboboxSelected>>", al_seleccionar_caballo_marcador)
+    
+    # SOLO MOSTRAMOS COMBO DISTANCIA PARA 1ro, 2do y 3ro (indices 0, 1, 2)
+    cb_dist = None
+    if i < 3:
+        cb_dist = ttk.Combobox(fr_marcador_of, values=distancias_opciones, state="readonly", width=15)
+        cb_dist.grid(row=i+1, column=2, padx=5, pady=5)
+    
     filas_marcador_oficial.append({ "combo_cab": cb_cab, "combo_dist": cb_dist })
 
 btn_enviar_res = tk.Button(tab_resultados, text="🏁 ENVIAR RESULTADOS", command=enviar_resultados_oficiales, bg="#27ae60", fg="white", font=("bold", 14), height=2); btn_enviar_res.pack(side="left", fill="x", expand=True, pady=10)

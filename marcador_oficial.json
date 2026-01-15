@@ -1,37 +1,37 @@
 {
     "visible": true,
-    "carrera": "9",
-    "premio": "CLASICO CARLOS PELLEGRINI",
+    "carrera": "12",
+    "premio": "JORGE DANTE GUERRA",
     "ganador": {
-        "nombre": "SUFFOK",
-        "jockey": "Moran Facundo R.",
-        "entrenador": "Noguera Assad Lazaro",
-        "stud": "L.C.J.",
-        "tiempo": "2' 7\" 2/5"
+        "nombre": "GREAT DADDY",
+        "jockey": "Bethencourt Julian E. - Ap. (2kg)",
+        "entrenador": "Jaime Alexis J.",
+        "stud": "EL PILI",
+        "tiempo": ""
     },
     "marcador": [
         {
-            "numero": "8",
-            "distancia": "2 1/2 CPOS"
+            "numero": "10",
+            "distancia": "1 CPO"
         },
         {
-            "numero": "1",
-            "distancia": "VARIOS CPOS"
+            "numero": "15",
+            "distancia": "3 1/2 CPOS"
         },
         {
-            "numero": "4",
-            "distancia": "1/2 CZA"
+            "numero": "11",
+            "distancia": "3 CPOS"
         },
         {
-            "numero": "6",
+            "numero": "12",
             "distancia": ""
         },
         {
-            "numero": "7",
+            "numero": "13",
             "distancia": ""
         },
         {
-            "numero": "9",
+            "numero": "14",
             "distancia": ""
         }
     ]

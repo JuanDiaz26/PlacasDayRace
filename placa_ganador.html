@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Placa Marcador Oficial V37 - Alineación Perfecta</title>
+    <title>Placa Marcador Oficial V43 - Platino & Geometría Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&family=Chakra+Petch:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,316 +11,187 @@
             --naranja-oficial: #EF5B2B;
             --amarillo-oficial: #f1c40f;
             --blanco: #ffffff;
-            --gris-fondo: #1e272e;
+            /* NUEVO COLOR DE FONDO: GRIS PLATINO SUAVE (NO BLANCO PURO) */
+            --fondo-ganador: #f2f4f6; 
+            --texto-oscuro: #2c3e50;
+            --sombra-tablero: inset 0 0 30px rgba(0,0,0,0.8);
         }
 
-        body {
-            margin: 0; padding: 0; width: 1920px; height: 1080px;
-            background: transparent;
-            font-family: 'Roboto', sans-serif; overflow: hidden;
-        }
+        body { margin: 0; padding: 0; width: 1920px; height: 1080px; background: transparent; font-family: 'Roboto', sans-serif; overflow: hidden; }
 
-        /* --- CONTENEDOR PRINCIPAL --- */
         #main-container {
-            position: absolute;
-            top: 50%; left: 50%; 
-            transform: translate(-50%, -50%); 
-            width: 1550px; height: 650px; /* Un poco mas ancha y alta */
-            display: flex; flex-direction: column;
-            filter: drop-shadow(0 30px 50px rgba(0,0,0,0.9));
-            opacity: 0; transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 1600px; height: 720px; display: flex; flex-direction: column;
+            filter: drop-shadow(0 30px 60px rgba(0,0,0,0.6));
+            opacity: 0; transition: opacity 0.5s ease-out;
         }
+        #main-container.visible { opacity: 1; }
+
+        .layout-row { display: flex; width: 100%; }
+        .col-left { width: 34%; flex-shrink: 0; } 
+        .col-right { width: 66%; flex-grow: 1; }
+
+        /* HEADER */
+        .top-bar { height: 90px; display: flex; border-bottom: 6px solid var(--amarillo-oficial); border-radius: 15px 15px 0 0; overflow: hidden; z-index: 2; }
+        .title-marcador { background: var(--naranja-oficial); display: flex; align-items: center; justify-content: center; font-family: 'Chakra Petch'; font-size: 38px; font-weight: 900; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); border-right: 2px solid rgba(0,0,0,0.2); text-align: center; line-height: 1; }
+        .title-carrera { background: var(--verde-tucuman); display: flex; align-items: center; padding-left: 40px; font-family: 'Roboto'; font-size: 34px; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 1px; }
+        .pill-num { background: white; color: var(--verde-tucuman); padding: 5px 15px; border-radius: 8px; margin-right: 20px; font-weight: 900; font-size: 38px; font-family: 'Chakra Petch'; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); }
+
+        /* CUERPO */
+        .body-content { flex-grow: 1; display: flex; border-radius: 0 0 15px 15px; overflow: hidden; }
         
-        #main-container.visible { opacity: 1; transform: translate(-50%, -50%); }
+        /* IZQUIERDA */
+        .col-marcador { background: var(--azul-oscuro); box-shadow: var(--sombra-tablero); display: flex; flex-direction: column; padding: 10px 0; border-right: 4px solid var(--amarillo-oficial); z-index: 10; }
+        .fila-puesto { display: flex; align-items: center; height: 16.66%; padding: 0 20px; border-bottom: 2px solid rgba(255,255,255,0.05); }
+        .lbl-puesto { width: 70px; text-align: center; color: var(--amarillo-oficial); font-family: 'Chakra Petch'; font-size: 45px; font-weight: 700; margin-right: 15px; }
+        .mandil-box { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; font-size: 42px; font-weight: 900; color: white; border-radius: 8px; border: 3px solid rgba(255,255,255,0.4); box-shadow: 4px 4px 10px rgba(0,0,0,0.5); margin-right: 20px; }
+        .distancia-wrapper { flex-grow: 1; display: flex; align-items: center; justify-content: flex-end; }
+        .dist-label-text { color: #ffffff; font-size: 24px; font-weight: 900; text-transform: uppercase; margin-right: 20px; text-align: right; line-height: 1; text-shadow: 1px 1px 2px black; }
+        .chapa { width: 75px; height: 75px; flex-shrink: 0; background: var(--amarillo-oficial); border-radius: 10px; border: 4px solid #b7950b; display: flex; justify-content: center; align-items: center; font-family: 'Chakra Petch', sans-serif; color: black; box-shadow: inset 0 0 15px rgba(0,0,0,0.2); position: relative; }
 
-        /* --- LAYOUT DE COLUMNAS (GRID MAESTRA) --- */
-        /* Definimos que la izquierda ocupa 32% y derecha 68% SIEMPRE */
-        .layout-row {
-            display: flex; width: 100%;
+        /* --- DERECHA (PLATINO) --- */
+        .col-ganador {
+            /* DEGRADADO SUTIL PLATINO */
+            background: linear-gradient(135deg, #ffffff 0%, #e8eaeb 100%);
+            display: flex; flex-direction: column; position: relative; padding: 40px 60px;
         }
-        .col-left { width: 32%; }
-        .col-right { width: 68%; }
 
-        /* --- 1. BARRA DE TITULO (TECHO) --- */
-        .top-bar {
-            height: 80px;
-            display: flex; /* Flex interno */
-            border-bottom: 5px solid var(--amarillo-oficial);
-            border-radius: 15px 15px 0 0;
-            overflow: hidden;
-        }
+        .logo-corner { position: absolute; top: 30px; right: 30px; width: 180px; height: auto; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2)); z-index: 10; }
+        .header-ganador-info { display: flex; align-items: flex-end; margin-bottom: 30px; margin-top: 30px; border-bottom: 3px solid #ccc; padding-bottom: 20px; }
+        .mandil-ganador { width: 120px; height: 120px; display: flex; justify-content: center; align-items: center; font-size: 70px; font-weight: 900; color: white; border-radius: 12px; border: 4px solid rgba(0,0,0,0.1); box-shadow: 5px 5px 20px rgba(0,0,0,0.3); margin-right: 30px; }
+        .textos-ganador { display: flex; flex-direction: column; justify-content: center; }
+        .lbl-ganador-sup { color: var(--naranja-oficial); font-size: 24px; font-weight: 900; letter-spacing: 4px; margin-bottom: 5px; text-transform: uppercase; }
+        .txt-caballo { font-family: 'Chakra Petch'; font-size: 85px; font-weight: 900; color: var(--azul-oscuro); line-height: 0.9; text-transform: uppercase; text-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
+        .info-grid { display: grid; grid-template-columns: auto 1fr; gap: 20px 40px; align-items: center; margin-top: 20px; }
+        .info-lbl { color: #7f8c8d; font-size: 28px; font-weight: 700; text-align: right; border-right: 5px solid var(--verde-tucuman); padding-right: 20px; }
+        .info-val { color: var(--texto-oscuro); font-size: 34px; font-weight: 900; text-transform: uppercase; }
+        .time-box { margin-top: auto; align-self: flex-end; background: var(--azul-oscuro); border: 2px solid var(--naranja-oficial); padding: 15px 50px; border-radius: 10px; display: flex; align-items: center; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .icon-clock { width: 50px; height: 50px; fill: var(--amarillo-oficial); }
+        .txt-time-lbl { font-size: 22px; color: white; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-right: 10px; }
+        .txt-time-val { font-size: 60px; color: var(--amarillo-oficial); font-weight: 900; font-family: 'Chakra Petch'; line-height: 1; }
+
+        /* --- LOGICA GRILLAS (GEMS) --- */
+        .dot, .ring { width: 16px; height: 16px; border-radius: 50%; }
+        .dot { background: black; }
+        .ring { border: 4px solid black; background: transparent; box-sizing: border-box; }
         
-        /* Titulo Marcador (Naranja) */
-        .title-marcador {
-            background: var(--naranja-oficial);
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Chakra Petch'; font-size: 36px; font-weight: 900; 
-            color: white; text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
-            border-right: 2px solid rgba(0,0,0,0.1); /* Linea sutil separadora */
-        }
+        .grid-container { display: grid; width: 100%; height: 100%; padding: 10px; box-sizing: border-box; }
         
-        /* Titulo Carrera (Verde Degradado) */
-        .title-carrera {
-            background: linear-gradient(90deg, #d35400 0%, var(--verde-tucuman) 10%, var(--verde-tucuman) 100%);
-            display: flex; align-items: center; padding-left: 40px;
-            font-family: 'Roboto'; font-size: 30px; font-weight: 700;
-            color: white; text-transform: uppercase; letter-spacing: 1px;
-        }
-        .pill-num { background: white; color: var(--verde-tucuman); padding: 4px 12px; border-radius: 6px; margin-right: 15px; font-weight: 900; font-size: 32px; font-family: 'Chakra Petch'; }
-
-        /* --- 2. CUERPO (BODY) --- */
-        .body-content {
-            flex-grow: 1; display: flex;
-            border-radius: 0 0 15px 15px; overflow: hidden;
-        }
-
-        /* --- COLUMNA MARCADOR (IZQ) --- */
-        .col-marcador {
-            background: var(--azul-oscuro);
-            display: flex; flex-direction: column;
-            justify-content: center; /* Centrar verticalmente las filas */
-            padding: 20px 0; 
-            border-right: 2px solid rgba(255,255,255,0.1);
-        }
-
-        .fila-puesto {
-            display: grid; grid-template-columns: 80px 80px 1fr; /* Columnas mas anchas */
-            align-items: center; 
-            height: 16.66%; /* Dividir equitativamente */
-            padding: 0 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        /* NUMEROS ROMANOS MAS GRANDES */
-        .lbl-puesto { 
-            color: var(--amarillo-oficial); 
-            font-family: 'Chakra Petch'; font-size: 38px; font-weight: 700; 
-            text-align: center;
-        }
-        
-        /* Mandil MAS GRANDE */
-        .mandil-box {
-            width: 65px; height: 65px;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 38px; font-weight: 900; color: white;
-            border-radius: 8px; border: 3px solid rgba(255,255,255,0.3);
-            box-shadow: 3px 3px 8px rgba(0,0,0,0.4);
-        }
-
-        /* Chapas de Distancia */
-        .distancia-box { display: flex; justify-content: center; align-items: center; height: 100%; }
-        
-        /* CHAPA AMARILLA MAS GRANDE */
-        .chapa {
-            width: 70px; height: 70px;
-            background: var(--amarillo-oficial);
-            border-radius: 10px; border: 3px solid #d4ac0d;
-            display: flex; justify-content: center; align-items: center;
-            font-family: 'Chakra Petch', sans-serif;
-            color: black;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
-        }
-
-        /* --- GRAFICOS CSS PURO (ICONOS) --- */
-        /* Texto simple GIGANTE (C, H, P, V.M) */
-        .chapa-txt { font-size: 45px; font-weight: 900; letter-spacing: -3px; line-height: 1; }
-        .chapa-txt-vm { font-size: 28px; font-weight: 900; letter-spacing: -1px; } /* Para V.M que es ancho */
-        
-        /* Tachados */
-        .tachado-wrapper { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-        .tachado-wrapper::after {
-            content: ''; position: absolute;
-            width: 90%; height: 5px; background: #c0392b;
-            transform: rotate(-45deg);
-        }
-
-        /* Dados (Puntos rellenos) */
-        .dice-grid { display: grid; gap: 6px; width: 45px; height: 45px; }
+        /* 1 */
         .d-1 { place-items: center; }
+        
+        /* 2 (Diagonal) */
         .d-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-        .d-3 { grid-template-columns: 1fr 1fr 1fr; align-items: center; } 
-        .d-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-        
-        /* 6 PUNTOS (VARIOS CUERPOS) - 2 columnas x 3 filas */
-        .d-6 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 5px; height: 55px; width: 35px; align-content: center; }
-        
-        .dot { width: 13px; height: 13px; background: black; border-radius: 50%; }
-        .pos-tl { grid-column: 1; grid-row: 1; } .pos-br { grid-column: 2; grid-row: 2; } 
+        .pos-tl { grid-column: 1; grid-row: 1; justify-self: center; align-self: center; }
+        .pos-br { grid-column: 2; grid-row: 2; justify-self: center; align-self: center; }
+        /* Para 4 Cuerpos (Cuadrado) */
+        .pos-tr { grid-column: 2; grid-row: 1; justify-self: center; align-self: center; }
+        .pos-bl { grid-column: 1; grid-row: 2; justify-self: center; align-self: center; }
 
-        /* 4. CIRCULOS VACIOS (ANILLOS) - Para los 1/2 */
-        /* Contenedor flexible para alinear 1, 2 o 3 anillos */
-        .rings-container {
-            display: flex; gap: 4px; justify-content: center; align-items: center;
-            height: 100%; width: 100%;
-        }
-        .circle-open { 
-            width: 20px; height: 20px; 
-            border: 5px solid black; /* Borde muy grueso */
-            background: transparent; border-radius: 50%; 
-            flex-shrink: 0;
-        }
+        /* 3 (Triangulo) */
+        .d-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        .pos-top-mid { grid-column: 1 / span 2; justify-self: center; align-self: end; margin-bottom: 2px; }
+        .pos-bot-left { grid-column: 1; justify-self: center; align-self: start; margin-top: 2px; }
+        .pos-bot-right { grid-column: 2; justify-self: center; align-self: start; margin-top: 2px; }
 
-        /* 5. Pasteles (Fracciones puras sin entero) */
+        /* 6 (Varios) */
+        .d-6 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; row-gap: 4px; place-items: center; padding: 5px 15px; }
+
+        .chapa-txt { font-size: 50px; font-weight: 900; letter-spacing: -3px; }
+        .chapa-txt-vm { font-size: 30px; font-weight: 900; letter-spacing: -1px; }
+        .tachado-wrapper::after { content: ''; position: absolute; width: 90%; height: 6px; background: #c0392b; transform: rotate(-45deg); }
+        .tachado-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
         .pie-half { width: 45px; height: 45px; border-radius: 50%; background: conic-gradient(black 0% 50%, transparent 50% 100%); border: 3px solid black; }
         .pie-34 { width: 45px; height: 45px; border-radius: 50%; background: conic-gradient(black 0% 75%, transparent 75% 100%); border: 3px solid black; }
 
-
-        /* --- COLUMNA GANADOR (DER) --- */
-        .col-ganador {
-            background: var(--gris-fondo);
-            display: flex; flex-direction: column;
-            position: relative;
-            padding: 50px 80px;
-        }
-
-        /* Fondo Logo */
-        .bg-logo {
-            position: absolute; right: 0; bottom: 0;
-            width: 500px; height: 500px;
-            background-image: url('logo-hipo.png');
-            background-size: contain; background-repeat: no-repeat; background-position: bottom right;
-            opacity: 0.08; filter: grayscale(100%);
-            pointer-events: none;
-        }
-
-        .lbl-ganador { color: var(--naranja-oficial); font-size: 24px; font-weight: 700; letter-spacing: 6px; margin-bottom: 10px; }
-        .txt-caballo { 
-            font-family: 'Chakra Petch'; font-size: 90px; font-weight: 900; 
-            color: white; line-height: 0.9; text-transform: uppercase;
-            text-shadow: 5px 5px 0px rgba(0,0,0,0.4);
-            margin-bottom: 50px;
-        }
-
-        /* Grilla de Datos */
-        .info-grid {
-            display: grid; grid-template-columns: auto 1fr; 
-            gap: 20px 40px; align-items: center;
-        }
-        .info-lbl { 
-            color: #bdc3c7; font-size: 26px; font-weight: 700; text-align: right; 
-            border-right: 4px solid var(--verde-tucuman); padding-right: 20px;
-        }
-        .info-val { color: white; font-size: 32px; font-weight: 700; text-transform: uppercase; }
-
-        /* Tiempo y Reloj */
-        .time-box {
-            margin-top: auto; align-self: flex-start;
-            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
-            padding: 15px 40px; border-radius: 60px;
-            display: flex; align-items: center; gap: 25px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        .icon-clock { width: 50px; height: 50px; fill: var(--amarillo-oficial); }
-        .txt-time-lbl { font-size: 18px; color: #aaa; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
-        .txt-time-val { font-size: 55px; color: var(--amarillo-oficial); font-weight: 900; font-family: 'Chakra Petch'; line-height: 1; }
-
-        /* Colores Mandiles */
         .m1 { background-color: #d32f2f; } .m2 { background-color: #ffffff; color: black !important; border: 1px solid #999; } .m3 { background-color: #1565c0; } .m4 { background-color: #fdd835; color: black !important; } .m5 { background-color: #2e7d32; } .m6 { background-color: #000000; color: #f1c40f !important; border: 1px solid #555; } .m7 { background-color: #ef6c00; } .m8 { background-color: #f48fb1; color: black !important; } .m9 { background-color: #00bcd4; color: black !important; } .m10 { background-color: #7b1fa2; } .m11 { background-color: #9e9e9e; color: #da2128 !important; } .m12 { background-color: #71bf44; color: black !important; } .m13 { background-color: #a05b09; color: #f1c40f !important; } .m14 { background-color: #b71c1c; } .m15 { background-color: #f3d19c; color: black !important; } 
-
     </style>
 </head>
 <body>
-
     <div id="main-container">
-        
         <div class="top-bar layout-row">
-            <div class="title-marcador col-left">MARCADOR</div>
+            <div class="title-marcador col-left">MARCADOR OFICIAL</div>
             <div class="title-carrera col-right">
                 <span class="pill-num" id="lbl-num-carrera">--</span>
                 <span id="lbl-premio">PREMIO ...</span>
             </div>
         </div>
-
         <div class="body-content layout-row">
-            <div class="col-marcador col-left" id="lista-puestos">
-                </div>
-
+            <div class="col-marcador col-left" id="lista-puestos"></div>
             <div class="col-ganador col-right">
-                <div class="bg-logo"></div> <div class="lbl-ganador">GANADOR</div>
-                <div class="txt-caballo" id="val-caballo">---</div>
-
-                <div class="info-grid">
-                    <div class="info-lbl">JOCKEY</div>
-                    <div class="info-val" id="val-jockey">---</div>
-
-                    <div class="info-lbl">ENTRENADOR</div>
-                    <div class="info-val" id="val-entrenador">---</div>
-
-                    <div class="info-lbl">STUD</div>
-                    <div class="info-val" id="val-stud">---</div>
-                </div>
-
-                <div class="time-box">
-                    <svg class="icon-clock" viewBox="0 0 24 24">
-                        <path d="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z" />
-                    </svg>
-                    <div>
-                        <div class="txt-time-lbl">TIEMPO OFICIAL</div>
-                        <div class="txt-time-val" id="val-tiempo">--' --'' --</div>
+                <img src="logo-hipo.png" class="logo-corner" alt="Logo">
+                <div class="header-ganador-info">
+                    <div class="mandil-ganador" id="mandil-ganador-box">?</div>
+                    <div class="textos-ganador">
+                        <div class="lbl-ganador-sup">GANADOR</div>
+                        <div class="txt-caballo" id="val-caballo">---</div>
                     </div>
+                </div>
+                <div class="info-grid">
+                    <div class="info-lbl">JOCKEY</div><div class="info-val" id="val-jockey">---</div>
+                    <div class="info-lbl">ENTRENADOR</div><div class="info-val" id="val-entrenador">---</div>
+                    <div class="info-lbl">STUD</div><div class="info-val" id="val-stud">---</div>
+                </div>
+                <div class="time-box">
+                    <svg class="icon-clock" viewBox="0 0 24 24"><path d="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z" /></svg>
+                    <div class="txt-time-lbl">TIEMPO:</div>
+                    <div class="txt-time-val" id="val-tiempo">--' --'' --</div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
         const ROMANOS = ["I", "II", "III", "IV", "V", "VI"];
 
         function generarIcono(codigo) {
-            // Normalizar texto
             const c = codigo.toUpperCase().trim().replace("CPOS", "").replace("CPO", "").trim(); 
-            // c ahora es "1", "2 1/2", "V.M.", etc.
-
             if (!c) return ""; 
 
-            // 1. TEXTOS ESPECIALES (GIGANTES)
             if (["CZA", "C"].includes(c)) return `<div class="chapa"><span class="chapa-txt">C</span></div>`;
             if (["PZO", "P"].includes(c)) return `<div class="chapa"><span class="chapa-txt">P</span></div>`;
             if (["HOC", "HOCICO", "H"].includes(c)) return `<div class="chapa"><span class="chapa-txt">H</span></div>`;
             if (c.startsWith("V.M")) return `<div class="chapa"><span class="chapa-txt-vm">V.M</span></div>`;
-            if (c.startsWith("S.A")) return `<div class="chapa"><span class="chapa-txt-vm">S.A</span></div>`; // Sin Apreciacion
+            if (c.startsWith("S.A")) return `<div class="chapa"><span class="chapa-txt-vm">S.A</span></div>`; 
 
-            // 2. TACHADOS (Medios especiales)
             if (c.includes("1/2 CZA")) return `<div class="chapa"><div class="tachado-wrapper"><span class="chapa-txt">C</span></div></div>`;
             if (c.includes("1/2 PZO")) return `<div class="chapa"><div class="tachado-wrapper"><span class="chapa-txt">P</span></div></div>`;
 
-            // 3. LOGICA DE MEDIOS CUERPOS (CIRCULOS VACIOS)
-            // "1 1/2" -> 1 circulo vacio
-            // "2 1/2" -> 2 circulos vacios
-            // "3 1/2" -> 3 circulos vacios
-            if (c.includes("1/2") || c.includes("½")) {
-                let enteros = 0;
-                if (c.startsWith("1")) enteros = 1;
-                if (c.startsWith("2")) enteros = 2;
-                if (c.startsWith("3")) enteros = 3;
-                
-                // Si es solo 1/2 (sin numero adelante), usamos el grafico de torta
-                if (enteros === 0 && !c.startsWith("0")) return `<div class="chapa"><div class="pie-half"></div></div>`;
+            // LOGICA GEOMETRICA PRECISA
+            const esMedio = c.includes("1/2") || c.includes("½");
+            const elementClass = esMedio ? "ring" : "dot"; 
+            
+            let cantidad = 0;
+            if (c.startsWith("1")) cantidad = 1;
+            else if (c.startsWith("2")) cantidad = 2;
+            else if (c.startsWith("3")) cantidad = 3;
+            else if (c.startsWith("4")) cantidad = 4;
 
-                // Generar anillos
-                let ringsHtml = "";
-                for(let i=0; i<enteros; i++) {
-                    ringsHtml += `<div class="circle-open"></div>`;
-                }
-                return `<div class="chapa"><div class="rings-container">${ringsHtml}</div></div>`;
-            }
-
-            // 4. FRACCIONES DE CUERPO (3/4, 1/4) -> Grafico Torta
+            if (esMedio && cantidad === 0 && !c.startsWith("0")) return `<div class="chapa"><div class="pie-half"></div></div>`;
             if (c.includes("3/4")) return `<div class="chapa"><div class="pie-34"></div></div>`;
 
-            // 5. CUERPOS ENTEROS (Puntos Rellenos)
-            if (c === "1") return `<div class="chapa"><div class="dice-grid d-1"><div class="dot"></div></div></div>`;
-            if (c === "2") return `<div class="chapa"><div class="dice-grid d-2"><div class="dot pos-tl"></div><div class="dot pos-br"></div></div></div>`;
-            if (c === "3") return `<div class="chapa"><div class="dice-grid d-3"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
-            if (c === "4") return `<div class="chapa"><div class="dice-grid d-4"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
-
-            // 6. VARIOS CUERPOS (6 Puntos)
-            if (c.includes("VAR") || parseInt(c) >= 5) {
-                return `<div class="chapa"><div class="dice-grid d-6"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+            // 1 o 1 1/2
+            if (cantidad === 1) {
+                return `<div class="chapa"><div class="grid-container d-1"><div class="${elementClass}"></div></div></div>`;
+            }
+            // 2 o 2 1/2 (Diagonal)
+            if (cantidad === 2) {
+                return `<div class="chapa"><div class="grid-container d-2"><div class="${elementClass} pos-tl"></div><div class="${elementClass} pos-br"></div></div></div>`;
+            }
+            // 3 o 3 1/2 (Triangulo)
+            if (cantidad === 3) {
+                return `<div class="chapa"><div class="grid-container d-3"><div class="${elementClass} pos-top-mid"></div><div class="${elementClass} pos-bot-left"></div><div class="${elementClass} pos-bot-right"></div></div></div>`;
+            }
+            // 4 (Cuadrado)
+            if (cantidad === 4 && !esMedio) {
+                return `<div class="chapa"><div class="grid-container d-2"><div class="dot pos-tl"></div><div class="dot pos-tr"></div><div class="dot pos-bl"></div><div class="dot pos-br"></div></div></div>`;
             }
 
-            // Default fallback
+            // VARIOS
+            if (c.includes("VAR") || cantidad >= 5) { 
+                return `<div class="chapa"><div class="grid-container d-6"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+            }
+
             return `<div class="chapa" style="font-size:14px; padding:2px;">${c}</div>`;
         }
 
@@ -328,48 +199,47 @@
             try {
                 const r = await fetch('marcador_oficial.json?nc=' + Date.now());
                 const d = await r.json();
-
                 const container = document.getElementById('main-container');
                 if (!d.visible) { container.classList.remove('visible'); return; }
 
-                // Datos Generales
                 document.getElementById('lbl-num-carrera').innerText = d.carrera + "ª";
                 document.getElementById('lbl-premio').innerText = "PREMIO " + (d.premio || "");
-
-                // Datos Ganador
                 document.getElementById('val-caballo').innerText = d.ganador.nombre;
                 document.getElementById('val-jockey').innerText = d.ganador.jockey;
                 document.getElementById('val-entrenador').innerText = d.ganador.entrenador;
                 document.getElementById('val-stud').innerText = d.ganador.stud;
                 document.getElementById('val-tiempo').innerText = d.ganador.tiempo;
+                
+                let numGanador = d.marcador[0] ? d.marcador[0].numero : "?";
+                const boxMandil = document.getElementById('mandil-ganador-box');
+                boxMandil.innerText = numGanador;
+                boxMandil.className = `mandil-ganador m${numGanador}`;
 
-                // Render Marcador
                 const lista = document.getElementById('lista-puestos');
                 lista.innerHTML = "";
 
                 d.marcador.forEach((item, idx) => {
                     const romano = ROMANOS[idx] || (idx+1);
-                    // Si es el 1ro, no lleva distancia
-                    let htmlDist = "";
-                    if (idx > 0) {
-                        htmlDist = generarIcono(item.distancia);
-                    }
-                    
+                    const htmlDist = generarIcono(item.distancia);
+                    let textLabel = "";
+                    if(idx === 0 && item.distancia) textLabel = "GANADA POR";
+                    if(idx === 1 && item.distancia) textLabel = "DEL 2º AL 3º";
+
                     const fila = `
                         <div class="fila-puesto">
                             <span class="lbl-puesto">${romano}</span>
                             <div class="mandil-box m${item.numero}">${item.numero}</div>
-                            <div class="distancia-box">${htmlDist}</div>
+                            <div class="distancia-wrapper">
+                                <span class="dist-label-text">${textLabel}</span>
+                                ${htmlDist}
+                            </div>
                         </div>
                     `;
                     lista.innerHTML += fila;
                 });
-
                 container.classList.add('visible');
-
             } catch(e) {}
         }
-
         setInterval(loop, 500);
     </script>
 </body>
