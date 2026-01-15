@@ -1,0 +1,38 @@
+{
+    "visible": true,
+    "carrera": "9",
+    "premio": "CLASICO CARLOS PELLEGRINI",
+    "ganador": {
+        "nombre": "SUFFOK",
+        "jockey": "Moran Facundo R.",
+        "entrenador": "Noguera Assad Lazaro",
+        "stud": "L.C.J.",
+        "tiempo": "2' 7\" 2/5"
+    },
+    "marcador": [
+        {
+            "numero": "8",
+            "distancia": "2 1/2 CPOS"
+        },
+        {
+            "numero": "1",
+            "distancia": "VARIOS CPOS"
+        },
+        {
+            "numero": "4",
+            "distancia": "1/2 CZA"
+        },
+        {
+            "numero": "6",
+            "distancia": ""
+        },
+        {
+            "numero": "7",
+            "distancia": ""
+        },
+        {
+            "numero": "9",
+            "distancia": ""
+        }
+    ]
+}
