@@ -13,6 +13,7 @@ ARCHIVO_COMANDO = "comando_reloj.json"
 ARCHIVO_PASEO = "paseo.json"
 ARCHIVO_PANTALLA = "pantalla_completa.json"
 ARCHIVO_RESULTADOS = "marcador_oficial.json"
+ARCHIVO_DIVIDENDOS = "dividendos_oficial.json"
 
 # --- GLOBALES ---
 carreras_cargadas = []
@@ -37,17 +38,21 @@ entry_res_tiempo = None
 combo_res_ganador = None
 entries_res_datos = {} 
 filas_marcador_oficial = [] 
-btn_res_toggle = None # Declarado aqui
+btn_res_toggle = None 
+
+# Variables Pestaña Dividendos
+vars_div = {} 
 
 # =============================================================================
 # FUNCIONES SISTEMA
 # =============================================================================
 def inicializar_sistema():
-    print("--- INICIANDO SISTEMA V26 (DISTANCIAS LIMITADAS A 3) ---")
+    print("--- INICIANDO SISTEMA V31 (FIX AUTOCOMPLETAR) ---")
     guardar_json(ARCHIVO_MARCADOR, []) 
     guardar_json(ARCHIVO_PASEO, {"visible": False})
     guardar_json(ARCHIVO_PANTALLA, {"visible": False})
     guardar_json(ARCHIVO_RESULTADOS, {"visible": False})
+    guardar_json(ARCHIVO_DIVIDENDOS, {"visible": False})
     enviar_comando_reloj("RESET")
     datos_vacios = {"num_carrera": "", "distancia": "", "premio": "", "condicion": "", "estado_pista": "", "visible": False}
     guardar_json(ARCHIVO_DATOS, datos_vacios)
@@ -144,24 +149,18 @@ def cargar_excel():
             lbl_status.config(text=f"✅ LISTO: {len(datos)} Carreras", fg="#2ecc71")
         else: messagebox.showwarning("Error", "No se encontraron carreras.")
 
-# --- MEMORIA GENERAL ---
 def guardar_estado_carrera_anterior():
     if not carrera_actual_data: return
     c_id = carrera_actual_data['id']
-    # Grid Pantalla
     grid_data = {}
     for item in entradas_pantalla:
         grid_data[str(item["num"])] = { "gan": item["gan"].get(), "col2": item["col2"].get(), "col3": item["col3"].get(), "col4": item["col4"].get() }
-    # Checkboxes Pantalla
     ret_data = []
     for item in checklist_vars:
         if item["var"].get(): ret_data.append(str(item["num"]))
-    # Headers
     headers = { "h2": combo_head_2.get() if combo_head_2 else "EXACTA", "h3": combo_head_3.get() if combo_head_3 else "TRIFECTA", "h4": combo_head_4.get() if combo_head_4 else "DOBLE" }
-    
     memoria_global_gui[c_id] = { "grid": grid_data, "retirados": ret_data, "headers": headers }
     
-    # GUARDAR ESTADO DE RESULTADOS
     res_data = {
         "ganador_num": combo_res_ganador.get().split(" - ")[0] if combo_res_ganador.get() else "",
         "ganador_nom": entries_res_datos["nombre"].get(),
@@ -199,6 +198,7 @@ def seleccionar_carrera(event):
         actualizar_grilla_pantalla()
         cargar_checklist_retirados()
         actualizar_pestana_resultados() 
+        limpiar_pestana_dividendos()
 
 def enviar_placa_info():
     global visibilidad_placa; visibilidad_placa = True; guardar_placa_json()
@@ -234,9 +234,6 @@ def abrir_pagos():
         win.destroy()
     tk.Button(win, text="💾 GUARDAR Y CERRAR", command=guardar_y_cerrar, bg="#27ae60", fg="white", font=("bold", 12), height=2).grid(row=2, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
 
-# =============================================================================
-# CONTROLES VIVO
-# =============================================================================
 def btn_start(): global reloj_corriendo; reloj_corriendo = True; enviar_comando_reloj("START"); actualizar_estado_reloj()
 def btn_parcial(): enviar_comando_reloj("PARCIAL")
 def btn_final(): global reloj_corriendo; reloj_corriendo = False; enviar_comando_reloj("FINALIZAR"); actualizar_estado_reloj()
@@ -256,7 +253,6 @@ def construir_datos_marcador(visible):
         if num_str:
             nombre = "COMPETIDOR"; 
             for c in caballos_obj:
-                # Busqueda flexible
                 if str(c["numero"]).strip() == num_str: nombre = c["nombre"]; break
             datos.append({ "posicion": i+1, "numero": num_str, "nombre": nombre, "dividendo": dividendos_memoria.get(num_str, "") })
     return datos
@@ -266,9 +262,6 @@ def toggle_marcador_tv():
     if visibilidad_marcador: btn_mar_toggle.config(text="👁️ OCULTAR", bg="#7f8c8d"); btn_act_marcador.config(bg="#2ecc71", text="✅ EN AIRE")
     else: btn_mar_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71"); btn_act_marcador.config(bg="#8e44ad", text="🚀 ENVIAR A TV (Oculto)")
 
-# =============================================================================
-# CONTROL PASEO
-# =============================================================================
 def guardar_cambios_paseo_actual():
     idx = combo_paseo.current(); 
     if idx < 0 or not carrera_actual_data: return
@@ -321,9 +314,6 @@ def ciclo_automatico_paseo():
     if chk_auto_var.get() and visibilidad_paseo and carrera_actual_data: siguiente_caballo()
     root.after(20000, ciclo_automatico_paseo)
 
-# =============================================================================
-# PANTALLA COMPLETA (MODIFICADO PARA 4 COLUMNAS)
-# =============================================================================
 entradas_pantalla = []; checklist_vars = []
 
 def actualizar_grilla_pantalla():
@@ -448,7 +438,7 @@ def key_handler(event):
     if event.keysym == 'F4': btn_reset()
 
 # =============================================================================
-# NUEVO MODULO: RESULTADOS Y MARCADOR FINAL
+# RESULTADOS Y MARCADOR FINAL
 # =============================================================================
 def actualizar_pestana_resultados():
     if not carrera_actual_data: return
@@ -457,7 +447,6 @@ def actualizar_pestana_resultados():
         "ganador_num": "", "ganador_nom": "", "ganador_joc": "", "ganador_entr": "", "ganador_stud": "", "tiempo": "", "marcador": []
     })
 
-    # Llenar Combo Ganador
     lista_cab = [f"{c['numero']} - {c['nombre']}" for c in carrera_actual_data['caballos']]
     combo_res_ganador['values'] = lista_cab
     if datos_res["ganador_num"]:
@@ -472,16 +461,10 @@ def actualizar_pestana_resultados():
     entries_res_datos["stud"].delete(0, tk.END); entries_res_datos["stud"].insert(0, datos_res["ganador_stud"])
     entry_res_tiempo.delete(0, tk.END); entry_res_tiempo.insert(0, datos_res["tiempo"])
 
-    # Llenar filas del 1 al 6
     marcador_data = datos_res.get("marcador", [])
-    
-    # 1. Primero limpiamos todas las listas para evitar mezclas
     for i in range(6):
         fila_widgets = filas_marcador_oficial[i]
-        fila_widgets["combo_cab"]['values'] = lista_cab # Reload full list first
-        
-    for i in range(6):
-        fila_widgets = filas_marcador_oficial[i]
+        fila_widgets["combo_cab"]['values'] = lista_cab
         if i < len(marcador_data):
             num_guardado = marcador_data[i]["numero"]
             dist_guardada = marcador_data[i]["distancia"]
@@ -491,14 +474,13 @@ def actualizar_pestana_resultados():
                         fila_widgets["combo_cab"].set(val); break
             else: fila_widgets["combo_cab"].set("")
             
-            # Solo seteamos si existe el combo (los 4,5,6 no tienen combo_dist ahora)
-            if fila_widgets["combo_dist"]:
-                fila_widgets["combo_dist"].set(dist_guardada)
+            if fila_widgets["combo_dist"]: fila_widgets["combo_dist"].set(dist_guardada)
         else:
             fila_widgets["combo_cab"].set("")
             if fila_widgets["combo_dist"]: fila_widgets["combo_dist"].set("")
     
     actualizar_listas_inteligentes()
+    actualizar_prediccion_dividendos() # Actualizar sugerencias
 
 def actualizar_listas_inteligentes():
     if not carrera_actual_data: return
@@ -520,6 +502,7 @@ def actualizar_listas_inteligentes():
 
 def al_seleccionar_caballo_marcador(event):
     actualizar_listas_inteligentes()
+    actualizar_prediccion_dividendos()
 
 def al_seleccionar_ganador(event):
     if not carrera_actual_data: return
@@ -535,6 +518,7 @@ def al_seleccionar_ganador(event):
         
         filas_marcador_oficial[0]["combo_cab"].set(val)
         actualizar_listas_inteligentes()
+        actualizar_prediccion_dividendos()
 
 def enviar_resultados_oficiales():
     global visibilidad_resultados; visibilidad_resultados = True
@@ -543,21 +527,19 @@ def enviar_resultados_oficiales():
     num_car = "".join(filter(str.isdigit, carrera_actual_data['id']))
     if not num_car: num_car = "1"
     
-    nombre_premio = carrera_actual_data.get('premio', '').replace('PREMIO', '').replace('"', '').strip()
-    
+    nombre_premio = carrera_actual_data.get('premio', '').strip().upper()
+    distancia_carrera = entry_dist.get()
+
     marcador_export = []
     for fila in filas_marcador_oficial:
         val_cab = fila["combo_cab"].get()
         if val_cab:
             num = val_cab.split(" - ")[0]
-            # Si tiene combo_dist (1,2,3) lo usa, sino vacio
             dist = fila["combo_dist"].get() if fila["combo_dist"] else ""
             marcador_export.append({"numero": num, "distancia": dist})
             
     data = {
-        "visible": True,
-        "carrera": num_car,
-        "premio": nombre_premio, 
+        "visible": True, "carrera": num_car, "premio": nombre_premio, "distancia": distancia_carrera,
         "ganador": {
             "nombre": entries_res_datos["nombre"].get(),
             "jockey": entries_res_datos["jockey"].get(),
@@ -567,7 +549,6 @@ def enviar_resultados_oficiales():
         },
         "marcador": marcador_export
     }
-    
     guardar_json(ARCHIVO_RESULTADOS, data)
     btn_res_toggle.config(text="👁️ OCULTAR", bg="#7f8c8d")
 
@@ -577,9 +558,135 @@ def toggle_resultados():
     else: guardar_json(ARCHIVO_RESULTADOS, {"visible": False}); btn_res_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
 
 # =============================================================================
+# NUEVA PESTAÑA: DIVIDENDOS MANUALES
+# =============================================================================
+def actualizar_prediccion_dividendos():
+    # Obtiene numeros del marcador para autocompletar combinaciones
+    m = []
+    for f in filas_marcador_oficial:
+        val = f["combo_cab"].get()
+        if val: m.append(val.split(" - ")[0])
+    
+    # CORREGIDO: Usar delete/insert en lugar de set() para Entry
+    if len(m) >= 2: 
+        vars_div["comb_ex"].delete(0, tk.END)
+        vars_div["comb_ex"].insert(0, f"{m[0]}-{m[1]}")
+    else: 
+        vars_div["comb_ex"].delete(0, tk.END)
+    
+    if len(m) >= 3: 
+        vars_div["comb_tri"].delete(0, tk.END)
+        vars_div["comb_tri"].insert(0, f"{m[0]}-{m[1]}-{m[2]}")
+    else: 
+        vars_div["comb_tri"].delete(0, tk.END)
+
+def autocompletar_desde_marcador():
+    actualizar_prediccion_dividendos() # Llama la funcion que llena
+    messagebox.showinfo("Auto-Completar", "Combinaciones Exacta y Trifecta copiadas del Marcador.")
+
+def limpiar_pestana_dividendos():
+    # Limpia campos al cambiar carrera
+    for k, v in vars_div.items():
+        # Si es un Entry (cajas de texto)
+        if isinstance(v, tk.Entry): 
+            v.delete(0, tk.END)
+        # Si es StringVar (y no son los radios)
+        elif isinstance(v, tk.StringVar) and k != "sel_ex" and k != "sel_tri": 
+            v.set("")
+    # Reset Radios
+    vars_div["sel_ex"].set("EXA") 
+    vars_div["sel_tri"].set("TRI")
+
+def enviar_placa_dividendos_manual():
+    if not carrera_actual_data: return
+    num_car = "".join(filter(str.isdigit, carrera_actual_data['id']))
+    nombre_premio = carrera_actual_data.get('premio', '').strip().upper()
+    distancia = entry_dist.get()
+
+    # 1. Marcador
+    marcador = []
+    for fila in filas_marcador_oficial:
+        val_cab = fila["combo_cab"].get()
+        if val_cab:
+            num = val_cab.split(" - ")[0]
+            nombre_cab = val_cab.split(" - ")[1] if " - " in val_cab else ""
+            jockey_cab = ""
+            for c in carrera_actual_data['caballos']:
+                if str(c['numero']) == num:
+                    jockey_cab = c['jockey']; break
+            marcador.append({"puesto": len(marcador)+1, "numero": num, "nombre": nombre_cab, "jockey": jockey_cab})
+
+    # 2. Pagos Unitarios
+    pagos_unitarios = []
+    # Ganador
+    if vars_div["gan_monto"].get():
+        num = marcador[0]["numero"] if len(marcador) > 0 else "?"
+        nom = marcador[0]["nombre"] if len(marcador) > 0 else ""
+        pagos_unitarios.append({"tipo": "GAN", "numero": num, "nombre": nom, "monto": vars_div["gan_monto"].get()})
+    # Segundo
+    if vars_div["seg_monto"].get():
+        num = marcador[1]["numero"] if len(marcador) > 1 else "?"
+        nom = marcador[1]["nombre"] if len(marcador) > 1 else ""
+        pagos_unitarios.append({"tipo": "SEG", "numero": num, "nombre": nom, "monto": vars_div["seg_monto"].get()})
+    # Tercero
+    if vars_div["ter_monto"].get():
+        num = marcador[2]["numero"] if len(marcador) > 2 else "?"
+        nom = marcador[2]["nombre"] if len(marcador) > 2 else ""
+        pagos_unitarios.append({"tipo": "TER", "numero": num, "nombre": nom, "monto": vars_div["ter_monto"].get()})
+
+    # 3. Apuestas
+    apuestas = []
+    
+    # Exacta / Imperfecta
+    if vars_div["comb_ex"].get() and vars_div["monto_ex"].get():
+        apuestas.append({
+            "nombre": "EXACTA" if vars_div["sel_ex"].get() == "EXA" else "IMPERF.",
+            "combinacion": vars_div["comb_ex"].get(),
+            "pago": vars_div["monto_ex"].get()
+        })
+    
+    # Trifecta / Cuatrifecta
+    if vars_div["comb_tri"].get() and vars_div["monto_tri"].get():
+        apuestas.append({
+            "nombre": "TRIFECTA" if vars_div["sel_tri"].get() == "TRI" else "CUATRIF.",
+            "combinacion": vars_div["comb_tri"].get(),
+            "pago": vars_div["monto_tri"].get()
+        })
+
+    # Doble
+    if vars_div["comb_dob"].get() and vars_div["monto_dob"].get():
+        apuestas.append({"nombre": "DOBLE", "combinacion": vars_div["comb_dob"].get(), "pago": vars_div["monto_dob"].get()})
+        
+    # Triplo
+    if vars_div["comb_tpl"].get() and vars_div["monto_tpl"].get():
+        apuestas.append({"nombre": "TRIPLO", "combinacion": vars_div["comb_tpl"].get(), "pago": vars_div["monto_tpl"].get()})
+        
+    # Cuaterna
+    if vars_div["comb_cua"].get() and vars_div["monto_cua"].get():
+        apuestas.append({"nombre": "CUATERNA", "combinacion": vars_div["comb_cua"].get(), "pago": vars_div["monto_cua"].get()})
+        
+    # Quintuplo
+    if vars_div["comb_qui"].get() and vars_div["monto_qui"].get():
+        apuestas.append({"nombre": "QUINTUPLO", "combinacion": vars_div["comb_qui"].get(), "pago": vars_div["monto_qui"].get()})
+
+    # Cadena
+    if vars_div["comb_cad"].get() and vars_div["monto_cad"].get():
+        apuestas.append({"nombre": "CADENA", "combinacion": vars_div["comb_cad"].get(), "pago": vars_div["monto_cad"].get()})
+
+    data = {
+        "visible": True, "carrera": num_car, "premio": nombre_premio, "distancia": distancia,
+        "marcador": marcador, "pagos_unitarios": pagos_unitarios, "apuestas": apuestas 
+    }
+    guardar_json(ARCHIVO_DIVIDENDOS, data)
+    messagebox.showinfo("Éxito", "Placa Dividendos Enviada")
+
+def toggle_dividendos():
+    guardar_json(ARCHIVO_DIVIDENDOS, {"visible": False})
+
+# =============================================================================
 # VENTANA PRINCIPAL
 # =============================================================================
-root = tk.Tk(); root.title("CONSOLA DE MANDO V26 - LIMITED DISTANCES"); root.geometry("1300x850"); root.configure(bg="#2c3e50") 
+root = tk.Tk(); root.title("CONSOLA DE MANDO V31 - FINAL PRO (FIXED)"); root.geometry("1300x850"); root.configure(bg="#2c3e50") 
 p_izq = tk.Frame(root, bg="#ecf0f1", padx=10, pady=10); p_izq.place(relx=0, rely=0, relwidth=0.30, relheight=1)
 tk.Label(p_izq, text="1. CONFIGURACIÓN", font=("Segoe UI", 14, "bold"), bg="#ecf0f1", fg="#7f8c8d").pack(anchor="w")
 fr_carga = tk.LabelFrame(p_izq, text="Archivo", bg="#ecf0f1"); fr_carga.pack(fill="x", pady=5); tk.Button(fr_carga, text="📂 EXCEL", command=cargar_excel, bg="#bdc3c7").pack(side="left", padx=5, pady=5); combo_selector = ttk.Combobox(fr_carga, state="readonly"); combo_selector.pack(side="left", fill="x", expand=True, padx=5); combo_selector.bind("<<ComboboxSelected>>", seleccionar_carrera)
@@ -614,29 +721,101 @@ tk.Label(fr_marcador_of, text="Puesto", bg="#34495e", fg="white", font=("bold",9
 tk.Label(fr_marcador_of, text="Caballo", bg="#34495e", fg="white", font=("bold",9)).grid(row=0, column=1)
 tk.Label(fr_marcador_of, text="Distancia al Anterior", bg="#34495e", fg="white", font=("bold",9)).grid(row=0, column=2)
 
-distancias_opciones = [
-    "", "1 CPO", "1 1/2 CPOS", 
-    "2 CPOS", "2 1/2 CPOS", 
-    "3 CPOS", "3 1/2 CPOS",  # <-- AGREGADO
-    "4 CPOS", "VARIOS CPOS", 
-    "CZA", "1/2 CZA", "PZO", "1/2 PZO", 
-    "HOCICO", "V.M.", "S.A."
-]
+distancias_opciones = ["", "1 CPO", "1 1/2 CPOS", "2 CPOS", "2 1/2 CPOS", "3 CPOS", "3 1/2 CPOS", "4 CPOS", "VARIOS CPOS", "CZA", "1/2 CZA", "PZO", "1/2 PZO", "HOCICO", "V.M.", "S.A."]
 
 for i in range(6):
     tk.Label(fr_marcador_of, text=f"{i+1}°", font=("bold", 12), bg="#34495e", fg="white").grid(row=i+1, column=0, padx=5, pady=5)
     cb_cab = ttk.Combobox(fr_marcador_of, state="readonly", width=25); cb_cab.grid(row=i+1, column=1, padx=5, pady=5); cb_cab.bind("<<ComboboxSelected>>", al_seleccionar_caballo_marcador)
-    
-    # SOLO MOSTRAMOS COMBO DISTANCIA PARA 1ro, 2do y 3ro (indices 0, 1, 2)
     cb_dist = None
-    if i < 3:
+    if i < 3: 
         cb_dist = ttk.Combobox(fr_marcador_of, values=distancias_opciones, state="readonly", width=15)
         cb_dist.grid(row=i+1, column=2, padx=5, pady=5)
-    
     filas_marcador_oficial.append({ "combo_cab": cb_cab, "combo_dist": cb_dist })
 
 btn_enviar_res = tk.Button(tab_resultados, text="🏁 ENVIAR RESULTADOS", command=enviar_resultados_oficiales, bg="#27ae60", fg="white", font=("bold", 14), height=2); btn_enviar_res.pack(side="left", fill="x", expand=True, pady=10)
 btn_res_toggle = tk.Button(tab_resultados, text="👁️ OCULTAR", command=toggle_resultados, bg="#7f8c8d", fg="white", font=("bold", 10), width=15, height=2); btn_res_toggle.pack(side="right", padx=10, pady=10)
+
+# --- NUEVA PESTAÑA: DIVIDENDOS MANUALES ---
+tab_dividendos = tk.Frame(notebook, bg="#34495e", padx=20, pady=20); notebook.add(tab_dividendos, text=" DIVIDENDOS OFICIALES ")
+
+# Boton AUTO-COMPLETAR
+btn_auto = tk.Button(tab_dividendos, text="🔮 AUTOCOMPLETAR DESDE MARCADOR", command=autocompletar_desde_marcador, bg="#8e44ad", fg="white", font=("bold", 12))
+btn_auto.pack(fill="x", pady=5)
+
+# Sección Unitarios (Ganador / Seg / Ter)
+fr_uni = tk.LabelFrame(tab_dividendos, text="Pagos Unitarios ($)", bg="#34495e", fg="white", padx=10, pady=10)
+fr_uni.pack(fill="x", pady=5)
+tk.Label(fr_uni, text="GANADOR:", bg="#34495e", fg="#f1c40f", font=("bold", 10)).grid(row=0, column=0, sticky="e")
+vars_div["gan_monto"] = tk.Entry(fr_uni, width=10); vars_div["gan_monto"].grid(row=0, column=1, padx=5)
+tk.Label(fr_uni, text="SEGUNDO:", bg="#34495e", fg="white", font=("bold", 10)).grid(row=0, column=2, sticky="e")
+vars_div["seg_monto"] = tk.Entry(fr_uni, width=10); vars_div["seg_monto"].grid(row=0, column=3, padx=5)
+tk.Label(fr_uni, text="TERCERO:", bg="#34495e", fg="white", font=("bold", 10)).grid(row=0, column=4, sticky="e")
+vars_div["ter_monto"] = tk.Entry(fr_uni, width=10); vars_div["ter_monto"].grid(row=0, column=5, padx=5)
+
+# Sección Combinadas
+fr_comb = tk.LabelFrame(tab_dividendos, text="Apuestas Combinadas", bg="#34495e", fg="white", padx=10, pady=10)
+fr_comb.pack(fill="both", expand=True, pady=5)
+
+# Exacta / Imperfecta
+fr_ex = tk.Frame(fr_comb, bg="#34495e", pady=5); fr_ex.pack(fill="x")
+vars_div["sel_ex"] = tk.StringVar(value="EXA")
+tk.Radiobutton(fr_ex, text="EXACTA", variable=vars_div["sel_ex"], value="EXA", bg="#34495e", fg="white", selectcolor="#2c3e50").pack(side="left")
+tk.Radiobutton(fr_ex, text="IMPERFECTA", variable=vars_div["sel_ex"], value="IMP", bg="#34495e", fg="white", selectcolor="#2c3e50").pack(side="left")
+tk.Label(fr_ex, text="Comb:", bg="#34495e", fg="#bdc3c7").pack(side="left", padx=5)
+vars_div["comb_ex"] = tk.Entry(fr_ex, width=10); vars_div["comb_ex"].pack(side="left")
+tk.Label(fr_ex, text="$", bg="#34495e", fg="white").pack(side="left", padx=5)
+vars_div["monto_ex"] = tk.Entry(fr_ex, width=12); vars_div["monto_ex"].pack(side="left")
+
+# Trifecta / Cuatrifecta
+fr_tri = tk.Frame(fr_comb, bg="#34495e", pady=5); fr_tri.pack(fill="x")
+vars_div["sel_tri"] = tk.StringVar(value="TRI")
+tk.Radiobutton(fr_tri, text="TRIFECTA", variable=vars_div["sel_tri"], value="TRI", bg="#34495e", fg="white", selectcolor="#2c3e50").pack(side="left")
+tk.Radiobutton(fr_tri, text="CUATRIFECTA", variable=vars_div["sel_tri"], value="CUA", bg="#34495e", fg="white", selectcolor="#2c3e50").pack(side="left")
+tk.Label(fr_tri, text="Comb:", bg="#34495e", fg="#bdc3c7").pack(side="left", padx=5)
+vars_div["comb_tri"] = tk.Entry(fr_tri, width=15); vars_div["comb_tri"].pack(side="left")
+tk.Label(fr_tri, text="$", bg="#34495e", fg="white").pack(side="left", padx=5)
+vars_div["monto_tri"] = tk.Entry(fr_tri, width=12); vars_div["monto_tri"].pack(side="left")
+
+# Doble
+fr_dob = tk.Frame(fr_comb, bg="#34495e", pady=5); fr_dob.pack(fill="x")
+tk.Label(fr_dob, text="DOBLE:", bg="#34495e", fg="white", font=("bold",10), width=12, anchor="w").pack(side="left")
+vars_div["comb_dob"] = tk.Entry(fr_dob, width=15); vars_div["comb_dob"].pack(side="left")
+tk.Label(fr_dob, text="$", bg="#34495e", fg="white").pack(side="left", padx=5)
+vars_div["monto_dob"] = tk.Entry(fr_dob, width=12); vars_div["monto_dob"].pack(side="left")
+
+# Triplo
+fr_tpl = tk.Frame(fr_comb, bg="#34495e", pady=5); fr_tpl.pack(fill="x")
+tk.Label(fr_tpl, text="TRIPLO:", bg="#34495e", fg="white", font=("bold",10), width=12, anchor="w").pack(side="left")
+vars_div["comb_tpl"] = tk.Entry(fr_tpl, width=15); vars_div["comb_tpl"].pack(side="left")
+tk.Label(fr_tpl, text="$", bg="#34495e", fg="white").pack(side="left", padx=5)
+vars_div["monto_tpl"] = tk.Entry(fr_tpl, width=12); vars_div["monto_tpl"].pack(side="left")
+
+# Cuaterna
+fr_cua = tk.Frame(fr_comb, bg="#34495e", pady=5); fr_cua.pack(fill="x")
+tk.Label(fr_cua, text="CUATERNA:", bg="#34495e", fg="white", font=("bold",10), width=12, anchor="w").pack(side="left")
+vars_div["comb_cua"] = tk.Entry(fr_cua, width=15); vars_div["comb_cua"].pack(side="left")
+tk.Label(fr_cua, text="$", bg="#34495e", fg="white").pack(side="left", padx=5)
+vars_div["monto_cua"] = tk.Entry(fr_cua, width=12); vars_div["monto_cua"].pack(side="left")
+
+# Quintuplo
+fr_qui = tk.Frame(fr_comb, bg="#34495e", pady=5); fr_qui.pack(fill="x")
+tk.Label(fr_qui, text="QUINTUPLO:", bg="#34495e", fg="white", font=("bold",10), width=12, anchor="w").pack(side="left")
+vars_div["comb_qui"] = tk.Entry(fr_qui, width=15); vars_div["comb_qui"].pack(side="left")
+tk.Label(fr_qui, text="$", bg="#34495e", fg="white").pack(side="left", padx=5)
+vars_div["monto_qui"] = tk.Entry(fr_qui, width=12); vars_div["monto_qui"].pack(side="left")
+
+# Cadena
+fr_cad = tk.Frame(fr_comb, bg="#34495e", pady=5); fr_cad.pack(fill="x")
+tk.Label(fr_cad, text="CADENA:", bg="#34495e", fg="white", font=("bold",10), width=12, anchor="w").pack(side="left")
+vars_div["comb_cad"] = tk.Entry(fr_cad, width=15); vars_div["comb_cad"].pack(side="left")
+tk.Label(fr_cad, text="$", bg="#34495e", fg="white").pack(side="left", padx=5)
+vars_div["monto_cad"] = tk.Entry(fr_cad, width=12); vars_div["monto_cad"].pack(side="left")
+
+# Botones Dividendos
+btn_env_div = tk.Button(tab_dividendos, text="💰 ENVIAR DIVIDENDOS OFICIALES", command=enviar_placa_dividendos_manual, bg="#e67e22", fg="white", font=("bold", 14), height=2)
+btn_env_div.pack(fill="x", pady=20)
+btn_hide_div = tk.Button(tab_dividendos, text="👁️ OCULTAR", command=toggle_dividendos, bg="#7f8c8d", fg="white", font=("bold", 10))
+btn_hide_div.pack(fill="x", padx=50)
 
 root.bind('<Key>', key_handler)
 inicializar_sistema(); root.bind_all("<Button-1>", lambda event: event.widget.focus_set()); root.mainloop()

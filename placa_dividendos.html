@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Placa Dividendos Oficial V48 - Geometría Perfecta</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&family=Chakra+Petch:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* COLORES */
+            --verde-tucuman: #00665c;
+            --azul-oscuro: #001a2c;
+            --naranja-oficial: #EF5B2B;
+            --amarillo-oficial: #f1c40f;
+            --blanco: #ffffff;
+            --fondo-gris: #1e272e;
+            
+            /* --- GEOMETRIA MAESTRA --- */
+            --ancho-izq: 32%; /* Ancho fijo columna izquierda */
+            --ancho-borde: 6px; /* Grosor de la linea divisoria */
+        }
+
+        body { margin: 0; padding: 0; width: 1920px; height: 1080px; background: transparent; font-family: 'Roboto', sans-serif; overflow: hidden; }
+
+        #main-container {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 1750px; height: 800px; display: flex; flex-direction: column;
+            filter: drop-shadow(0 30px 60px rgba(0,0,0,0.9)); 
+            opacity: 0; transition: opacity 0.5s;
+        }
+        #main-container.visible { opacity: 1; }
+
+        /* --- HEADER --- */
+        .top-bar { 
+            height: 90px; display: flex; 
+            border-bottom: var(--ancho-borde) solid var(--amarillo-oficial); 
+            border-radius: 15px 15px 0 0; overflow: hidden; 
+            flex-shrink: 0;
+        }
+        
+        .title-izq { 
+            /* FLEX 0 0 ASEGURA QUE NO SE ESTIRE NI ENCOJA */
+            flex: 0 0 var(--ancho-izq);
+            background: var(--naranja-oficial); 
+            display: flex; align-items: center; justify-content: center; 
+            font-family: 'Chakra Petch'; font-size: 40px; font-weight: 900; 
+            color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            /* Borde derecho EXACTO */
+            border-right: var(--ancho-borde) solid rgba(0,0,0,0.2); 
+            box-sizing: border-box; 
+        }
+        
+        .title-der { 
+            flex-grow: 1; /* Toma el resto */
+            background: var(--verde-tucuman); 
+            display: flex; align-items: center; padding-left: 40px; 
+            font-family: 'Roboto'; font-size: 32px; font-weight: 700; 
+            color: white; letter-spacing: 1px; 
+        }
+        .pill-num { background: white; color: var(--verde-tucuman); padding: 5px 15px; border-radius: 8px; margin-right: 20px; font-weight: 900; font-size: 38px; font-family: 'Chakra Petch'; }
+
+        /* --- CUERPO --- */
+        .body-content { flex-grow: 1; display: flex; border-radius: 0 0 15px 15px; overflow: hidden; background: var(--azul-oscuro); }
+
+        /* COLUMNA IZQ: MARCADOR */
+        .col-marcador { 
+            flex: 0 0 var(--ancho-izq); /* MISMO ANCHO QUE HEADER */
+            background: rgba(0,0,0,0.2); 
+            display: flex; flex-direction: column; 
+            border-right: var(--ancho-borde) solid var(--amarillo-oficial); 
+            padding: 15px 0; box-sizing: border-box;
+        }
+
+        .fila-marcador { 
+            flex-grow: 1; display: flex; align-items: center; 
+            padding: 0 25px; 
+            border-bottom: 2px solid rgba(255,255,255,0.05); 
+        }
+        
+        .lbl-puesto { 
+            width: 50px; color: var(--amarillo-oficial); 
+            font-family: 'Chakra Petch'; font-size: 38px; font-weight: 700; 
+            text-align: left; 
+        }
+        
+        .mandil-box-sm { 
+            width: 65px; height: 65px; 
+            display: flex; justify-content: center; align-items: center; 
+            font-size: 40px; font-weight: 900; color: white; 
+            border-radius: 8px; border: 3px solid rgba(255,255,255,0.4); 
+            box-shadow: 3px 3px 8px rgba(0,0,0,0.5); 
+            margin-right: 20px; flex-shrink: 0;
+        }
+        
+        .info-caballo { display: flex; flex-direction: column; justify-content: center; overflow: hidden; width: 100%; }
+        
+        .txt-nombre { 
+            color: white; font-size: 28px; /* Aumentado */
+            font-weight: 900; text-transform: uppercase; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            line-height: 1; margin-bottom: 4px;
+        }
+        
+        .txt-jockey { 
+            color: #bdc3c7; font-size: 17px; /* Aumentado */
+            font-weight: 700; text-transform: uppercase; 
+            letter-spacing: 1px; white-space: nowrap; 
+            overflow: hidden; text-overflow: ellipsis; 
+        }
+
+        /* --- COLUMNA DER: DIVIDENDOS --- */
+        .col-pagos { 
+            flex-grow: 1; 
+            background: var(--azul-oscuro); 
+            display: flex; flex-direction: column; 
+            padding: 0;
+        }
+
+        /* 1. SECCION GANADOR DESTACADO */
+        .box-ganador-top {
+            height: 35%; 
+            background: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0));
+            border-bottom: 2px solid var(--naranja-oficial);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 50px;
+        }
+
+        .ganador-info-wrapper { display: flex; align-items: center; gap: 30px; }
+        
+        .mandil-ganador-lg {
+            width: 130px; height: 130px;
+            font-size: 80px; font-weight: 900; color: white;
+            border-radius: 15px; border: 5px solid rgba(255,255,255,0.8);
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 25px rgba(0,0,0,0.6);
+        }
+
+        .textos-ganador-top { display: flex; flex-direction: column; }
+        .lbl-gan { color: var(--naranja-oficial); font-weight: 900; font-size: 26px; letter-spacing: 2px; }
+        .nom-gan { color: white; font-family: 'Chakra Petch'; font-weight: 900; font-size: 75px; line-height: 1; text-transform: uppercase; text-shadow: 4px 4px 0 rgba(0,0,0,0.5); }
+
+        .pago-ganador-lg { text-align: right; }
+        .lbl-pago-gan { color: #aaa; font-size: 20px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }
+        .val-pago-gan { font-family: 'Chakra Petch'; font-size: 90px; font-weight: 900; color: var(--amarillo-oficial); line-height: 0.9; text-shadow: 0 0 15px rgba(241, 196, 15, 0.3); }
+
+        /* 2. SECCION APUESTAS */
+        .box-apuestas-bottom {
+            height: 65%; padding: 25px 40px;
+            display: grid; grid-template-columns: 1fr 1fr; 
+            grid-auto-rows: min-content; gap: 15px 40px; 
+            align-content: start;
+        }
+
+        .row-apuesta {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-left: 6px solid var(--amarillo-oficial);
+            border-radius: 8px; padding: 8px 15px; /* Menos padding vertical */
+            height: 60px; /* Altura fija */
+        }
+
+        .lbl-apuesta { 
+            width: 140px; 
+            color: var(--amarillo-oficial); 
+            font-family: 'Chakra Petch'; font-weight: 700; font-size: 24px; 
+            text-transform: uppercase; flex-shrink: 0;
+        }
+        
+        /* CORRECCION CADENA: Letra adaptable */
+        .val-comb { 
+            flex-grow: 1; text-align: center; 
+            color: white; font-size: 26px; /* Un pelin mas chico base */
+            font-weight: 900; letter-spacing: 1px;
+            text-shadow: 2px 2px 4px black;
+            white-space: nowrap; 
+            overflow: hidden; text-overflow: ellipsis;
+            margin: 0 15px;
+        }
+        
+        /* CORRECCION MONTOS: No se rompen y tamaño justo */
+        .val-monto { 
+            width: auto; text-align: right; flex-shrink: 0;
+            color: #2ecc71; font-family: 'Chakra Petch'; font-weight: 900; 
+            font-size: 28px; /* Ajustado para que entren millones */
+            white-space: nowrap; 
+        }
+
+        /* Colores Mandiles */
+        .m1 { background-color: #d32f2f; } .m2 { background-color: #ffffff; color: black !important; } .m3 { background-color: #1565c0; } .m4 { background-color: #fdd835; color: black !important; } .m5 { background-color: #2e7d32; } .m6 { background-color: #000000; color: #f1c40f !important; border: 1px solid #555; } .m7 { background-color: #ef6c00; } .m8 { background-color: #f48fb1; color: black !important; } .m9 { background-color: #00bcd4; color: black !important; } .m10 { background-color: #7b1fa2; } .m11 { background-color: #9e9e9e; color: #da2128 !important; } .m12 { background-color: #71bf44; color: black !important; } .m13 { background-color: #a05b09; color: #f1c40f !important; } .m14 { background-color: #b71c1c; } .m15 { background-color: #f3d19c; color: black !important; } 
+    </style>
+</head>
+<body>
+    <div id="main-container">
+        <div class="top-bar">
+            <div class="title-izq">DIVIDENDOS</div>
+            <div class="title-der"><span class="pill-num" id="lbl-carrera">--</span><span id="lbl-premio">PREMIO ...</span></div>
+        </div>
+        <div class="body-content">
+            <div class="col-marcador" id="lista-marcador">
+                </div>
+
+            <div class="col-pagos">
+                <div class="box-ganador-top">
+                    <div class="ganador-info-wrapper">
+                        <div class="mandil-ganador-lg" id="mandil-ganador">?</div>
+                        <div class="textos-ganador-top">
+                            <span class="lbl-gan">GANADOR</span>
+                            <span class="nom-gan" id="nombre-ganador">---</span>
+                        </div>
+                    </div>
+                    <div class="pago-ganador-lg">
+                        <div class="lbl-pago-gan">PAGO</div>
+                        <div class="val-pago-gan" id="monto-ganador">$ 0.00</div>
+                    </div>
+                </div>
+                <div class="box-apuestas-bottom" id="lista-apuestas">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ROMANOS = ["I", "II", "III", "IV", "V", "VI"];
+
+        async function loop() {
+            try {
+                const r = await fetch('dividendos_oficial.json?nc=' + Date.now());
+                const d = await r.json();
+                
+                const container = document.getElementById('main-container');
+                if(!d.visible) { container.classList.remove('visible'); return; }
+                
+                // Header
+                document.getElementById('lbl-carrera').innerText = d.carrera + "ª";
+                let titulo = d.premio;
+                if(d.distancia) titulo += " - " + d.distancia;
+                document.getElementById('lbl-premio').innerText = titulo;
+
+                // Marcador Izquierdo
+                const cMarcador = document.getElementById('lista-marcador');
+                cMarcador.innerHTML = "";
+                if(d.marcador) {
+                    d.marcador.forEach((m, i) => {
+                        const row = `
+                            <div class="fila-marcador">
+                                <span class="lbl-puesto">${ROMANOS[i]}</span>
+                                <div class="mandil-box-sm m${m.numero}">${m.numero}</div>
+                                <div class="info-caballo">
+                                    <div class="txt-nombre">${m.nombre}</div>
+                                    <div class="txt-jockey">${m.jockey}</div>
+                                </div>
+                            </div>
+                        `;
+                        cMarcador.innerHTML += row;
+                    });
+                }
+
+                // Ganador
+                let ganadorData = { numero: "?", nombre: "---", monto: "---" };
+                if(d.pagos_unitarios) {
+                    const found = d.pagos_unitarios.find(p => p.tipo === "GAN");
+                    if(found) ganadorData = found;
+                }
+                const boxMandil = document.getElementById('mandil-ganador');
+                boxMandil.innerText = ganadorData.numero;
+                boxMandil.className = `mandil-ganador-lg m${ganadorData.numero}`;
+                document.getElementById('nombre-ganador').innerText = ganadorData.nombre;
+                
+                let m = ganadorData.monto.toString();
+                if(!m.includes("$") && !m.toLowerCase().includes("vac")) m = "$ " + m;
+                document.getElementById('monto-ganador').innerText = m;
+
+                // Apuestas
+                const cApuestas = document.getElementById('lista-apuestas');
+                cApuestas.innerHTML = "";
+                
+                // Seg / Ter
+                if(d.pagos_unitarios) {
+                    const seg = d.pagos_unitarios.find(p => p.tipo === "SEG");
+                    const ter = d.pagos_unitarios.find(p => p.tipo === "TER");
+                    
+                    if(seg && seg.monto) {
+                        let mS = seg.monto.includes("$") ? seg.monto : "$ " + seg.monto;
+                        cApuestas.innerHTML += `
+                            <div class="row-apuesta" style="border-left-color: #bdc3c7">
+                                <div class="lbl-apuesta" style="color:white">SEGUNDO</div>
+                                <div class="val-comb">${seg.numero}</div>
+                                <div class="val-monto" style="color:#bdc3c7">${mS}</div>
+                            </div>
+                        `;
+                    }
+                    if(ter && ter.monto) {
+                        let mT = ter.monto.includes("$") ? ter.monto : "$ " + ter.monto;
+                        cApuestas.innerHTML += `
+                            <div class="row-apuesta" style="border-left-color: #a05b09">
+                                <div class="lbl-apuesta" style="color:white">TERCERO</div>
+                                <div class="val-comb">${ter.numero}</div>
+                                <div class="val-monto" style="color:#e67e22">${mT}</div>
+                            </div>
+                        `;
+                    }
+                }
+
+                // Combinadas
+                if(d.apuestas) {
+                    d.apuestas.forEach(a => {
+                        let colorBorde = "var(--amarillo-oficial)";
+                        if(a.nombre.includes("EXA") || a.nombre.includes("IMP")) colorBorde = "#3498db";
+                        if(a.nombre.includes("TRI") || a.nombre.includes("CUA")) colorBorde = "#9b59b6";
+                        
+                        let montoStr = a.pago;
+                        if(!montoStr.includes("$") && !montoStr.toLowerCase().includes("vac")) montoStr = "$ " + montoStr;
+
+                        const row = `
+                            <div class="row-apuesta" style="border-left-color: ${colorBorde}">
+                                <div class="lbl-apuesta">${a.nombre}</div>
+                                <div class="val-comb">${a.combinacion}</div>
+                                <div class="val-monto">${montoStr}</div>
+                            </div>
+                        `;
+                        cApuestas.innerHTML += row;
+                    });
+                }
+
+                container.classList.add('visible');
+
+            } catch(e) {}
+        }
+        setInterval(loop, 1000);
+    </script>
+</body>
+</html>
