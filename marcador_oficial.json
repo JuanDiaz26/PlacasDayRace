@@ -1,38 +1,38 @@
 {
     "visible": true,
-    "carrera": "9",
-    "premio": "CLASICO \"CARLOS PELLEGRINI\"",
-    "distancia": "2000 METROS",
+    "carrera": "10",
+    "premio": "PREMIO \"ENRIQUE R. IRIARTE\"",
+    "distancia": "1400 METROS",
     "ganador": {
-        "nombre": "SUFFOK",
-        "jockey": "Moran Facundo R.",
-        "entrenador": "Noguera Assad Lazaro",
-        "stud": "L.C.J.",
-        "tiempo": ""
+        "nombre": "EUFEMIO",
+        "jockey": "Suarez Hector A.",
+        "entrenador": "Gallego Jose M.",
+        "stud": "LOS MOLESTOS",
+        "tiempo": "1'12\" 1/5"
     },
     "marcador": [
         {
-            "numero": "8",
+            "numero": "2",
             "distancia": "1 1/2 CPOS"
         },
         {
             "numero": "4",
-            "distancia": "3 CPOS"
-        },
-        {
-            "numero": "7",
-            "distancia": "VARIOS CPOS"
-        },
-        {
-            "numero": "9",
-            "distancia": ""
-        },
-        {
-            "numero": "1",
-            "distancia": ""
+            "distancia": "2 1/2 CPOS"
         },
         {
             "numero": "5",
+            "distancia": "VARIOS CPOS"
+        },
+        {
+            "numero": "7",
+            "distancia": ""
+        },
+        {
+            "numero": "8",
+            "distancia": ""
+        },
+        {
+            "numero": "3",
             "distancia": ""
         }
     ]

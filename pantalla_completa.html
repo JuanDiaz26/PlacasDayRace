@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Pantalla Oficial V35 - Tabla Optimizada</title>
+    <title>Pantalla Oficial V37 - Ticker Global Corregido</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@900&family=Chakra+Petch:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -56,65 +56,65 @@
         #inc-lbl { font-size: 24px; font-weight: 900; color: white; margin-right: 15px; }
         #inc-monto { font-size: 38px; font-weight: 900; color: var(--amarillo-oficial); text-shadow: 1px 1px 2px black; }
 
-        /* TABLA (Espacio fijo para 10 filas) */
+        /* TABLA */
         .table-container { flex-grow: 1; background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; margin-bottom: 10px; }
-        
-        /* --- CABECERA DE TABLA REDISTRIBUIDA --- */
         .tbl-head { 
             background: var(--verde-tucuman); color: white; 
-            display: grid; 
-            /* AQUI ESTA LA MAGIA: 70px (N) | 110px (GAN) | 1fr (RESTO PARA COMBINADA) */
-            grid-template-columns: 70px 110px 1fr; 
+            display: grid; grid-template-columns: 70px 110px 1fr; 
             padding: 12px; font-size: 26px; font-weight: 900; 
             text-align: center; border-bottom: 3px solid var(--amarillo-oficial); flex-shrink: 0; 
         }
         #tbl-body { flex-grow: 1; overflow: hidden; position: relative; }
-        
-        /* --- FILAS REDISTRIBUIDAS --- */
         .tbl-row { 
-            display: grid; 
-            grid-template-columns: 70px 110px 1fr; /* Misma proporcion que header */
+            display: grid; grid-template-columns: 70px 110px 1fr; 
             padding: 0 15px; align-items: center; 
             border-bottom: 1px solid rgba(255,255,255,0.1); font-family: 'Chakra Petch', sans-serif; 
             height: 52px; 
         }
         .tbl-row:nth-child(even) { background: rgba(255,255,255,0.03); }
-        
-        /* MANDIL */
         .mandil-box { width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: 900; color: white; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); text-shadow: 1px 1px 0 #000; margin: 0 auto; }
-        
-        /* PRECIO GANADOR (Centrado) */
         .price-val-gan { font-size: 32px; font-weight: 900; text-align: center; color: white; letter-spacing: 1px; }
-        
-        /* PRECIO COMBINADO (Alineado a la derecha, un poco mas chico para que entre texto) */
         .price-val-comb { 
-            font-size: 28px; /* Un poco mas chico para combinaciones largas */
-            font-weight: 700; text-align: right; /* Alineado a derecha */
-            padding-right: 20px; /* Margen para no pegar al borde */
-            color: var(--amarillo-oficial); letter-spacing: 0.5px; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* Puntos suspensivos si es larguisimo */
+            font-size: 28px; font-weight: 700; text-align: right; 
+            padding-right: 20px; color: var(--amarillo-oficial); 
+            letter-spacing: 0.5px; white-space: nowrap; 
+            overflow: hidden; text-overflow: ellipsis; 
         }
-
         .val-ret { color: #e74c3c !important; text-decoration: line-through; opacity: 0.6; }
 
-        /* LOGO ABAJO IZQUIERDA */
         #logo-container-left { display: flex; justify-content: center; align-items: flex-end; height: 160px; flex-shrink: 0; padding-bottom: 20px; }
         #logo-img-left { max-height: 140px; max-width: 90%; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
 
         /* COLUMNA DERECHA */
         #right-column { flex-grow: 1; width: 0; display: flex; flex-direction: column; position: relative; }
-        #ticker-strip { height: 45px; min-height: 45px; background: linear-gradient(90deg, #c0392b 0%, #e74c3c 100%); display: flex; align-items: center; border-bottom: 1px solid white; box-shadow: 0 5px 10px rgba(0,0,0,0.5); z-index: 40; width: 100%; }
-        #ticker-label { background: #900; color: white; font-weight: 900; padding: 0 30px; height: 100%; display: flex; align-items: center; font-size: 20px; letter-spacing: 1px; white-space: nowrap; }
+        
+        /* TICKER RETIRADOS (Nuevo estilo global mixto) */
+        #ticker-strip { height: 60px; min-height: 60px; background: linear-gradient(90deg, #c0392b 0%, #e74c3c 100%); display: flex; align-items: center; border-bottom: 1px solid white; box-shadow: 0 5px 10px rgba(0,0,0,0.5); z-index: 40; width: 100%; }
+        #ticker-label { background: #900; color: white; font-weight: 900; padding: 0 30px; height: 100%; display: flex; align-items: center; font-size: 24px; letter-spacing: 1px; white-space: nowrap; }
         #ticker-area { flex-grow: 1; overflow: hidden; height: 100%; display: flex; align-items: center; }
-        #ticker-text { display: flex; white-space: nowrap; animation: infinite-scroll 30s linear infinite; }
-        .ticker-part { display: flex; align-items: center; padding-right: 50px; }
+        
+        /* Velocidad 15s */
+        #ticker-text { display: flex; white-space: nowrap; animation: infinite-scroll 20s linear infinite; align-items: center; }
+        .ticker-part { display: flex; align-items: center; padding-right: 100px; }
         @keyframes infinite-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .ret-race-tag { color: var(--amarillo-oficial); margin-right: 10px; font-weight: 900; text-transform: uppercase; font-size: 20px; margin-left: 20px; }
-        .ret-horse-box { display: inline-flex; align-items: center; background: white; padding: 2px 10px; border-radius: 4px; margin-right: 20px; }
-        .ret-mandil { width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; font-weight: 900; margin-right: 8px; border-radius: 3px; font-size: 16px; color:white; text-shadow:1px 1px 0 #000; }
-        .ret-all-run { color: white; font-weight: 900; text-transform: uppercase; font-size: 20px; }
-        .ret-sep { color:white; opacity:0.5; margin:0 20px; }
+        
+        /* ESTILOS NUEVOS PARA EL TICKER MIXTO */
+        .ret-sep { color: var(--amarillo-oficial); margin: 0 15px; font-weight: 900; }
+        .ret-race-tag { color: var(--amarillo-oficial); font-weight: 900; margin-right: 10px; font-size: 22px; }
+        .ret-none { color: #ffffff; font-weight: 900; font-size: 22px; letter-spacing: 1px; }
 
+        /* Estilos para caballos individuales dentro del ticker global */
+        .ret-item-inline { display: inline-flex; align-items: center; margin-right: 15px; background: rgba(0,0,0,0.2); padding: 2px 8px 2px 2px; border-radius: 4px; }
+        .ret-mandil-box-sm {
+            width: 30px; height: 30px; font-size: 18px; font-weight: 900; color: white; 
+            border-radius: 4px; display: flex; justify-content: center; align-items: center;
+            margin-right: 8px; border: 1px solid rgba(255,255,255,0.5);
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+        }
+        .ret-name-sm { font-size: 20px; font-weight: 700; color: white; text-transform: uppercase; }
+
+
+        /* POZOS */
         #pozos-strip { height: 90px; min-height: 90px; background: var(--azul-oscuro); border-bottom: 4px solid var(--naranja-oficial); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.6); z-index: 30; width: 100%; box-sizing: border-box; }
         .pozo-item { display: flex; flex-direction: column; align-items: center; line-height: 1.1; flex: 1; }
         .pozo-lbl { font-size: 18px; color: #a3e4d7; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
@@ -127,7 +127,6 @@
 </head>
 <body>
     <div id="layout-bg"></div> 
-    
     <div id="main-wrapper">
         <div id="top-header">
             <div class="mapa-container">
@@ -153,12 +152,10 @@
         <div id="content-area">
             <div id="left-sidebar">
                 <div id="inc-box"><span id="inc-lbl">INCREMENTO:</span><span id="inc-monto">$ ---</span></div>
-                
                 <div class="table-container">
                     <div class="tbl-head"><span>Nº</span><span>GAN</span><span id="rot-head">EXA</span></div>
                     <div id="tbl-body"></div>
                 </div>
-                
                 <div id="logo-container-left">
                     <img src="logo-hipo.png" id="logo-img-left" alt="Logo">
                 </div>
@@ -171,8 +168,10 @@
                 </div>
                 <div id="pozos-strip">
                     <div class="pozo-item"><span class="pozo-lbl">GANADOR</span><span class="pozo-val" id="pz-gan">$---</span></div>
-                    <div class="pozo-item"><span class="pozo-lbl">EXACTA</span><span class="pozo-val" id="pz-exa">$---</span></div>
-                    <div class="pozo-item"><span class="pozo-lbl">TRIFECTA</span><span class="pozo-val" id="pz-tri">$---</span></div>
+                    
+                    <div class="pozo-item"><span class="pozo-lbl" id="lbl-pozo-exa">EXACTA</span><span class="pozo-val" id="pz-exa">$---</span></div>
+                    <div class="pozo-item"><span class="pozo-lbl" id="lbl-pozo-tri">TRIFECTA</span><span class="pozo-val" id="pz-tri">$---</span></div>
+                    
                     <div class="pozo-item"><span class="pozo-lbl" id="pz-extra-lbl">EXTRA</span><span class="pozo-val" id="pz-extra">$---</span></div>
                 </div>
                 <div id="video-hole"></div>
@@ -206,11 +205,17 @@
                 document.getElementById('val-fav').innerText = d.favoritos || "---";
                 document.getElementById('inc-lbl').innerText = (d.incremento.label || "INC.") + ":";
                 document.getElementById('inc-monto').innerText = "$ " + (d.incremento.monto || "0");
+                
+                // POZOS DINAMICOS
                 document.getElementById('pz-gan').innerText = "$" + d.pozos.gan; 
                 document.getElementById('pz-exa').innerText = "$" + d.pozos.exa; 
                 document.getElementById('pz-tri').innerText = "$" + d.pozos.tri;
-                document.getElementById('pz-extra-lbl').innerText = d.pozos.label_extra || "EXTRA";
                 document.getElementById('pz-extra').innerText = "$" + d.pozos.extra;
+                document.getElementById('pz-extra-lbl').innerText = d.pozos.label_extra || "EXTRA";
+                
+                // Titulos de Pozos
+                if(d.pozos.label_exa) document.getElementById('lbl-pozo-exa').innerText = d.pozos.label_exa.replace(":","");
+                if(d.pozos.label_tri) document.getElementById('lbl-pozo-tri').innerText = d.pozos.label_tri.replace(":","");
 
                 const hora = d.carrera_info.hora;
                 if(hora) {
@@ -227,18 +232,52 @@
                 const dot = document.getElementById('start-dot'); 
                 dot.setAttribute("cx", coords.cx); dot.setAttribute("cy", coords.cy);
 
-                let tickHtml = "";
-                if(d.retirados_global) {
-                    d.retirados_global.forEach((txt) => {
-                        let parts = txt.split(':'); 
-                        tickHtml += `<span class="ret-sep">//</span><span class="ret-race-tag">${parts[0]} Carrera:</span><span class="ret-all-run">${parts[1]}</span>`;
+                // --- TICKER RETIRADOS GLOBAL CORREGIDO (CON MANDILES MIXTOS) ---
+                let htmlRet = "";
+                if (d.retirados_global && d.retirados_global.length > 0) {
+                    d.retirados_global.forEach((txt, index) => {
+                        // txt es tipo "1ª:CORREN TODOS" o "2ª:7,NOMBRE CABALLO|8,OTRO"
+                        let parts = txt.split(':');
+                        let raceTag = parts[0]; // "1ª"
+                        let content = parts[1]; // "CORREN TODOS" o "7,NOMBRE..."
+
+                        // Separador
+                        if (index > 0) htmlRet += `<span class="ret-sep">//</span>`;
+
+                        // Etiqueta Carrera
+                        htmlRet += `<span class="ret-race-tag">${raceTag} Carrera:</span>`;
+
+                        if (content.includes("CORREN TODOS")) {
+                            htmlRet += `<span class="ret-none">CORREN TODOS</span>`;
+                        } else {
+                            // Hay retirados especificos, parseamos la cadena "7,NOM|8,NOM"
+                            let horses = content.split('|');
+                            horses.forEach(h_str => {
+                                let h_parts = h_str.split(','); // ["7", "NOMBRE"]
+                                if(h_parts.length >= 2) {
+                                    let num = h_parts[0];
+                                    let nom = h_parts[1];
+                                    let numColor = num.replace(/\D/g, '');
+                                    // Mandil colorido pequeño inline
+                                    htmlRet += `
+                                        <div class="ret-item-inline">
+                                            <div class="ret-mandil-box-sm m${numColor}">${num}</div>
+                                            <span class="ret-name-sm">${nom}</span>
+                                        </div>`;
+                                }
+                            });
+                        }
                     });
+                } else {
+                    htmlRet = `<span class="ret-none">SIN INFORMACIÓN DE RETIRADOS</span>`;
                 }
+
                 const tEl = document.getElementById('ticker-text'); 
-                if(tEl.getAttribute('data-raw') !== tickHtml) {
-                    tEl.setAttribute('data-raw', tickHtml);
-                    tEl.innerHTML = `<div class="ticker-part">${tickHtml}</div><div class="ticker-part">${tickHtml}</div>`;
+                if(tEl.getAttribute('data-raw') !== htmlRet) {
+                    tEl.setAttribute('data-raw', htmlRet);
+                    tEl.innerHTML = `<div class="ticker-part">${htmlRet}</div><div class="ticker-part">${htmlRet}</div>`;
                 }
+
             } catch(e) {}
         }
 
@@ -275,7 +314,6 @@
                 if (extraVal === "RET") extraVal = "RET";
                 let styleRet = cab.ganador === "RET" ? "color:#e74c3c; text-decoration:line-through;" : "";
 
-                // CLASES DIFERENCIADAS: PRICE-VAL-GAN (Centrado) vs PRICE-VAL-COMB (Derecha)
                 html += `
                 <div class="tbl-row">
                     <div class="mandil-box m${num}">${cab.numero}</div>

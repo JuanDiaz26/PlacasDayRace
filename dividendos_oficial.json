@@ -1,69 +1,72 @@
 {
     "visible": true,
-    "carrera": "9",
-    "premio": "CLASICO \"CARLOS PELLEGRINI\"",
-    "distancia": "2000 METROS",
+    "carrera": "10",
+    "premio": "PREMIO \"ENRIQUE R. IRIARTE\"",
+    "distancia": "1400 METROS",
     "marcador": [
         {
             "puesto": 1,
-            "numero": "8",
-            "nombre": "SUFFOK",
-            "jockey": "Moran Facundo R."
+            "numero": "2",
+            "nombre": "EUFEMIO",
+            "jockey": "Suarez Hector A."
         },
         {
             "puesto": 2,
             "numero": "4",
-            "nombre": "DR. LEGASOV",
-            "jockey": "Camos Ruben O."
+            "nombre": "CANDY GATO",
+            "jockey": "Romano Juan R."
         },
         {
             "puesto": 3,
-            "numero": "7",
-            "nombre": "HE'S A ROCKSTAR",
-            "jockey": "Vizcarra Jose A."
+            "numero": "5",
+            "nombre": "MASTER DANDY",
+            "jockey": "Rojas Cristian N. - Ap. (2kg)"
         },
         {
             "puesto": 4,
-            "numero": "9",
-            "nombre": "SHOW GOES ON",
-            "jockey": "Brito Francisco M."
+            "numero": "7",
+            "nombre": "LORD LANCELOT",
+            "jockey": "Brito Francisco M. - Ap. (2kg)"
         },
         {
             "puesto": 5,
-            "numero": "1",
-            "nombre": "DEMOSTRAME",
-            "jockey": "Barrionuevo Sergio R."
+            "numero": "8",
+            "nombre": "EURO SPRING",
+            "jockey": "Medina Lucas S. - Ap. (3kg)"
         },
         {
             "puesto": 6,
-            "numero": "5",
-            "nombre": "HYMPRESIONANTE",
-            "jockey": "Rodriguez Matias A."
+            "numero": "3",
+            "nombre": "DISTINTO RIG",
+            "jockey": "Barrionuevo Sergio R."
         }
     ],
     "pagos_unitarios": [
         {
             "tipo": "GAN",
-            "numero": "8",
-            "nombre": "SUFFOK",
-            "monto": "6,20"
+            "numero": "2",
+            "nombre": "EUFEMIO",
+            "monto": "10,30"
         }
     ],
     "apuestas": [
         {
             "nombre": "EXACTA",
-            "combinacion": "8-4",
-            "pago": "25.000,70"
+            "combinacion": "2-4",
+            "pago": "15.000,15",
+            "vacante": false
         },
         {
             "nombre": "TRIFECTA",
-            "combinacion": "8-4-7",
-            "pago": "30.000,50"
+            "combinacion": "2-4-5",
+            "pago": "23.000,50",
+            "vacante": false
         },
         {
-            "nombre": "CADENA",
-            "combinacion": "6-1-2-3-4-5",
-            "pago": "1.235.000,50"
+            "nombre": "CUATERNA",
+            "combinacion": "4-5-6-2",
+            "pago": "89.000,00",
+            "vacante": true
         }
     ]
 }

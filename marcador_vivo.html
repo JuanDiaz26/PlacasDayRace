@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Marcador Vivo COMPACTO V4 (Balanced)</title>
+    <title>Marcador Vivo COMPACTO V5 (Conectado)</title>
     <style>
         body { margin: 0; padding: 0; background: transparent; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
 
@@ -21,14 +21,10 @@
             background: linear-gradient(180deg, #161616 0%, #000000 100%);
             border-top: 4px solid #EF5B2B; 
             border-radius: 6px;
-            
             width: auto; 
-            /* CAMBIO: AUMENTÉ LA ALTURA TOTAL para darle aire al nombre */
             height: auto; 
-            
             display: flex;
             flex-direction: column; 
-            
             box-shadow: 0 6px 12px rgba(0,0,0,0.8);
             opacity: 0; 
             transition: opacity 0.5s ease-out;
@@ -39,29 +35,16 @@
 
         /* --- PARTE SUPERIOR --- */
         .top-row {
-            display: flex;
-            align-items: center;
-            justify-content: center; 
-            gap: 10px;
-            padding: 6px 5px 6px 5px; /* Menos padding abajo */
-            height: auto; /* Espacio para el mandil grande */
+            display: flex; align-items: center; justify-content: center; 
+            gap: 10px; padding: 6px 10px; height: auto; 
         }
 
         .mandil {
-            /* CAMBIO: MÁS ALTO Y ANCHO */
-            width: 70px;
-            height: 70px;
+            width: 70px; height: 70px;
             border-radius: 6px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            
-            /* Fuente más grande */
-            font-size: 34px; 
-            font-weight: 900;
-            color: white;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 34px; font-weight: 900; color: white;
             text-shadow: 2px 2px 0px rgba(0,0,0,0.6);
-            
             border: 2px solid rgba(255,255,255,0.25);
             text-transform: uppercase;
             box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
@@ -69,61 +52,41 @@
         }
 
         .contenedor-precio {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start; 
-            justify-content: center;
-            line-height: 1;
-            /* Pequeño ajuste para centrarlo visualmente con el mandil */
-            padding-top: 2px; 
+            display: flex; flex-direction: column;
+            align-items: flex-start; justify-content: center;
+            line-height: 1; padding-top: 2px; min-width: 60px;
         }
 
-        .fila-precio-num {
-            display: flex;
-            align-items: baseline; 
-        }
+        .fila-precio-num { display: flex; align-items: baseline; }
 
-        .label-pago { display: none; } /* ELIMINADO "PAGA" */
+        /* Estilo para cuando muestra POSICION (#1) */
+        .label-pos { 
+            color: #bdc3c7; font-size: 20px; font-weight: 700; 
+        }
 
         .simbolo { 
-            display: inline-block; 
-            color: #2ecc71; 
-            font-size: 25px; 
-            font-weight: 800; 
-            margin-right: 2px; 
+            display: inline-block; color: #2ecc71; 
+            font-size: 25px; font-weight: 800; margin-right: 2px; 
         }
 
         .monto-pago {
-            color: #fff;
-            /* Ajustado levemente para no competir tanto con el mandil */
-            font-size: 25px; 
-            font-weight: 800;
-            letter-spacing: -1px;
+            color: #fff; font-size: 28px; font-weight: 800; letter-spacing: -1px;
         }
 
         /* --- PARTE INFERIOR (NOMBRE) --- */
         .bottom-row {
-            background-color: rgba(255, 255, 255, 0.12); /* Un pelín más claro para separar */
-            width: 100%;
-            flex-grow: 1; /* Ocupa todo el espacio restante */
-            padding-bottom: 5px;
-            display: flex;
-            align-items: center; 
-            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.12);
+            width: 100%; flex-grow: 1; padding: 4px 0;
+            display: flex; align-items: center; justify-content: center;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
 
         .nombre-caballo {
-            color: #eeeeee;
-            font-size: 13px; /* Letra un punto más grande */
-            font-weight: 700;
-            text-transform: uppercase;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-align: center;
-            width: 100%;
-            letter-spacing: 0.5px;
+            color: #eeeeee; font-size: 14px; font-weight: 700;
+            text-transform: uppercase; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
+            text-align: center; width: 140px; /* Ancho fijo para nombres */
+            padding: 0 5px; letter-spacing: 0.5px;
         }
 
         /* --- COLORES OFICIALES --- */
@@ -151,13 +114,8 @@
         <div class="caja-caballo" id="slot-0">
             <div class="top-row">
                 <div class="mandil m0" id="mandil-0">-</div>
-                <div class="contenedor-precio">
-                    <span class="label-pago" id="lbl-0" style="display:none;"></span> 
-                    <div class="fila-precio-num">
-                        <span class="simbolo" id="sim-0">$</span>
-                        <span class="monto-pago" id="monto-0">#1</span>
+                <div class="contenedor-precio" id="precio-box-0">
                     </div>
-                </div>
             </div>
             <div class="bottom-row">
                 <div class="nombre-caballo" id="nom-0">COMPETIDOR</div>
@@ -166,124 +124,80 @@
         <div class="caja-caballo" id="slot-1">
             <div class="top-row">
                 <div class="mandil m0" id="mandil-1">-</div>
-                <div class="contenedor-precio">
-                    <span class="label-pago" id="lbl-1" style="display:none;"></span>
-                    <div class="fila-precio-num">
-                        <span class="simbolo" id="sim-1">$</span>
-                        <span class="monto-pago" id="monto-1">#2</span>
-                    </div>
-                </div>
+                <div class="contenedor-precio" id="precio-box-1"></div>
             </div>
-            <div class="bottom-row">
-                <div class="nombre-caballo" id="nom-1">COMPETIDOR</div>
-            </div>
+            <div class="bottom-row"><div class="nombre-caballo" id="nom-1">COMPETIDOR</div></div>
         </div>
         <div class="caja-caballo" id="slot-2">
             <div class="top-row">
                 <div class="mandil m0" id="mandil-2">-</div>
-                <div class="contenedor-precio">
-                    <span class="label-pago" id="lbl-2" style="display:none;"></span>
-                    <div class="fila-precio-num">
-                        <span class="simbolo" id="sim-2">$</span>
-                        <span class="monto-pago" id="monto-2">#3</span>
-                    </div>
-                </div>
+                <div class="contenedor-precio" id="precio-box-2"></div>
             </div>
-            <div class="bottom-row">
-                <div class="nombre-caballo" id="nom-2">COMPETIDOR</div>
-            </div>
+            <div class="bottom-row"><div class="nombre-caballo" id="nom-2">COMPETIDOR</div></div>
         </div>
         <div class="caja-caballo" id="slot-3">
             <div class="top-row">
                 <div class="mandil m0" id="mandil-3">-</div>
-                <div class="contenedor-precio">
-                    <span class="label-pago" id="lbl-3" style="display:none;"></span>
-                    <div class="fila-precio-num">
-                        <span class="simbolo" id="sim-3">$</span>
-                        <span class="monto-pago" id="monto-3">#4</span>
-                    </div>
-                </div>
+                <div class="contenedor-precio" id="precio-box-3"></div>
             </div>
-            <div class="bottom-row">
-                <div class="nombre-caballo" id="nom-3">COMPETIDOR</div>
-            </div>
+            <div class="bottom-row"><div class="nombre-caballo" id="nom-3">COMPETIDOR</div></div>
         </div>
     </div>
 
     <script>
-        let estadoPrevio = [
-            { num: null, div: null, nom: null, visible: false },
-            { num: null, div: null, nom: null, visible: false },
-            { num: null, div: null, nom: null, visible: false },
-            { num: null, div: null, nom: null, visible: false }
-        ];
-
         async function leerMarcador() {
             try {
+                // Lee el JSON generado por el Python V33
                 const response = await fetch('marcador.json?nocache=' + new Date().getTime());
                 const data = await response.json();
                 
                 if (data.length === 0) {
                     for (let i = 0; i < 4; i++) {
                         document.getElementById(`slot-${i}`).classList.remove('visible');
-                        estadoPrevio[i].visible = false;
                     }
                     return;
                 }
 
                 for (let i = 0; i < 4; i++) {
                     const slot = document.getElementById(`slot-${i}`);
-                    const mandilDiv = document.getElementById(`mandil-${i}`);
-                    const nomDiv = document.getElementById(`nom-${i}`);
-                    const lblDiv = document.getElementById(`lbl-${i}`);
-                    const simDiv = document.getElementById(`sim-${i}`);
-                    const montoDiv = document.getElementById(`monto-${i}`);
-
-                    let nuevoNum = null; let nuevoDiv = null; let nuevoNom = null; let nuevoVisible = false;
-
+                    
                     if (data[i]) {
-                        nuevoNum = data[i].numero;
-                        nuevoDiv = data[i].dividendo || ""; 
-                        nuevoNom = data[i].nombre || "COMPETIDOR"; 
-                        nuevoVisible = true;
-                    }
-                    const estado = estadoPrevio[i];
+                        const num = data[i].numero;
+                        const nom = data[i].nombre || "COMPETIDOR";
+                        const div = data[i].dividendo; // Viene de la grilla de pantalla completa
 
-                    // 1. Visibilidad
-                    if (estado.visible !== nuevoVisible) {
-                        if (nuevoVisible) slot.classList.add('visible');
-                        else slot.classList.remove('visible');
-                        estado.visible = nuevoVisible;
-                    }
-                    if (!nuevoVisible) continue;
+                        // 1. Mandil
+                        const mandilDiv = document.getElementById(`mandil-${i}`);
+                        mandilDiv.innerText = num;
+                        let colorClass = "m" + (num.replace(/\D/g, '') || "0");
+                        mandilDiv.className = `mandil ${colorClass}`;
 
-                    // 2. Datos
-                    if (estado.num !== nuevoNum) {
-                        let numColor = nuevoNum.replace(/\D/g, '') || "0";
-                        mandilDiv.innerText = nuevoNum; 
-                        mandilDiv.className = `mandil m${numColor}`;
-                        estado.num = nuevoNum;
-                    }
-                    if (estado.nom !== nuevoNom) {
-                        nomDiv.innerText = nuevoNom; estado.nom = nuevoNom;
-                    }
-                    if (estado.div !== nuevoDiv) {
-                        if (nuevoDiv) {
-                            lblDiv.style.display = "none"; 
-                            simDiv.style.display = "inline"; 
-                            montoDiv.innerText = nuevoDiv;
+                        // 2. Nombre
+                        document.getElementById(`nom-${i}`).innerText = nom;
+
+                        // 3. Precio / Posición
+                        const precioBox = document.getElementById(`precio-box-${i}`);
+                        if (div && div.trim() !== "") {
+                            // Tiene plata: mostrar en verde
+                            let displayDiv = div.includes("$") ? div.replace("$", "").trim() : div;
+                            precioBox.innerHTML = `
+                                <div class="fila-precio-num">
+                                    <span class="simbolo">$</span>
+                                    <span class="monto-pago">${displayDiv}</span>
+                                </div>`;
                         } else {
-                            lblDiv.style.display = "block"; 
-                            lblDiv.innerText = "POS";
-                            simDiv.style.display = "none"; 
-                            montoDiv.innerText = "#" + (i + 1);
+                            // No tiene plata: mostrar puesto #1, #2...
+                            precioBox.innerHTML = `<span class="label-pos">#${i + 1}</span>`;
                         }
-                        estado.div = nuevoDiv;
+
+                        slot.classList.add('visible');
+                    } else {
+                        slot.classList.remove('visible');
                     }
                 }
             } catch (e) { }
         }
-        setInterval(leerMarcador, 200);
+        setInterval(leerMarcador, 500); // Actualiza cada medio segundo
     </script>
 </body>
 </html>

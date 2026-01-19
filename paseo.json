@@ -1,3 +1,10 @@
 {
-    "visible": false
+    "visible": true,
+    "numero": "3",
+    "nombre": "DISTINTO RIG",
+    "jockey": "Barrionuevo Sergio R.",
+    "stud": "NORITA",
+    "cuidador": "Chirino Carlos A.",
+    "cambio_monta": false,
+    "retirado": false
 }
