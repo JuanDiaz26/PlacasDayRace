@@ -1,8 +1,8 @@
 {
-    "num_carrera": "10º Carrera",
-    "distancia": "1400 METROS",
-    "premio": "PREMIO \"ENRIQUE R. IRIARTE\"",
-    "condicion": "Para todo spc de 5 años y más edad ganadores de 2 carreras; de 6 años y más edad ganadores de 3 carreras",
-    "estado_pista": "NORMAL",
-    "visible": true
+    "num_carrera": "",
+    "distancia": "",
+    "premio": "",
+    "condicion": "",
+    "estado_pista": "",
+    "visible": false
 }

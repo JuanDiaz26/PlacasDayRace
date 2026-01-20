@@ -1,10 +1,10 @@
 {
     "visible": true,
-    "favoritos": "",
+    "favoritos": "7-3-8",
     "carrera_info": {
-        "numero": "10º Carrera",
-        "distancia": "1400 METROS",
-        "hora": "19:40",
+        "numero": "6º Carrera",
+        "distancia": "1300 METROS",
+        "hora": "17:00",
         "pista": "NORMAL"
     },
     "pozos": {
@@ -12,10 +12,12 @@
         "exa": "",
         "tri": "",
         "extra": "",
-        "label_extra": "CADENA:"
+        "label_extra": "CUATERNA:",
+        "label_exa": "IMPERFECTA:",
+        "label_tri": "CUATRIFECTA:"
     },
     "incremento": {
-        "label": "EXACTA",
+        "label": "DOBLE",
         "monto": "1"
     },
     "retirados_global": [
@@ -24,18 +26,18 @@
         "3ª:CORREN TODOS",
         "4ª:CORREN TODOS",
         "5ª:CORREN TODOS",
-        "6ª:CORREN TODOS",
+        "6ª:6,IL FELINO",
         "7ª:CORREN TODOS",
         "8ª:CORREN TODOS",
         "9ª:CORREN TODOS",
-        "10ª:4,CANDY GATO",
+        "10ª:CORREN TODOS",
         "11ª:CORREN TODOS",
         "12ª:CORREN TODOS"
     ],
     "retirados_detalle": [
         {
             "numero": "4",
-            "nombre": "CANDY GATO"
+            "nombre": "IL FELINO"
         }
     ],
     "tabla_apuestas": [
@@ -83,13 +85,6 @@
         },
         {
             "numero": "7",
-            "ganador": "",
-            "exacta": "",
-            "trifecta": "",
-            "doble": ""
-        },
-        {
-            "numero": "8",
             "ganador": "",
             "exacta": "",
             "trifecta": "",
