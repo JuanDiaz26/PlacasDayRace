@@ -1,1 +1,26 @@
-[]
+[
+    {
+        "posicion": 1,
+        "numero": "4",
+        "nombre": "CHICA DE BLANCO",
+        "dividendo": ""
+    },
+    {
+        "posicion": 2,
+        "numero": "5",
+        "nombre": "EL PATRIARCA",
+        "dividendo": ""
+    },
+    {
+        "posicion": 3,
+        "numero": "1",
+        "nombre": "APOSTOLICO FRANK",
+        "dividendo": ""
+    },
+    {
+        "posicion": 4,
+        "numero": "8",
+        "nombre": "TIERNO DE ALMA",
+        "dividendo": ""
+    }
+]

@@ -1,10 +1,10 @@
 {
     "visible": true,
-    "favoritos": "7-3-8",
+    "favoritos": "8-1-7",
     "carrera_info": {
-        "numero": "6º Carrera",
-        "distancia": "1300 METROS",
-        "hora": "17:00",
+        "numero": "9º Carrera",
+        "distancia": "2000 METROS",
+        "hora": "19:00",
         "pista": "NORMAL"
     },
     "pozos": {
@@ -12,12 +12,12 @@
         "exa": "",
         "tri": "",
         "extra": "",
-        "label_extra": "CUATERNA:",
-        "label_exa": "IMPERFECTA:",
-        "label_tri": "CUATRIFECTA:"
+        "label_extra": "CADENA:",
+        "label_exa": "EXACTA:",
+        "label_tri": "TRIFECTA:"
     },
     "incremento": {
-        "label": "DOBLE",
+        "label": "EXACTA",
         "monto": "1"
     },
     "retirados_global": [
@@ -26,10 +26,10 @@
         "3ª:CORREN TODOS",
         "4ª:CORREN TODOS",
         "5ª:CORREN TODOS",
-        "6ª:6,IL FELINO",
+        "6ª:CORREN TODOS",
         "7ª:CORREN TODOS",
         "8ª:CORREN TODOS",
-        "9ª:CORREN TODOS",
+        "9ª:9,DR. LEGASOV",
         "10ª:CORREN TODOS",
         "11ª:CORREN TODOS",
         "12ª:CORREN TODOS"
@@ -37,27 +37,31 @@
     "retirados_detalle": [
         {
             "numero": "4",
-            "nombre": "IL FELINO"
+            "nombre": "DR. LEGASOV"
+        },
+        {
+            "numero": "6",
+            "nombre": "TATY BOONE"
         }
     ],
     "tabla_apuestas": [
         {
             "numero": "1",
-            "ganador": "",
+            "ganador": "5.57",
             "exacta": "",
             "trifecta": "",
             "doble": ""
         },
         {
             "numero": "2",
-            "ganador": "",
+            "ganador": "6.21",
             "exacta": "",
             "trifecta": "",
             "doble": ""
         },
         {
             "numero": "3",
-            "ganador": "",
+            "ganador": "8.96",
             "exacta": "",
             "trifecta": "",
             "doble": ""
@@ -71,21 +75,35 @@
         },
         {
             "numero": "5",
-            "ganador": "",
+            "ganador": "6.17",
             "exacta": "",
             "trifecta": "",
             "doble": ""
         },
         {
             "numero": "6",
-            "ganador": "",
+            "ganador": "RET",
+            "exacta": "RET",
+            "trifecta": "RET",
+            "doble": "RET"
+        },
+        {
+            "numero": "7",
+            "ganador": "5.58",
             "exacta": "",
             "trifecta": "",
             "doble": ""
         },
         {
-            "numero": "7",
-            "ganador": "",
+            "numero": "8",
+            "ganador": "2.64",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
+        },
+        {
+            "numero": "9",
+            "ganador": "6.19",
             "exacta": "",
             "trifecta": "",
             "doble": ""

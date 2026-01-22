@@ -1,3 +1,10 @@
 {
-    "visible": false
+    "visible": true,
+    "numero": "6",
+    "nombre": "TATY BOONE",
+    "jockey": "Erik Andrada Csc",
+    "stud": "LA POROTA",
+    "cuidador": "Nieva Angel E.",
+    "cambio_monta": true,
+    "retirado": true
 }
