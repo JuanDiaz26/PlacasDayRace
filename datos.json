@@ -1,8 +1,8 @@
 {
-    "num_carrera": "4º Carrera",
-    "distancia": "1200 METROS",
-    "premio": "PREMIO \"SMILE CAT 2023\"",
-    "condicion": "Para todo producto spc de 3 años perdedores. peso 56 kilos.",
-    "estado_pista": "NORMAL",
-    "visible": true
+    "num_carrera": "",
+    "distancia": "",
+    "premio": "",
+    "condicion": "",
+    "estado_pista": "",
+    "visible": false
 }

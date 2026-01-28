@@ -5,189 +5,451 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # Permite que tu interfaz se conecte sin problemas
+CORS(app)
 
-# --- MEMORIA DEL SISTEMA ---
-estado_carrera = {
-    "activa": False,
-    "numero_carrera": 0,
-    "caballos": [],         # Lista de números de caballos [1, 2, 3...]
-    "retirados": [],        # Lista de retirados
-    "apuestas": {},         # { "GAN": {1: 5000, 2: 1000}, "EXA": {...} }
-    "pozos_base": {},       # { "CUA": 500000 } (Incrementos iniciales)
-    "total_jugado": {},     # { "GAN": 6000, "CUA": 505000 }
-    "dividendos": {}        # { "1": 2.40, "2": 15.30 }
-}
+# --- MEMORIA DEL HIPODROMO (Persistente entre cambios de pestaña) ---
+# Estructura: { "1": { datos_carrera_1 }, "2": { datos_carrera_2 } }
+HIPODROMO = {}
 
-COMISION = 0.25 # El hipódromo se queda con el 25%
+COMISION = 0.25  # 25% retención del hipódromo
 
-# --- FUNCIONES DE LOGICA DE NEGOCIO ---
-
-def calcular_dividendos():
-    """Recalcula los sports basados en la plata jugada."""
-    if not estado_carrera["activa"]: return
-
-    # 1. Calcular Totales por Tipo de Apuesta
-    for tipo, bolsas in estado_carrera["apuestas"].items():
-        total_tipo = sum(bolsas.values())
-        
-        # Sumar el incremento base si existe (Ej: Cuaterna arranca en 500k)
-        if tipo in estado_carrera["pozos_base"]:
-            total_tipo += estado_carrera["pozos_base"][tipo]
-        
-        estado_carrera["total_jugado"][tipo] = total_tipo
-
-    # 2. Calcular Sport a GANADOR
-    pozo_ganador = estado_carrera["total_jugado"].get("GAN", 0)
-    pozo_neto = pozo_ganador * (1 - COMISION) # Sacamos la comisión
+# --- LOGICA DE COMBINACIONES ---
+def calcular_pago_combinado(pozo_tipo, dividendo_gan_c1, dividendo_gan_c2):
+    """
+    Simula un pago de exacta/doble basándose en los sports de ganador.
+    Formula aproximada: (Sport1 * Sport2) / Factor de corrección de pozo
+    """
+    if dividendo_gan_c1 == 0 or dividendo_gan_c2 == 0: return 0
+    # Factor aleatorio para que varíe un poco
+    factor = random.uniform(0.8, 1.2)
+    base = (dividendo_gan_c1 * dividendo_gan_c2) * factor
     
-    nuevos_dividendos = {}
-    bolsas_gan = estado_carrera["apuestas"].get("GAN", {})
+    # Ajuste por tamaño de pozo (si hay mucha plata, paga un poco más estable)
+    if pozo_tipo > 1000000: base = base * 0.9
     
-    # Encontrar favorito para lógica de retirados (el que más plata tiene)
-    caballo_fav = None
-    max_plata = -1
-    
-    for cab_num in estado_carrera["caballos"]:
-        if cab_num in estado_carrera["retirados"]: continue
-        plata = bolsas_gan.get(cab_num, 0)
-        if plata > max_plata:
-            max_plata = plata
-            caballo_fav = cab_num
+    if base < 2.0: base = 2.0
+    return round(base, 1)
 
-    for cab_num in estado_carrera["caballos"]:
-        if cab_num in estado_carrera["retirados"]:
-            nuevos_dividendos[cab_num] = "RET"
-            continue
-            
-        plata_al_caballo = bolsas_gan.get(cab_num, 0)
-        
-        # Si nadie le jugó, paga un fijo alto (simulado)
-        if plata_al_caballo == 0:
-            sport = 99.90
-        else:
-            sport = pozo_neto / plata_al_caballo
-            if sport < 1.10: sport = 1.10 # Mínimo legal
-            
-        nuevos_dividendos[cab_num] = round(sport, 2)
-        
-    estado_carrera["dividendos"] = nuevos_dividendos
-
-def mover_plata_retirado_al_favorito(caballo_retirado):
-    """Mueve las apuestas del retirado al favorito actual."""
-    print(f"--- ⚠️ RETIRO: Moviendo plata del {caballo_retirado} al Favorito ---")
+def mover_plata_retirado_al_favorito(c, caballo_retirado):
+    """Mueve las apuestas del retirado al favorito actual dentro de esa carrera."""
+    print(f"--- ⚠️ RETIRO C{request.json.get('carrera')}: Moviendo plata del {caballo_retirado} al Favorito ---")
     
-    # Identificar favorito actual (el que tiene más plata en GANADOR)
-    bolsas_gan = estado_carrera["apuestas"].get("GAN", {})
+    bolsas_gan = c["apuestas_gan"]
     favorito = None
     max_plata = -1
     
     for cab, plata in bolsas_gan.items():
-        if cab != caballo_retirado and cab not in estado_carrera["retirados"]:
+        if cab != caballo_retirado and cab not in c["retirados"]:
             if plata > max_plata:
                 max_plata = plata
                 favorito = cab
     
     if favorito:
-        print(f"--- EL FAVORITO ES EL {favorito} ---")
-        # Mover en todas las categorías (simplificado para GAN, se podría expandir)
-        for tipo in estado_carrera["apuestas"]:
-            plata_muerta = estado_carrera["apuestas"][tipo].get(caballo_retirado, 0)
-            if plata_muerta > 0:
-                estado_carrera["apuestas"][tipo][caballo_retirado] = 0
-                estado_carrera["apuestas"][tipo][favorito] = estado_carrera["apuestas"][tipo].get(favorito, 0) + plata_muerta
-                print(f"Movidos ${plata_muerta} de {caballo_retirado} a {favorito} en {tipo}")
-    else:
-        print("No se encontró favorito (¿Todos retirados?)")
+        plata_muerta = bolsas_gan.get(caballo_retirado, 0)
+        if plata_muerta > 0:
+            c["apuestas_gan"][caballo_retirado] = 0
+            c["apuestas_gan"][favorito] += plata_muerta
+            print(f"   -> ${plata_muerta} transferidos al favorito {favorito}")
 
+# --- BUCLE PRINCIPAL DE SIMULACION ---
 def simulador_bucle():
-    """Genera apuestas automáticas cada 5 segundos."""
+    """Corre cada 10 segundos y actualiza TODAS las carreras activas."""
     while True:
-        time.sleep(5) 
-        if estado_carrera["activa"]:
-            # Simular gente apostando
-            cant_apuestas = random.randint(5, 20) # 5 a 20 personas apuestan
+        time.sleep(10) # RITMO PEDIDO (10 SEGUNDOS)
+        
+        carreras_activas = [k for k, v in HIPODROMO.items() if v["activa"]]
+        
+        if not carreras_activas:
+            continue
+
+        print(f"\n--- 🎲 SIMULANDO APUESTAS EN CARRERAS: {carreras_activas} ---")
+
+        for num_carrera in carreras_activas:
+            c = HIPODROMO[num_carrera]
             
-            for _ in range(cant_apuestas):
-                # Elige un caballo al azar que NO esté retirado
-                candidatos = [c for c in estado_carrera["caballos"] if c not in estado_carrera["retirados"]]
-                if not candidatos: break
-                
-                # Simular tendencia: Es más probable que apuesten a los que ya tienen plata
-                cab_elegido = random.choice(candidatos) 
-                
-                monto = random.choice([100, 200, 500, 1000, 5000])
-                
-                # Cargar a Ganador
-                if "GAN" not in estado_carrera["apuestas"]: estado_carrera["apuestas"]["GAN"] = {}
-                estado_carrera["apuestas"]["GAN"][cab_elegido] = estado_carrera["apuestas"]["GAN"].get(cab_elegido, 0) + monto
-                
-                # Cargar a Pozos Extra (Aleatorio)
-                for tipo in ["EXA", "TRI", "CUA", "CAD"]:
-                    if tipo in estado_carrera["apuestas"] and random.random() > 0.7: # 30% chance
-                         estado_carrera["apuestas"][tipo]["POZO"] = estado_carrera["apuestas"][tipo].get("POZO", 0) + monto
+            # 1. GENERAR APUESTAS ALEATORIAS (Inyectar plata)
+            # Solo apostamos a caballos NO retirados
+            corren = [h for h in c["caballos"] if h not in c["retirados"]]
+            if not corren: continue
 
-            calcular_dividendos()
-            print(f"💰 TOTE ACTUALIZADO | Pozo GAN: ${estado_carrera['total_jugado'].get('GAN',0)}")
+            # Simular volumen de apuestas
+            volumen = random.randint(10, 50) 
+            
+            for _ in range(volumen):
+                cab = random.choice(corren)
+                # Montos variados
+                monto = random.choices([100, 500, 1000, 5000], weights=[50, 30, 15, 5])[0]
+                
+                # Sumar a Ganador
+                c["apuestas_gan"][cab] = c["apuestas_gan"].get(cab, 0) + monto
+                c["pozos_totales"]["GAN"] += monto
+                
+                # Sumar a los otros pozos (Simulación de flujo de dinero)
+                for tipo in ["EXA", "TRI", "DOBLE", "CUA", "QUI", "CAD"]:
+                    if tipo in c["pozos_totales"]: 
+                        c["pozos_totales"][tipo] += (monto * 0.5) 
 
-# Arrancar el hilo del simulador en segundo plano
+            # 2. RECALCULAR SPORT GANADOR
+            pozo_gan_neto = c["pozos_totales"]["GAN"] * (1 - COMISION)
+            
+            # Encontrar Favoritos
+            ranking_favoritos = sorted(c["apuestas_gan"].items(), key=lambda item: item[1], reverse=True)
+            ranking_favoritos = [x for x in ranking_favoritos if x[0] not in c["retirados"]]
+            
+            top_1 = ranking_favoritos[0][0] if len(ranking_favoritos) > 0 else None
+            top_2 = ranking_favoritos[1][0] if len(ranking_favoritos) > 1 else None
+            
+            nuevos_sports = {}
+            for cab in c["caballos"]:
+                if cab in c["retirados"]:
+                    nuevos_sports[cab] = "RET"
+                    continue
+                
+                plata = c["apuestas_gan"].get(cab, 0)
+                if plata == 0:
+                    nuevos_sports[cab] = 99.90
+                else:
+                    val = pozo_gan_neto / plata
+                    if val < 1.10: val = 1.10
+                    nuevos_sports[cab] = round(val, 2)
+            
+            c["dividendos_gan"] = nuevos_sports
+
+            # 3. RECALCULAR COMBINACIONES (EXA/TRI/DOBLE) PARA LA GRILLA
+            data_grilla = {} 
+            
+            div_fav = novos_sports_val = nuevos_sports.get(top_1, 2.0) if top_1 else 2.0
+            
+            for cab in corren:
+                mi_sport = nuevos_sports.get(cab, 10.0)
+                if isinstance(mi_sport, str): mi_sport = 0 # Si es RET
+                
+                # --- EXACTA / IMPERFECTA ---
+                # Si soy el favorito, cruzo con el 2do favorito. Si no, conmigo + favorito.
+                pareja = top_2 if cab == top_1 else top_1
+                div_pareja = nuevos_sports.get(pareja, 5.0) if pareja else 5.0
+                if isinstance(div_pareja, str): div_pareja = 0
+
+                # Simular pago combinada
+                pago_exa = calcular_pago_combinado(c["pozos_totales"]["EXA"], mi_sport, div_pareja)
+                
+                # --- TRIFECTA / CUATRIFECTA ---
+                pago_tri = round(pago_exa * random.uniform(4, 8), 1)
+                
+                # --- DOBLE ---
+                pago_doble = 0
+                # Simulamos que en la proxima carrera gana un caballo random (Factor 3.5)
+                pago_doble = calcular_pago_combinado(c["pozos_totales"]["DOBLE"], mi_sport, 3.5)
+                
+                data_grilla[cab] = {
+                    "EXA": pago_exa,
+                    "TRI": pago_tri,
+                    "DOBLE": pago_doble if pago_doble > 0 else "-"
+                }
+            
+            c["dividendos_extra"] = data_grilla
+            
+            print(f"   > Carrera {num_carrera}: Pozo GAN ${c['pozos_totales']['GAN']} | Fav: {top_1} (${div_fav})")
+
+# Iniciar hilo
 t = threading.Thread(target=simulador_bucle)
 t.daemon = True
 t.start()
 
-# --- ENDPOINTS (LA API PARA TU CONTROLADOR) ---
+# --- ENDPOINTS ---
 
 @app.route('/configurar', methods=['POST'])
 def configurar():
     data = request.json
-    estado_carrera["activa"] = True
-    estado_carrera["numero_carrera"] = data.get("carrera")
-    estado_carrera["caballos"] = data.get("caballos", [])
-    estado_carrera["retirados"] = []
+    num = str(data.get("carrera"))
+    caballos = [str(x) for x in data.get("caballos", [])]
+    incrementos = data.get("incrementos", {}) 
     
-    # Inicializar bolsas vacias
-    estado_carrera["apuestas"] = { "GAN": {}, "EXA": {}, "TRI": {}, "CUA": {}, "CAD": {} }
-    
-    # Cargar Incrementos Iniciales (Si vienen del Excel)
-    estado_carrera["pozos_base"] = data.get("incrementos", {}) 
-    
-    # Poner un piso de plata inicial para que no den error de división por cero
-    for c in estado_carrera["caballos"]:
-        estado_carrera["apuestas"]["GAN"][c] = 1000 # Semilla inicial invisible
-        
-    calcular_dividendos()
-    print(f"\n=== CARRERA {estado_carrera['numero_carrera']} CONFIGURADA ===")
-    print(f"Incrementos base: {estado_carrera['pozos_base']}")
-    return jsonify({"status": "ok", "msg": "Sistema de apuestas iniciado"})
+    # Si la carrera NO existe en memoria, la creamos
+    if num not in HIPODROMO:
+        print(f"🆕 INICIALIZANDO CARRERA {num}")
+        HIPODROMO[num] = {
+            "activa": True,
+            "caballos": caballos,
+            "retirados": [],
+            "apuestas_gan": {c: 1000 for c in caballos}, # Semilla inicial
+            "pozos_totales": {
+                "GAN": incrementos.get("GAN", 10000), 
+                "EXA": incrementos.get("EXACTA", incrementos.get("IMPERFECTA", 0)),
+                "TRI": incrementos.get("TRIFECTA", incrementos.get("CUATRIFECTA", 0)),
+                "DOBLE": incrementos.get("DOBLE", 0),
+                "CUA": incrementos.get("CUATERNA", 0),
+                "QUI": incrementos.get("QUINTUPLO", 0),
+                "CAD": incrementos.get("CADENA", 0)
+            },
+            "dividendos_gan": {},
+            "dividendos_extra": {}
+        }
+    else:
+        print(f"🔄 RECONECTANDO A CARRERA {num} (Recuperando Pozos)")
+        # Solo actualizamos status, no borramos la plata
+        HIPODROMO[num]["activa"] = True 
+
+    return jsonify({"status": "ok", "msg": f"Carrera {num} configurada."})
 
 @app.route('/retirar', methods=['POST'])
 def retirar():
     data = request.json
-    cab_num = data.get("numero") # Puede venir como string "1" o int 1
+    num_c = str(data.get("carrera"))
+    cab = str(data.get("caballo"))
     
-    # Normalizar a string o int según uses en tu lista
-    # Asumimos que la lista 'caballos' tiene ints o strings consistentes.
-    # Vamos a forzar string para evitar líos.
-    cab_num = str(cab_num)
-    estado_carrera["caballos"] = [str(x) for x in estado_carrera["caballos"]]
+    if num_c in HIPODROMO:
+        c = HIPODROMO[num_c]
+        if cab not in c["retirados"]:
+            c["retirados"].append(cab)
+            mover_plata_retirado_al_favorito(c, cab)
+            return jsonify({"status": "ok"})
     
-    if cab_num not in estado_carrera["retirados"]:
-        estado_carrera["retirados"].append(cab_num)
-        mover_plata_retirado_al_favorito(cab_num)
-        calcular_dividendos()
-        return jsonify({"status": "ok", "msg": f"Caballo {cab_num} retirado. Apuestas movidas al favorito."})
-    
-    return jsonify({"status": "error", "msg": "Ya estaba retirado"})
+    return jsonify({"status": "error", "msg": "Carrera o caballo no valido"})
 
 @app.route('/dividendos', methods=['GET'])
-def obtener_dividendos():
-    # Esta es la funcion que tu controlador consultará cada 2 segs
-    return jsonify({
-        "carrera": estado_carrera["numero_carrera"],
-        "dividendos": estado_carrera["dividendos"],
-        "pozos": estado_carrera["total_jugado"]
-    })
+def get_dividendos():
+    num_c = str(request.args.get('carrera'))
+    
+    if num_c in HIPODROMO:
+        c = HIPODROMO[num_c]
+        return jsonify({
+            "status": "ok",
+            "ganador": c["dividendos_gan"],
+            "extras": c["dividendos_extra"],
+            "pozos": c["pozos_totales"]
+        })
+    else:
+        return jsonify({"status": "error", "msg": "Carrera no iniciada"})
 
 if __name__ == '__main__':
-    print("🏇 SERVIDOR TOTE (SIMULADOR) INICIADO EN PUERTO 5000")
+    print("🏇 TOTE SERVER V2 (MULTI-CARRERA + LOGICA COMPLEJA) CORRIENDO...")
+    app.run(host='0.0.0.0', port=5000)
+
+import threading
+import time
+import random
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
+
+# --- MEMORIA DEL HIPODROMO (Persistente entre cambios de pestaña) ---
+# Estructura: { "1": { datos_carrera_1 }, "2": { datos_carrera_2 } }
+HIPODROMO = {}
+
+COMISION = 0.25  # 25% retención del hipódromo
+
+# --- LOGICA DE COMBINACIONES ---
+def calcular_pago_combinado(pozo_tipo, dividendo_gan_c1, dividendo_gan_c2):
+    """
+    Simula un pago de exacta/doble basándose en los sports de ganador.
+    Formula aproximada: (Sport1 * Sport2) / Factor de corrección de pozo
+    """
+    if dividendo_gan_c1 == 0 or dividendo_gan_c2 == 0: return 0
+    # Factor aleatorio para que varíe un poco
+    factor = random.uniform(0.8, 1.2)
+    base = (dividendo_gan_c1 * dividendo_gan_c2) * factor
+    
+    # Ajuste por tamaño de pozo (si hay mucha plata, paga un poco más estable)
+    if pozo_tipo > 1000000: base = base * 0.9
+    
+    if base < 2.0: base = 2.0
+    return round(base, 1)
+
+def mover_plata_retirado_al_favorito(c, caballo_retirado):
+    """Mueve las apuestas del retirado al favorito actual dentro de esa carrera."""
+    print(f"--- ⚠️ RETIRO C{request.json.get('carrera')}: Moviendo plata del {caballo_retirado} al Favorito ---")
+    
+    bolsas_gan = c["apuestas_gan"]
+    favorito = None
+    max_plata = -1
+    
+    for cab, plata in bolsas_gan.items():
+        if cab != caballo_retirado and cab not in c["retirados"]:
+            if plata > max_plata:
+                max_plata = plata
+                favorito = cab
+    
+    if favorito:
+        plata_muerta = bolsas_gan.get(caballo_retirado, 0)
+        if plata_muerta > 0:
+            c["apuestas_gan"][caballo_retirado] = 0
+            c["apuestas_gan"][favorito] += plata_muerta
+            print(f"   -> ${plata_muerta} transferidos al favorito {favorito}")
+
+# --- BUCLE PRINCIPAL DE SIMULACION ---
+def simulador_bucle():
+    """Corre cada 10 segundos y actualiza TODAS las carreras activas."""
+    while True:
+        time.sleep(10) # RITMO PEDIDO (10 SEGUNDOS)
+        
+        carreras_activas = [k for k, v in HIPODROMO.items() if v["activa"]]
+        
+        if not carreras_activas:
+            continue
+
+        print(f"\n--- 🎲 SIMULANDO APUESTAS EN CARRERAS: {carreras_activas} ---")
+
+        for num_carrera in carreras_activas:
+            c = HIPODROMO[num_carrera]
+            
+            # 1. GENERAR APUESTAS ALEATORIAS (Inyectar plata)
+            # Solo apostamos a caballos NO retirados
+            corren = [h for h in c["caballos"] if h not in c["retirados"]]
+            if not corren: continue
+
+            # Simular volumen de apuestas
+            volumen = random.randint(10, 50) 
+            
+            for _ in range(volumen):
+                cab = random.choice(corren)
+                # Montos variados
+                monto = random.choices([100, 500, 1000, 5000], weights=[50, 30, 15, 5])[0]
+                
+                # Sumar a Ganador
+                c["apuestas_gan"][cab] = c["apuestas_gan"].get(cab, 0) + monto
+                c["pozos_totales"]["GAN"] += monto
+                
+                # Sumar a los otros pozos (Simulación de flujo de dinero)
+                for tipo in ["EXA", "TRI", "DOBLE", "CUA", "QUI", "CAD"]:
+                    if tipo in c["pozos_totales"]: 
+                        c["pozos_totales"][tipo] += (monto * 0.5) 
+
+            # 2. RECALCULAR SPORT GANADOR
+            pozo_gan_neto = c["pozos_totales"]["GAN"] * (1 - COMISION)
+            
+            # Encontrar Favoritos
+            ranking_favoritos = sorted(c["apuestas_gan"].items(), key=lambda item: item[1], reverse=True)
+            ranking_favoritos = [x for x in ranking_favoritos if x[0] not in c["retirados"]]
+            
+            top_1 = ranking_favoritos[0][0] if len(ranking_favoritos) > 0 else None
+            top_2 = ranking_favoritos[1][0] if len(ranking_favoritos) > 1 else None
+            
+            nuevos_sports = {}
+            for cab in c["caballos"]:
+                if cab in c["retirados"]:
+                    nuevos_sports[cab] = "RET"
+                    continue
+                
+                plata = c["apuestas_gan"].get(cab, 0)
+                if plata == 0:
+                    nuevos_sports[cab] = 99.90
+                else:
+                    val = pozo_gan_neto / plata
+                    if val < 1.10: val = 1.10
+                    nuevos_sports[cab] = round(val, 2)
+            
+            c["dividendos_gan"] = nuevos_sports
+
+            # 3. RECALCULAR COMBINACIONES (EXA/TRI/DOBLE) PARA LA GRILLA
+            data_grilla = {} 
+            
+            div_fav = novos_sports_val = nuevos_sports.get(top_1, 2.0) if top_1 else 2.0
+            
+            for cab in corren:
+                mi_sport = nuevos_sports.get(cab, 10.0)
+                if isinstance(mi_sport, str): mi_sport = 0 # Si es RET
+                
+                # --- EXACTA / IMPERFECTA ---
+                # Si soy el favorito, cruzo con el 2do favorito. Si no, conmigo + favorito.
+                pareja = top_2 if cab == top_1 else top_1
+                div_pareja = nuevos_sports.get(pareja, 5.0) if pareja else 5.0
+                if isinstance(div_pareja, str): div_pareja = 0
+
+                # Simular pago combinada
+                pago_exa = calcular_pago_combinado(c["pozos_totales"]["EXA"], mi_sport, div_pareja)
+                
+                # --- TRIFECTA / CUATRIFECTA ---
+                pago_tri = round(pago_exa * random.uniform(4, 8), 1)
+                
+                # --- DOBLE ---
+                pago_doble = 0
+                # Simulamos que en la proxima carrera gana un caballo random (Factor 3.5)
+                pago_doble = calcular_pago_combinado(c["pozos_totales"]["DOBLE"], mi_sport, 3.5)
+                
+                data_grilla[cab] = {
+                    "EXA": pago_exa,
+                    "TRI": pago_tri,
+                    "DOBLE": pago_doble if pago_doble > 0 else "-"
+                }
+            
+            c["dividendos_extra"] = data_grilla
+            
+            print(f"   > Carrera {num_carrera}: Pozo GAN ${c['pozos_totales']['GAN']} | Fav: {top_1} (${div_fav})")
+
+# Iniciar hilo
+t = threading.Thread(target=simulador_bucle)
+t.daemon = True
+t.start()
+
+# --- ENDPOINTS ---
+
+@app.route('/configurar', methods=['POST'])
+def configurar():
+    data = request.json
+    num = str(data.get("carrera"))
+    caballos = [str(x) for x in data.get("caballos", [])]
+    incrementos = data.get("incrementos", {}) 
+    
+    # Si la carrera NO existe en memoria, la creamos
+    if num not in HIPODROMO:
+        print(f"🆕 INICIALIZANDO CARRERA {num}")
+        HIPODROMO[num] = {
+            "activa": True,
+            "caballos": caballos,
+            "retirados": [],
+            "apuestas_gan": {c: 1000 for c in caballos}, # Semilla inicial
+            "pozos_totales": {
+                "GAN": incrementos.get("GAN", 10000), 
+                "EXA": incrementos.get("EXACTA", incrementos.get("IMPERFECTA", 0)),
+                "TRI": incrementos.get("TRIFECTA", incrementos.get("CUATRIFECTA", 0)),
+                "DOBLE": incrementos.get("DOBLE", 0),
+                "CUA": incrementos.get("CUATERNA", 0),
+                "QUI": incrementos.get("QUINTUPLO", 0),
+                "CAD": incrementos.get("CADENA", 0)
+            },
+            "dividendos_gan": {},
+            "dividendos_extra": {}
+        }
+    else:
+        print(f"🔄 RECONECTANDO A CARRERA {num} (Recuperando Pozos)")
+        # Solo actualizamos status, no borramos la plata
+        HIPODROMO[num]["activa"] = True 
+
+    return jsonify({"status": "ok", "msg": f"Carrera {num} configurada."})
+
+@app.route('/retirar', methods=['POST'])
+def retirar():
+    data = request.json
+    num_c = str(data.get("carrera"))
+    cab = str(data.get("caballo"))
+    
+    if num_c in HIPODROMO:
+        c = HIPODROMO[num_c]
+        if cab not in c["retirados"]:
+            c["retirados"].append(cab)
+            mover_plata_retirado_al_favorito(c, cab)
+            return jsonify({"status": "ok"})
+    
+    return jsonify({"status": "error", "msg": "Carrera o caballo no valido"})
+
+@app.route('/dividendos', methods=['GET'])
+def get_dividendos():
+    num_c = str(request.args.get('carrera'))
+    
+    if num_c in HIPODROMO:
+        c = HIPODROMO[num_c]
+        return jsonify({
+            "status": "ok",
+            "ganador": c["dividendos_gan"],
+            "extras": c["dividendos_extra"],
+            "pozos": c["pozos_totales"]
+        })
+    else:
+        return jsonify({"status": "error", "msg": "Carrera no iniciada"})
+
+if __name__ == '__main__':
+    print("🏇 TOTE SERVER V2 (MULTI-CARRERA + LOGICA COMPLEJA) CORRIENDO...")
     app.run(host='0.0.0.0', port=5000)

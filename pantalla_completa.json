@@ -1,112 +1,103 @@
 {
     "visible": true,
-    "favoritos": "8-1-7",
+    "favoritos": "3-6-8",
     "carrera_info": {
-        "numero": "9º Carrera",
-        "distancia": "2000 METROS",
-        "hora": "19:00",
+        "numero": "1º Carrera",
+        "distancia": "1300 METROS",
+        "hora": "14:00",
         "pista": "NORMAL"
     },
     "pozos": {
-        "gan": "",
-        "exa": "",
-        "tri": "",
-        "extra": "",
-        "label_extra": "CADENA:",
+        "gan": "231400",
+        "exa": "110700",
+        "tri": "110700",
+        "extra": "110700",
+        "label_extra": "CUATERNA:",
         "label_exa": "EXACTA:",
         "label_tri": "TRIFECTA:"
     },
     "incremento": {
-        "label": "EXACTA",
-        "monto": "1"
+        "label": "CUATERNA",
+        "monto": "200"
     },
     "retirados_global": [
         "1ª:CORREN TODOS",
         "2ª:CORREN TODOS",
-        "3ª:CORREN TODOS",
+        "3ª:3,GIULIE IS A BOMB",
         "4ª:CORREN TODOS",
         "5ª:CORREN TODOS",
         "6ª:CORREN TODOS",
         "7ª:CORREN TODOS",
         "8ª:CORREN TODOS",
-        "9ª:9,DR. LEGASOV",
+        "9ª:CORREN TODOS",
         "10ª:CORREN TODOS",
         "11ª:CORREN TODOS",
         "12ª:CORREN TODOS"
     ],
-    "retirados_detalle": [
-        {
-            "numero": "4",
-            "nombre": "DR. LEGASOV"
-        },
-        {
-            "numero": "6",
-            "nombre": "TATY BOONE"
-        }
-    ],
+    "retirados_detalle": [],
     "tabla_apuestas": [
         {
             "numero": "1",
-            "ganador": "5.57",
-            "exacta": "",
-            "trifecta": "",
-            "doble": ""
+            "ganador": "6.40",
+            "exacta": "28.3",
+            "trifecta": "189.6",
+            "doble": "25.0"
         },
         {
             "numero": "2",
-            "ganador": "6.21",
-            "exacta": "",
-            "trifecta": "",
-            "doble": ""
+            "ganador": "10.65",
+            "exacta": "39.4",
+            "trifecta": "166.3",
+            "doble": "41.0"
         },
         {
             "numero": "3",
-            "ganador": "8.96",
-            "exacta": "",
-            "trifecta": "",
-            "doble": ""
+            "ganador": "4.01",
+            "exacta": "22.6",
+            "trifecta": "114.5",
+            "doble": "14.8"
         },
         {
             "numero": "4",
-            "ganador": "RET",
-            "exacta": "RET",
-            "trifecta": "RET",
-            "doble": "RET"
+            "ganador": "7.39",
+            "exacta": "35.2",
+            "trifecta": "212.2",
+            "doble": "30.9"
         },
         {
             "numero": "5",
-            "ganador": "6.17",
-            "exacta": "",
-            "trifecta": "",
-            "doble": ""
+            "ganador": "11.49",
+            "exacta": "42.9",
+            "trifecta": "303.7",
+            "doble": "32.4"
         },
         {
             "numero": "6",
-            "ganador": "RET",
-            "exacta": "RET",
-            "trifecta": "RET",
-            "doble": "RET"
+            "ganador": "5.98",
+            "exacta": "20.7",
+            "trifecta": "109.1",
+            "doble": "20.8"
         },
         {
             "numero": "7",
-            "ganador": "5.58",
-            "exacta": "",
-            "trifecta": "",
-            "doble": ""
+            "ganador": "8.72",
+            "exacta": "33.2",
+            "trifecta": "193.5",
+            "doble": "27.3"
         },
         {
             "numero": "8",
-            "ganador": "2.64",
-            "exacta": "",
-            "trifecta": "",
-            "doble": ""
+            "ganador": "6.15",
+            "exacta": "24.7",
+            "trifecta": "182.1",
+            "doble": "22.0"
         },
         {
             "numero": "9",
-            "ganador": "6.19",
-            "exacta": "",
-            "trifecta": "",
-            "doble": ""
+            "ganador": "6.20",
+            "exacta": "28.6",
+            "trifecta": "206.0",
+            "doble": "25.9"
         }
     ],
     "config_nombres": {
