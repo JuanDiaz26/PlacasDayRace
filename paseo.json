@@ -1,3 +1,10 @@
 {
-    "visible": false
+    "visible": true,
+    "numero": "1",
+    "nombre": "BUENOS MUCHACHOS",
+    "jockey": "",
+    "stud": "LA POROTA",
+    "cuidador": "Nieva Pedro A.",
+    "cambio_monta": false,
+    "retirado": false
 }

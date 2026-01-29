@@ -59,7 +59,7 @@ vars_div = {}
 # FUNCIONES SISTEMA
 # =============================================================================
 def inicializar_sistema():
-    print("--- INICIANDO SISTEMA V38 (INTEGRACION TOTAL + RESULTADOS OK) ---")
+    print("--- INICIANDO SISTEMA V39 (SIMULADOR COMBINADO) ---")
     guardar_json(ARCHIVO_MARCADOR, []) 
     guardar_json(ARCHIVO_PASEO, {"visible": False})
     guardar_json(ARCHIVO_PANTALLA, {"visible": False})
@@ -91,58 +91,51 @@ def toggle_simulador():
     if not simulacion_activa:
         # INICIAR SIMULACION
         try:
-            # 1. Recopilar datos
             caballos_lista = [str(c['numero']) for c in carrera_actual_data['caballos']]
             
-            # Leer incrementos de la pantalla para alimentar al server
+            # Leer incrementos y bases de pozos
             incrementos = {}
             try:
-                # Leemos el pozo extra
                 lbl_extra = combo_pozo_extra.get().replace(":","").strip()
                 val_extra = entry_pozo_extra.get().replace("$","").replace(".","").strip()
                 if val_extra.isdigit(): incrementos[lbl_extra] = int(val_extra)
                 
-                # Leemos los otros pozos si tienen base
                 val_gan = entry_pozo_gan.get().replace("$","").replace(".","").strip()
                 if val_gan.isdigit(): incrementos["GAN"] = int(val_gan)
             except: pass
 
-            # Mandamos configuración de qué apuestas se juegan en esta carrera
-            # Basado en los combos de la grilla
+            # Detectar qué tipo de apuestas se juegan (para la logica Exacta vs Imperfecta)
             tipos_juego = ["GAN"]
-            if "EXACTA" in combo_head_2.get() or "IMPERFECTA" in combo_head_2.get(): tipos_juego.append("EXA")
-            if "TRIFECTA" in combo_head_3.get(): tipos_juego.append("TRI")
-            if "DOBLE" in combo_head_4.get(): tipos_juego.append("DOBLE")
+            # Enviamos el TEXTO del combo (ej: "IMPERFECTA") al server
+            tipos_juego.append(combo_head_2.get().upper()) 
+            tipos_juego.append(combo_head_3.get().upper())
+            tipos_juego.append(combo_head_4.get().upper())
 
             payload = {
                 "carrera": entry_num.get(),
                 "caballos": caballos_lista,
                 "incrementos": incrementos,
-                "tipos_apuesta": tipos_juego,
-                "es_ultima": False # A futuro se podria detectar
+                "tipos_apuesta": tipos_juego
             }
 
-            # 2. Enviar CONFIG al servidor
             resp = requests.post(f"{URL_SIMULADOR}/configurar", json=payload, timeout=2)
             if resp.status_code == 200:
                 simulacion_activa = True
                 btn_simulador.config(text="🟢 SIMULANDO (ON)", bg="#27ae60")
-                consultar_simulador_loop() # Arrancar bucle
+                consultar_simulador_loop()
             else:
-                messagebox.showerror("Error Simulador", "El servidor respondio con error.")
+                messagebox.showerror("Error", "El servidor respondio con error.")
         except Exception as e:
-            messagebox.showerror("Error de Conexión", f"No se pudo conectar con el Simulador.\n¿Está abierto 'tote_server.py'?\n\nError: {e}")
+            messagebox.showerror("Error Conexión", f"No se pudo conectar al Simulador.\nError: {e}")
     else:
-        # DETENER
         simulacion_activa = False
         btn_simulador.config(text="🔴 CONECTAR SIMULADOR", bg="#c0392b")
 
 def consultar_simulador_loop():
-    """Consulta periódica al servidor para actualizar la grilla y la pantalla."""
+    """Consulta al servidor y actualiza la grilla con COMBINACIONES."""
     if not simulacion_activa: return
 
     try:
-        # Preguntamos por la carrera ACTUAL (la que está en el entry)
         num_c = entry_num.get()
         resp = requests.get(f"{URL_SIMULADOR}/dividendos", params={"carrera": num_c}, timeout=2)
         
@@ -150,50 +143,45 @@ def consultar_simulador_loop():
             data = resp.json()
             if data["status"] == "ok":
                 div_gan = data.get("ganador", {})
-                div_extra = data.get("extras", {}) # { "1": {"EXA": 20, "TRI": 50...} }
+                div_extra = data.get("extras", {}) 
                 pozos = data.get("pozos", {})
 
-                # 1. Actualizar Grilla (Todas las columnas)
+                # 1. ACTUALIZAR GRILLA
                 for item in entradas_pantalla:
                     num = item["num"]
                     
-                    # GANADOR
+                    # GANADOR (Numero solo)
                     if num in div_gan:
                         val = div_gan[num]
                         txt = f"{val:.2f}" if isinstance(val, float) else str(val)
                         if item["gan"].get() != txt:
                             item["gan"].delete(0, tk.END); item["gan"].insert(0, txt)
                     
-                    # EXTRAS (EXA, TRI, DOBLE)
+                    # EXTRAS (Combinaciones + Precio)
                     if num in div_extra:
                         extras_cab = div_extra[num]
                         
-                        # Columna 2 (Exacta/Imp)
-                        val_exa = extras_cab.get("EXA", "-")
-                        txt_exa = f"{val_exa:.1f}" if isinstance(val_exa, float) else str(val_exa)
-                        if item["col2"].get() != txt_exa:
-                            item["col2"].delete(0, tk.END); item["col2"].insert(0, txt_exa)
+                        # Exacta/Imp
+                        val_exa = extras_cab.get("EXA", "-") # Ej: "1-4 $540"
+                        if item["col2"].get() != str(val_exa):
+                            item["col2"].delete(0, tk.END); item["col2"].insert(0, str(val_exa))
 
-                        # Columna 3 (Trifecta)
+                        # Trifecta
                         val_tri = extras_cab.get("TRI", "-")
-                        txt_tri = f"{val_tri:.1f}" if isinstance(val_tri, float) else str(val_tri)
-                        if item["col3"].get() != txt_tri:
-                            item["col3"].delete(0, tk.END); item["col3"].insert(0, txt_tri)
+                        if item["col3"].get() != str(val_tri):
+                            item["col3"].delete(0, tk.END); item["col3"].insert(0, str(val_tri))
 
-                        # Columna 4 (Doble)
+                        # Doble
                         val_dob = extras_cab.get("DOBLE", "-")
-                        txt_dob = f"{val_dob:.1f}" if isinstance(val_dob, float) else str(val_dob)
-                        if item["col4"].get() != txt_dob:
-                            item["col4"].delete(0, tk.END); item["col4"].insert(0, txt_dob)
+                        if item["col4"].get() != str(val_dob):
+                            item["col4"].delete(0, tk.END); item["col4"].insert(0, str(val_dob))
 
-                # 2. Actualizar Pozos Superiores
+                # 2. ACTUALIZAR POZOS (Arriba)
                 if "GAN" in pozos:
                     entry_pozo_gan.delete(0, tk.END); entry_pozo_gan.insert(0, f"{int(pozos['GAN'])}")
                 
-                # Mapeo inteligente de pozos segun lo seleccionado en los combos
-                
                 def actualizar_pozo_dinamico(combo, entry):
-                    lbl = combo.get().replace(":","").strip() # Ej "EXACTA"
+                    lbl = combo.get().replace(":","").strip()
                     key_server = "EXA" if "EXACTA" in lbl or "IMPERFECTA" in lbl else \
                                  "TRI" if "TRIFECTA" in lbl or "CUATRIFECTA" in lbl else \
                                  "DOBLE" if "DOBLE" in lbl else \
@@ -209,18 +197,16 @@ def consultar_simulador_loop():
                 actualizar_pozo_dinamico(combo_pozo_tri_lbl, entry_pozo_tri)
                 actualizar_pozo_dinamico(combo_pozo_extra, entry_pozo_extra)
 
-                # 3. AUTO-UPDATE AL OBS (Para que no tengas que clickear)
-                # Llamamos a enviar_pantalla_completa pero sin hacer ruido
+                # 3. GUARDADO SILENCIOSO (Para OBS)
                 enviar_pantalla_completa(silencioso=True)
 
     except Exception as e:
         print(f"Error leyendo simulador: {e}")
     
-    # Repetir cada 10 segundos (RITMO PEDIDO)
-    root.after(10000, consultar_simulador_loop)
+    root.after(10000, consultar_simulador_loop) # 10 Segundos
 
 def notificar_retirado_simulador(num_caballo):
-    """Avisa al simulador que se retiró un caballo."""
+    """Avisa al simulador."""
     if simulacion_activa:
         try:
             payload = {"carrera": entry_num.get(), "caballo": str(num_caballo)}

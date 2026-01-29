@@ -1,6 +1,6 @@
 {
     "visible": true,
-    "favoritos": "3-6-8",
+    "favoritos": "1-5-3",
     "carrera_info": {
         "numero": "1º Carrera",
         "distancia": "1300 METROS",
@@ -8,22 +8,22 @@
         "pista": "NORMAL"
     },
     "pozos": {
-        "gan": "231400",
-        "exa": "110700",
-        "tri": "110700",
-        "extra": "110700",
-        "label_extra": "CUATERNA:",
+        "gan": "1562300",
+        "exa": "622920",
+        "tri": "622920",
+        "extra": "622920",
+        "label_extra": "CADENA:",
         "label_exa": "EXACTA:",
         "label_tri": "TRIFECTA:"
     },
     "incremento": {
-        "label": "CUATERNA",
-        "monto": "200"
+        "label": "",
+        "monto": ""
     },
     "retirados_global": [
         "1ª:CORREN TODOS",
         "2ª:CORREN TODOS",
-        "3ª:3,GIULIE IS A BOMB",
+        "3ª:CORREN TODOS",
         "4ª:CORREN TODOS",
         "5ª:CORREN TODOS",
         "6ª:CORREN TODOS",
@@ -38,66 +38,66 @@
     "tabla_apuestas": [
         {
             "numero": "1",
-            "ganador": "6.40",
-            "exacta": "28.3",
-            "trifecta": "189.6",
-            "doble": "25.0"
+            "ganador": "6.22",
+            "exacta": "1-5 $28.6",
+            "trifecta": "1-5-3 $155.2",
+            "doble": "1-3 $18.2"
         },
         {
             "numero": "2",
-            "ganador": "10.65",
-            "exacta": "39.4",
-            "trifecta": "166.3",
-            "doble": "41.0"
+            "ganador": "7.31",
+            "exacta": "2-1 $36.8",
+            "trifecta": "2-1-5 $362.5",
+            "doble": "2-4 $19.6"
         },
         {
             "numero": "3",
-            "ganador": "4.01",
-            "exacta": "22.6",
-            "trifecta": "114.5",
-            "doble": "14.8"
+            "ganador": "6.53",
+            "exacta": "3-1 $33.8",
+            "trifecta": "3-1-5 $281.7",
+            "doble": "3-5 $17.6"
         },
         {
             "numero": "4",
-            "ganador": "7.39",
-            "exacta": "35.2",
-            "trifecta": "212.2",
-            "doble": "30.9"
+            "ganador": "6.86",
+            "exacta": "4-1 $34.3",
+            "trifecta": "4-1-5 $303.6",
+            "doble": "4-12 $18.0"
         },
         {
             "numero": "5",
-            "ganador": "11.49",
-            "exacta": "42.9",
-            "trifecta": "303.7",
-            "doble": "32.4"
+            "ganador": "6.52",
+            "exacta": "5-1 $31.8",
+            "trifecta": "5-1-3 $217.6",
+            "doble": "5-8 $17.6"
         },
         {
             "numero": "6",
-            "ganador": "5.98",
-            "exacta": "20.7",
-            "trifecta": "109.1",
-            "doble": "20.8"
+            "ganador": "7.40",
+            "exacta": "6-1 $33.0",
+            "trifecta": "6-1-5 $212.8",
+            "doble": "6-11 $18.8"
         },
         {
             "numero": "7",
-            "ganador": "8.72",
-            "exacta": "33.2",
-            "trifecta": "193.5",
-            "doble": "27.3"
+            "ganador": "6.53",
+            "exacta": "7-1 $30.1",
+            "trifecta": "7-1-5 $277.3",
+            "doble": "7-14 $16.9"
         },
         {
             "numero": "8",
-            "ganador": "6.15",
-            "exacta": "24.7",
-            "trifecta": "182.1",
-            "doble": "22.0"
+            "ganador": "6.95",
+            "exacta": "8-1 $33.5",
+            "trifecta": "8-1-5 $308.1",
+            "doble": "8-10 $17.6"
         },
         {
             "numero": "9",
-            "ganador": "6.20",
-            "exacta": "28.6",
-            "trifecta": "206.0",
-            "doble": "25.9"
+            "ganador": "6.64",
+            "exacta": "9-1 $31.0",
+            "trifecta": "9-1-5 $194.2",
+            "doble": "9-11 $18.6"
         }
     ],
     "config_nombres": {
