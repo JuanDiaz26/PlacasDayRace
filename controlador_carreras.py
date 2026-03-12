@@ -141,22 +141,55 @@ def consultar_simulador_loop():
                 pozos = data.get("pozos", {})
 
                 # 1. ACTUALIZAR GRILLA
+                # OBTENEMOS LOS RETIRADOS ACTUALES PARA EL ESCUDO
+                c_id_actual = carrera_actual_data['id']
+                retirados_act = memoria_global_gui.get(c_id_actual, {}).get("retirados", [])
+
+                # 1. ACTUALIZAR GRILLA
                 for item in entradas_pantalla:
                     num = item["num"]
+                    
+                    # ESCUDO RETIRADOS: Si está retirado, forzamos RET en toda la fila
+                    if num in retirados_act:
+                        if item["gan"].get() != "RET": item["gan"].delete(0, tk.END); item["gan"].insert(0, "RET")
+                        if item["col2"].get() != "RET": item["col2"].delete(0, tk.END); item["col2"].insert(0, "RET")
+                        if item["col3"].get() != "RET": item["col3"].delete(0, tk.END); item["col3"].insert(0, "RET")
+                        if item["col4"].get() != "RET": item["col4"].delete(0, tk.END); item["col4"].insert(0, "RET")
+                        continue # Terminamos con este caballo y pasamos al siguiente
+
+                    # LÓGICA NORMAL (Si NO está retirado, limpiamos cualquier rastro de RET viejo)
+                    
+                    # 1. Limpieza forzada inmediata (mata al fantasma de la caja)
+                    if item["gan"].get() == "RET": item["gan"].delete(0, tk.END); item["gan"].insert(0, "-")
+                    if item["col2"].get() == "RET": item["col2"].delete(0, tk.END); item["col2"].insert(0, "-")
+                    if item["col3"].get() == "RET": item["col3"].delete(0, tk.END); item["col3"].insert(0, "-")
+                    if item["col4"].get() == "RET": item["col4"].delete(0, tk.END); item["col4"].insert(0, "-")
+
+                    # 2. Dejar pasar los números reales del simulador
                     if num in div_gan:
                         val = div_gan[num]
-                        txt = f"{val:.2f}" if isinstance(val, float) else str(val)
+                        # Si el simulador viene con delay y manda un "RET" viejo, lo ignoramos poniéndole "-"
+                        txt = "-" if val == "RET" else (f"{val:.2f}" if isinstance(val, float) else str(val))
                         if item["gan"].get() != txt:
                             item["gan"].delete(0, tk.END); item["gan"].insert(0, txt)
                     
                     if num in div_extra:
                         extras_cab = div_extra[num]
-                        val_exa = extras_cab.get("EXA", "-") 
-                        if item["col2"].get() != str(val_exa): item["col2"].delete(0, tk.END); item["col2"].insert(0, str(val_exa))
+                        
+                        val_exa = extras_cab.get("EXA", "-")
+                        val_exa = "-" if val_exa == "RET" else str(val_exa)
+                        if item["col2"].get() != val_exa: 
+                            item["col2"].delete(0, tk.END); item["col2"].insert(0, val_exa)
+                            
                         val_tri = extras_cab.get("TRI", "-")
-                        if item["col3"].get() != str(val_tri): item["col3"].delete(0, tk.END); item["col3"].insert(0, str(val_tri))
+                        val_tri = "-" if val_tri == "RET" else str(val_tri)
+                        if item["col3"].get() != val_tri: 
+                            item["col3"].delete(0, tk.END); item["col3"].insert(0, val_tri)
+                            
                         val_dob = extras_cab.get("DOBLE", "-")
-                        if item["col4"].get() != str(val_dob): item["col4"].delete(0, tk.END); item["col4"].insert(0, str(val_dob))
+                        val_dob = "-" if val_dob == "RET" else str(val_dob)
+                        if item["col4"].get() != val_dob: 
+                            item["col4"].delete(0, tk.END); item["col4"].insert(0, val_dob)
 
                 # 2. ACTUALIZAR POZOS (Arriba)
                 if "GAN" in pozos:
@@ -211,12 +244,21 @@ def consultar_simulador_loop():
     root.after(10000, consultar_simulador_loop) # 10 Segundos
 
 def notificar_retirado_simulador(num_caballo):
-    """Avisa al simulador."""
+    """Avisa al simulador que un caballo no corre."""
     if simulacion_activa:
         try:
             payload = {"carrera": entry_num.get(), "caballo": str(num_caballo)}
             requests.post(f"{URL_SIMULADOR}/retirar", json=payload)
             print(f"-> Simulador notificado: Retiro {num_caballo}")
+        except: pass
+
+def notificar_reincorporado_simulador(num_caballo):
+    """Avisa al simulador que un caballo vuelve a correr."""
+    if simulacion_activa:
+        try:
+            payload = {"carrera": entry_num.get(), "caballo": str(num_caballo)}
+            requests.post(f"{URL_SIMULADOR}/reincorporar", json=payload)
+            print(f"<- Simulador notificado: Reincorporación {num_caballo}")
         except: pass
 
 # =============================================================================
@@ -464,22 +506,34 @@ def toggle_marcador_tv():
     if visibilidad_marcador: btn_mar_toggle.config(text="👁️ OCULTAR", bg="#7f8c8d"); btn_act_marcador.config(bg="#2ecc71", text="✅ EN AIRE")
     else: btn_mar_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71"); btn_act_marcador.config(bg="#8e44ad", text="🚀 ENVIAR A TV (Oculto)")
 
+bloquear_trace = False
+
+def al_cambiar_ret_paseo(*args):
+    """Esta función mágica sincroniza la tilde de Paseo con la de Pantalla Completa en tiempo real"""
+    global bloquear_trace
+    if bloquear_trace or not carrera_actual_data: return
+    idx = combo_paseo.current()
+    if idx < 0: return
+    num_cab = str(carrera_actual_data['caballos'][idx]['numero'])
+    is_ret = chk_retirado_var.get()
+    
+    # Buscar el checkbox equivalente en Pantalla Completa y simular el click
+    for item in checklist_vars:
+        if item["num"] == num_cab:
+            if item["var"].get() != is_ret:
+                item["var"].set(is_ret)  # ¡Esto dispara la actualización al OBS automáticamente!
+            break
+
 def guardar_cambios_paseo_actual():
-    idx = combo_paseo.current(); 
+    idx = combo_paseo.current() 
     if idx < 0 or not carrera_actual_data: return
     caballo = carrera_actual_data['caballos'][idx]; num_cab = str(caballo['numero'])
-    memoria_paseo[num_cab] = { "jockey": entry_jockey.get(), "stud": entry_stud.get(), "cuidador": entry_cuid.get(), "cambio_monta": chk_cambio_var.get(), "retirado": chk_retirado_var.get() }
-    c_id = carrera_actual_data['id']
-    if c_id not in memoria_global_gui: memoria_global_gui[c_id] = {"grid": {}, "retirados": []}
-    lista_ret = memoria_global_gui[c_id].get("retirados", [])
-    if chk_retirado_var.get():
-        if num_cab not in lista_ret: lista_ret.append(num_cab)
-    else:
-        if num_cab in lista_ret: lista_ret.remove(num_cab)
-    memoria_global_gui[c_id]["retirados"] = lista_ret
-    cargar_checklist_retirados()
+    
+    # Solo guarda textos. ¡Ya no toca los retirados para no hacer lío con el fantasma de los 20 seg!
+    memoria_paseo[num_cab] = { "jockey": entry_jockey.get(), "stud": entry_stud.get(), "cuidador": entry_cuid.get(), "cambio_monta": chk_cambio_var.get() }
 
 def seleccionar_caballo_paseo(event):
+    global bloquear_trace
     if not carrera_actual_data: return
     idx = combo_paseo.current()
     if idx >= 0:
@@ -488,11 +542,15 @@ def seleccionar_caballo_paseo(event):
         entry_stud.delete(0, tk.END); entry_stud.insert(0, datos_memo.get("stud", caballo.get('stud', '')))
         entry_cuid.delete(0, tk.END); entry_cuid.insert(0, datos_memo.get("cuidador", caballo.get('cuidador', '')))
         chk_cambio_var.set(datos_memo.get("cambio_monta", False))
+        
         c_id = carrera_actual_data['id']
         lista_ret_global = memoria_global_gui.get(c_id, {}).get("retirados", [])
         esta_retirado_global = num_cab in lista_ret_global
-        esta_retirado_local = datos_memo.get("retirado", False)
-        chk_retirado_var.set(esta_retirado_global or esta_retirado_local)
+        
+        # Levantamos el escudo temporal para que la sincronización no haga un bucle infinito
+        bloquear_trace = True
+        chk_retirado_var.set(esta_retirado_global)
+        bloquear_trace = False
 
 def enviar_placa_paseo():
     global visibilidad_paseo; visibilidad_paseo = True; idx = combo_paseo.current(); 
@@ -555,62 +613,94 @@ def cargar_checklist_retirados():
     for widget in fr_check_ret.winfo_children(): widget.destroy()
     global checklist_vars; checklist_vars = []
     if not carrera_actual_data: return
+    
     c_id = carrera_actual_data['id']
     retirados_guardados = memoria_global_gui.get(c_id, {}).get("retirados", [])
     caballos = carrera_actual_data.get('caballos', [])
     
-    for cab in caballos:
-        var = tk.BooleanVar(); num_str = str(cab['numero']); nom_str = cab['nombre']
+    # -------------------------------------------------------------------
+    # EL CEREBRO (Sincronización Maestra única, afuera del bucle)
+    # -------------------------------------------------------------------
+    def on_ret_change(*args):
+        try: actualizar_listas_inteligentes()
+        except: pass
         
-        def on_ret_change(*args):
-            actualizar_listas_inteligentes()
+        c_id_actual = carrera_actual_data['id']
+        num_car = "".join(filter(str.isdigit, c_id_actual))
+        if not num_car: num_car = "1"
+        
+        lista_ret_global = []
+        lista_legacy = []
+        
+        for item in checklist_vars:
+            num = item["num"]
+            esta_tildado = item["var"].get()
             
-            c_id_actual = carrera_actual_data['id']
-            num_car = "".join(filter(str.isdigit, c_id_actual))
-            if not num_car: num_car = "1"
+            # Chequeamos si antes estaba retirado para no mandar notificaciones dobles
+            antes_retirado = num in memoria_global_gui.get(c_id_actual, {}).get("retirados", [])
             
-            lista_ret_global = []
-            lista_legacy = []
-            
-            for item in checklist_vars:
-                if item["var"].get():
-                    notificar_retirado_simulador(item["num"])
-                    lista_ret_global.append(item["num"])
-                    lista_legacy.append(f"{item['num']},{item['nom']}")
-            
-            # 1. Guardar estado en memoria global interna
-            if c_id_actual not in memoria_global_gui: memoria_global_gui[c_id_actual] = {"grid": {}, "retirados": []}
-            memoria_global_gui[c_id_actual]["retirados"] = lista_ret_global
-            
-            # 2. Actualizar el carrusel en la memoria de Python
-            if not lista_legacy: memoria_retirados[num_car] = "CORREN TODOS"
-            else: memoria_retirados[num_car] = "|".join(lista_legacy)
-            
-            # 3. LÓGICA INTELIGENTE DE ACTUALIZACIÓN (La Cirugía)
+            if esta_tildado:
+                lista_ret_global.append(num)
+                lista_legacy.append(f"{num},{item['nom']}")
+                if not antes_retirado:
+                    try: notificar_retirado_simulador(num)
+                    except: pass
+            else:
+                # Si no está tildado pero antes SÍ lo estaba, lo reincorporamos
+                if antes_retirado:
+                    try: notificar_reincorporado_simulador(num)
+                    except: pass
+        
+        # 1. Guardar estado en memoria global interna (Para que lea el simulador y Paseo)
+        if c_id_actual not in memoria_global_gui: memoria_global_gui[c_id_actual] = {"grid": {}, "retirados": []}
+        memoria_global_gui[c_id_actual]["retirados"] = lista_ret_global
+        
+        # 2. Actualizar el carrusel
+        if not lista_legacy: memoria_retirados[num_car] = "CORREN TODOS"
+        else: memoria_retirados[num_car] = "|".join(lista_legacy)
+        
+        # 3. Disparar actualización de las placas en OBS
+        try:
             if visibilidad_pantalla:
                 if c_id_actual == carrera_en_pantalla_obs or carrera_en_pantalla_obs is None:
-                    # RUTA A: Estás mirando la misma carrera que está en la TV (Actualización completa)
                     enviar_pantalla_completa(silencioso=True)
                 else:
-                    # RUTA B: Estás retirando de otra carrera. Solo inyectamos el carrusel al JSON sin tocar el resto.
-                    try:
-                        with open(ARCHIVO_PANTALLA, "r", encoding="utf-8") as f:
-                            data_tv = json.load(f)
-                        
-                        # Reconstruimos la tira de texto para el zócalo
-                        lista_final = []
-                        for k in sorted(memoria_retirados.keys(), key=lambda x: int(x) if x.isdigit() else 0):
-                            lista_final.append(f"{k}ª:{memoria_retirados[k]}")
-                        
-                        data_tv["retirados_global"] = lista_final
-                        guardar_json(ARCHIVO_PANTALLA, data_tv)
-                    except Exception as e:
-                        print(f"Error en cirugía de retirados: {e}")
+                    with open(ARCHIVO_PANTALLA, "r", encoding="utf-8") as f:
+                        data_tv = json.load(f)
+                    
+                    lista_final = []
+                    num_ancla = "".join(filter(str.isdigit, carrera_en_pantalla_obs)) if carrera_en_pantalla_obs else "1"
+                    num_ancla_int = int(num_ancla) if num_ancla.isdigit() else 1
 
+                    for k in sorted(memoria_retirados.keys(), key=lambda x: int(x) if x.isdigit() else 0):
+                        if k.isdigit() and int(k) >= num_ancla_int:
+                            lista_final.append(f"{k}ª:{memoria_retirados[k]}")
+                    
+                    data_tv["retirados_global"] = lista_final
+                    guardar_json(ARCHIVO_PANTALLA, data_tv)
+        except Exception as e:
+            print(f"Error en cirugía: {e}")
+            
+    # -------------------------------------------------------------------
+    # CREACIÓN DE LAS CASILLAS
+    # -------------------------------------------------------------------
+    for cab in caballos:
+        var = tk.BooleanVar()
+        num_str = str(cab['numero'])
+        nom_str = cab['nombre']
+        
+        # Primero agregamos a la lista
+        checklist_vars.append({"num": num_str, "nom": nom_str, "var": var})
+        
+        # Luego configuramos su estado inicial SIN disparar la función aún
+        if num_str in retirados_guardados: 
+            var.set(True)
+            
+        # Al final, le conectamos "El Cerebro"
         var.trace_add("write", on_ret_change)
-        if num_str in retirados_guardados: var.set(True)
-        c = tk.Checkbutton(fr_check_ret, text=f"{num_str} - {cab['nombre']}", var=var, bg="#ecf0f1", anchor="w")
-        c.pack(fill="x"); checklist_vars.append({"num": num_str, "nom": cab['nombre'], "var": var})
+        
+        c = tk.Checkbutton(fr_check_ret, text=f"{num_str} - {nom_str}", var=var, bg="#ecf0f1", anchor="w")
+        c.pack(fill="x")
 
 def cerrar_carrera_retirados():
     guardar_estado_carrera_anterior()
@@ -671,9 +761,15 @@ def enviar_pantalla_completa(silencioso=False):
         if item["var"].get():
             retirados_detalle.append({"numero": item["num"], "nombre": item["nom"]})
             
-    lista_final_retirados = [] # Legacy para compatibilidad
+    # FILTRO INTELIGENTE: Solo mostrar desde la carrera actual en adelante
+    num_car_actual = "".join(filter(str.isdigit, entry_num.get()))
+    num_car_actual_int = int(num_car_actual) if num_car_actual.isdigit() else 1
+
+    lista_final_retirados = [] 
     for k in sorted(memoria_retirados.keys(), key=lambda x: int(x) if x.isdigit() else 0):
-        val = memoria_retirados[k]; lista_final_retirados.append(f"{k}ª:{val}")
+        if k.isdigit() and int(k) >= num_car_actual_int:
+            val = memoria_retirados[k]
+            lista_final_retirados.append(f"{k}ª:{val}")
     
     # NUEVO: LECTURA DE LOS COMBOS DE POZOS
     lbl_exa = combo_pozo_exa_lbl.get() if combo_pozo_exa_lbl else "EXACTA"
@@ -1109,4 +1205,10 @@ btn_hide_div = tk.Button(tab_dividendos, text="👁️ OCULTAR", command=toggle_
 btn_hide_div.pack(fill="x", padx=50)
 
 root.bind('<Key>', key_handler)
+
+# Conectamos la función mágica al checkbox de la interfaz
+try:
+    chk_retirado_var.trace_add("write", al_cambiar_ret_paseo)
+except: pass
+
 inicializar_sistema(); root.bind_all("<Button-1>", lambda event: event.widget.focus_set()); root.mainloop()

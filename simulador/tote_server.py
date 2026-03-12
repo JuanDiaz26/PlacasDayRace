@@ -154,6 +154,7 @@ t.start()
 
 # --- ENDPOINTS ---
 @app.route('/configurar', methods=['POST'])
+
 def configurar():
     data = request.json
     num = str(data.get("carrera"))
@@ -214,6 +215,23 @@ def retirar():
                 c["apuestas_gan"][fav] += monto
                 print(f"⚠️ RETIRO C{num_c}: {cab} -> ${monto} pasados al {fav}")
             return jsonify({"status": "ok"})
+            
+    return jsonify({"status": "error"})
+
+@app.route('/reincorporar', methods=['POST'])
+def reincorporar():
+    data = request.json
+    num_c = str(data.get("carrera"))
+    cab = str(data.get("caballo"))
+    
+    if num_c in HIPODROMO:
+        c = HIPODROMO[num_c]
+        if cab in c["retirados"]:
+            c["retirados"].remove(cab)
+            # Le damos un "empujoncito" inicial de apuestas para que no quede en 0
+            c["apuestas_gan"][cab] = 500
+            print(f"✅ REINCORPORACIÓN C{num_c}: El caballo {cab} vuelve a la pista")
+        return jsonify({"status": "ok"})
             
     return jsonify({"status": "error"})
 
