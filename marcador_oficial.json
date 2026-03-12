@@ -1,3 +1,39 @@
 {
-    "visible": false
+    "visible": true,
+    "carrera": "1",
+    "premio": "PREMIO \"JUANA MANSO\"",
+    "distancia": "800 METROS",
+    "ganador": {
+        "nombre": "TANDILEÑA",
+        "jockey": "Vizcarra Jose A.",
+        "entrenador": "Chirino Carlos A.",
+        "stud": "TRAMO 20 (SDE)",
+        "tiempo": "1'19\"2/5"
+    },
+    "marcador": [
+        {
+            "numero": "1",
+            "distancia": "1 1/2 CPOS"
+        },
+        {
+            "numero": "2",
+            "distancia": "2 1/2 CPOS"
+        },
+        {
+            "numero": "5",
+            "distancia": "3 1/2 CPOS"
+        },
+        {
+            "numero": "4",
+            "distancia": ""
+        },
+        {
+            "numero": "6",
+            "distancia": ""
+        },
+        {
+            "numero": "7",
+            "distancia": ""
+        }
+    ]
 }

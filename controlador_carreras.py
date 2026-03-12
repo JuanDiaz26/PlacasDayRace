@@ -36,6 +36,8 @@ visibilidad_marcador = True
 visibilidad_paseo = False
 visibilidad_pantalla = False 
 visibilidad_resultados = False
+carrera_simulada = None  # Para que el simulador no se pierda al cambiar de pestaña
+carrera_en_pantalla_obs = None  # Recuerda qué carrera está ponchada en la TV
 
 # Variables globales widgets
 combo_head_2 = None; combo_head_3 = None; combo_head_4 = None
@@ -83,7 +85,7 @@ def enviar_comando_reloj(accion):
 # LOGICA SIMULADOR (CLIENTE)
 # =============================================================================
 def toggle_simulador():
-    global simulacion_activa
+    global simulacion_activa, carrera_simulada
     if not carrera_actual_data:
         messagebox.showwarning("Error", "Carga una carrera primero.")
         return
@@ -92,8 +94,6 @@ def toggle_simulador():
         # INICIAR SIMULACION
         try:
             caballos_lista = [str(c['numero']) for c in carrera_actual_data['caballos']]
-            
-            # Leer incrementos y bases de pozos
             incrementos = {}
             try:
                 lbl_extra = combo_pozo_extra.get().replace(":","").strip()
@@ -104,40 +104,34 @@ def toggle_simulador():
                 if val_gan.isdigit(): incrementos["GAN"] = int(val_gan)
             except: pass
 
-            # Detectar qué tipo de apuestas se juegan (para la logica Exacta vs Imperfecta)
-            tipos_juego = ["GAN"]
-            # Enviamos el TEXTO del combo (ej: "IMPERFECTA") al server
-            tipos_juego.append(combo_head_2.get().upper()) 
-            tipos_juego.append(combo_head_3.get().upper())
-            tipos_juego.append(combo_head_4.get().upper())
+            tipos_juego = ["GAN", combo_head_2.get().upper(), combo_head_3.get().upper(), combo_head_4.get().upper()]
 
-            payload = {
-                "carrera": entry_num.get(),
-                "caballos": caballos_lista,
-                "incrementos": incrementos,
-                "tipos_apuesta": tipos_juego
-            }
+            payload = { "carrera": entry_num.get(), "caballos": caballos_lista, "incrementos": incrementos, "tipos_apuesta": tipos_juego }
 
             resp = requests.post(f"{URL_SIMULADOR}/configurar", json=payload, timeout=2)
             if resp.status_code == 200:
                 simulacion_activa = True
+                carrera_simulada = entry_num.get() # <-- FIJAMOS LA CARRERA QUE ESTAMOS SIMULANDO
                 btn_simulador.config(text="🟢 SIMULANDO (ON)", bg="#27ae60")
                 consultar_simulador_loop()
-            else:
-                messagebox.showerror("Error", "El servidor respondio con error.")
-        except Exception as e:
-            messagebox.showerror("Error Conexión", f"No se pudo conectar al Simulador.\nError: {e}")
+            else: messagebox.showerror("Error", "El servidor respondio con error.")
+        except Exception as e: messagebox.showerror("Error Conexión", f"No se pudo conectar al Simulador.\nError: {e}")
     else:
         simulacion_activa = False
+        carrera_simulada = None
         btn_simulador.config(text="🔴 CONECTAR SIMULADOR", bg="#c0392b")
 
 def consultar_simulador_loop():
-    """Consulta al servidor y actualiza la grilla con COMBINACIONES."""
     if not simulacion_activa: return
 
+    # ESCUDO: Si seleccionaste otra carrera en la interfaz, frenamos la actualización 
+    # visual para no mezclar los datos, pero mantenemos el loop vivo.
+    if entry_num.get() != carrera_simulada:
+        root.after(10000, consultar_simulador_loop)
+        return
+
     try:
-        num_c = entry_num.get()
-        resp = requests.get(f"{URL_SIMULADOR}/dividendos", params={"carrera": num_c}, timeout=2)
+        resp = requests.get(f"{URL_SIMULADOR}/dividendos", params={"carrera": carrera_simulada}, timeout=2)
         
         if resp.status_code == 200:
             data = resp.json()
@@ -149,32 +143,20 @@ def consultar_simulador_loop():
                 # 1. ACTUALIZAR GRILLA
                 for item in entradas_pantalla:
                     num = item["num"]
-                    
-                    # GANADOR (Numero solo)
                     if num in div_gan:
                         val = div_gan[num]
                         txt = f"{val:.2f}" if isinstance(val, float) else str(val)
                         if item["gan"].get() != txt:
                             item["gan"].delete(0, tk.END); item["gan"].insert(0, txt)
                     
-                    # EXTRAS (Combinaciones + Precio)
                     if num in div_extra:
                         extras_cab = div_extra[num]
-                        
-                        # Exacta/Imp
-                        val_exa = extras_cab.get("EXA", "-") # Ej: "1-4 $540"
-                        if item["col2"].get() != str(val_exa):
-                            item["col2"].delete(0, tk.END); item["col2"].insert(0, str(val_exa))
-
-                        # Trifecta
+                        val_exa = extras_cab.get("EXA", "-") 
+                        if item["col2"].get() != str(val_exa): item["col2"].delete(0, tk.END); item["col2"].insert(0, str(val_exa))
                         val_tri = extras_cab.get("TRI", "-")
-                        if item["col3"].get() != str(val_tri):
-                            item["col3"].delete(0, tk.END); item["col3"].insert(0, str(val_tri))
-
-                        # Doble
+                        if item["col3"].get() != str(val_tri): item["col3"].delete(0, tk.END); item["col3"].insert(0, str(val_tri))
                         val_dob = extras_cab.get("DOBLE", "-")
-                        if item["col4"].get() != str(val_dob):
-                            item["col4"].delete(0, tk.END); item["col4"].insert(0, str(val_dob))
+                        if item["col4"].get() != str(val_dob): item["col4"].delete(0, tk.END); item["col4"].insert(0, str(val_dob))
 
                 # 2. ACTUALIZAR POZOS (Arriba)
                 if "GAN" in pozos:
@@ -188,10 +170,8 @@ def consultar_simulador_loop():
                                  "CUA" if "CUATERNA" in lbl else \
                                  "QUI" if "QUINTUPLO" in lbl else \
                                  "CAD" if "CADENA" in lbl else None
-                    
                     if key_server and key_server in pozos:
-                        entry.delete(0, tk.END)
-                        entry.insert(0, f"{int(pozos[key_server])}")
+                        entry.delete(0, tk.END); entry.insert(0, f"{int(pozos[key_server])}")
 
                 actualizar_pozo_dinamico(combo_pozo_exa_lbl, entry_pozo_exa)
                 actualizar_pozo_dinamico(combo_pozo_tri_lbl, entry_pozo_tri)
@@ -199,6 +179,31 @@ def consultar_simulador_loop():
 
                 # 3. GUARDADO SILENCIOSO (Para OBS)
                 enviar_pantalla_completa(silencioso=True)
+
+                # 4. ACTUALIZACIÓN EN TIEMPO REAL DEL MARCADOR VIVO
+                if visibilidad_marcador:
+                    try:
+                        # Leemos lo que está en pantalla ahora mismo
+                        with open(ARCHIVO_MARCADOR, "r", encoding="utf-8") as f:
+                            datos_marcador_actual = json.load(f)
+                        
+                        cambio_detectado = False
+                        # Actualizamos solo el dividendo mirando la grilla
+                        for pos in datos_marcador_actual:
+                            num_cab = pos["numero"]
+                            for item in entradas_pantalla:
+                                if item["num"] == num_cab:
+                                    nuevo_div = item["gan"].get()
+                                    if pos.get("dividendo") != nuevo_div:
+                                        pos["dividendo"] = nuevo_div
+                                        cambio_detectado = True
+                                    break
+                        
+                        # Si el simulador movió el precio, lo reescribimos para el OBS
+                        if cambio_detectado:
+                            guardar_json(ARCHIVO_MARCADOR, datos_marcador_actual)
+                    except Exception as e:
+                        print(f"Error actualizando marcador silencioso: {e}")
 
     except Exception as e:
         print(f"Error leyendo simulador: {e}")
@@ -325,13 +330,11 @@ def guardar_estado_carrera_anterior():
     memoria_resultados[c_id] = res_data
 
 def seleccionar_carrera(event):
-    global carrera_actual_data, dividendos_memoria, memoria_paseo, simulacion_activa
+    global carrera_actual_data, dividendos_memoria, memoria_paseo
     if carrera_actual_data: guardar_estado_carrera_anterior()
     
-    # DESACTIVAR SIMULADOR AL CAMBIAR CARRERA (Para evitar mezclar datos)
-    if simulacion_activa:
-        simulacion_activa = False
-        btn_simulador.config(text="🔴 CONECTAR SIMULADOR", bg="#c0392b")
+    # ELIMINADO: El bloque que apagaba el simulador. 
+    # Ahora el simulador seguirá trabajando en segundo plano aunque mires otra carrera.
 
     idx = combo_selector.current()
     if idx >= 0:
@@ -401,34 +404,58 @@ def actualizar_estado_reloj():
 
 # --- CONSTRUIR DATOS VIVO CONECTADO A GRILLA ---
 def construir_datos_marcador(visible):
-    datos = []; caballos_obj = carrera_actual_data.get("caballos", []) if carrera_actual_data else []
+    datos = []
     if not visible: return []
+    
+    caballos_obj = carrera_actual_data.get("caballos", []) if carrera_actual_data else []
+    
+    # Lista de números válidos para esta carrera específica
+    numeros_validos = [str(c["numero"]).strip() for c in caballos_obj]
     
     # 1. Obtener lista de retirados
     lista_retirados = []
     for item in checklist_vars:
         if item["var"].get(): lista_retirados.append(item["num"])
 
+    # Set para ir guardando los que ya tipeaste y detectar duplicados
+    numeros_ingresados = set() 
+
     for i in range(4):
-        entry = entradas_marcador[i]; num_str = entry.get().strip()
+        entry = entradas_marcador[i]
+        num_str = entry.get().strip()
+        
         if num_str:
-            # CHECK PROTECCION RETIRADOS
+            # --- NUEVA VALIDACIÓN: ¿El caballo existe en el programa? ---
+            if num_str not in numeros_validos:
+                messagebox.showwarning("Error de Tipeo", f"El mandil {num_str} NO corre en esta carrera.\nRevisá los números ingresados.")
+                return []
+                
+            # --- NUEVA VALIDACIÓN: ¿Pusiste el mismo número dos veces? ---
+            if num_str in numeros_ingresados:
+                messagebox.showwarning("Error de Duplicado", f"Ingresaste el caballo {num_str} dos veces en el marcador.\nCorregilo para evitar errores en TV.")
+                return []
+            numeros_ingresados.add(num_str)
+
+            # --- VALIDACIÓN ORIGINAL: Protección de Retirados ---
             if num_str in lista_retirados:
                 messagebox.showwarning("Error", f"El caballo {num_str} está MARCADO COMO RETIRADO.\nNo se puede mostrar en el marcador en vivo.")
                 return [] 
 
-            nombre = "COMPETIDOR"; 
+            # Buscar el nombre real del caballo
+            nombre = "COMPETIDOR"
             for c in caballos_obj:
-                if str(c["numero"]).strip() == num_str: nombre = c["nombre"]; break
+                if str(c["numero"]).strip() == num_str: 
+                    nombre = c["nombre"]; break
             
-            # NUEVO: LEER DIVIDENDO DE LA GRILLA DE PANTALLA COMPLETA
+            # Leer dividendo de la grilla de pantalla completa
             dividendo = ""
             for item in entradas_pantalla:
                 if item["num"] == num_str:
-                    dividendo = item["gan"].get() # Lee directo del entry de la grilla
+                    dividendo = item["gan"].get()
                     break
             
             datos.append({ "posicion": i+1, "numero": num_str, "nombre": nombre, "dividendo": dividendo })
+            
     return datos
 
 def actualizar_marcador_vivo(): global visibilidad_marcador; visibilidad_marcador = True; guardar_json(ARCHIVO_MARCADOR, construir_datos_marcador(True)); btn_act_marcador.config(bg="#2ecc71", text="✅ EN AIRE"); btn_mar_toggle.config(text="👁️ OCULTAR", bg="#7f8c8d")
@@ -531,15 +558,56 @@ def cargar_checklist_retirados():
     c_id = carrera_actual_data['id']
     retirados_guardados = memoria_global_gui.get(c_id, {}).get("retirados", [])
     caballos = carrera_actual_data.get('caballos', [])
+    
     for cab in caballos:
-        var = tk.BooleanVar(); num_str = str(cab['numero'])
-        # Comando para actualizar combos y notificar al simulador
-        def on_ret_change(*args, n=num_str):
+        var = tk.BooleanVar(); num_str = str(cab['numero']); nom_str = cab['nombre']
+        
+        def on_ret_change(*args):
             actualizar_listas_inteligentes()
-            notificar_retirado_simulador(n)
+            
+            c_id_actual = carrera_actual_data['id']
+            num_car = "".join(filter(str.isdigit, c_id_actual))
+            if not num_car: num_car = "1"
+            
+            lista_ret_global = []
+            lista_legacy = []
+            
+            for item in checklist_vars:
+                if item["var"].get():
+                    notificar_retirado_simulador(item["num"])
+                    lista_ret_global.append(item["num"])
+                    lista_legacy.append(f"{item['num']},{item['nom']}")
+            
+            # 1. Guardar estado en memoria global interna
+            if c_id_actual not in memoria_global_gui: memoria_global_gui[c_id_actual] = {"grid": {}, "retirados": []}
+            memoria_global_gui[c_id_actual]["retirados"] = lista_ret_global
+            
+            # 2. Actualizar el carrusel en la memoria de Python
+            if not lista_legacy: memoria_retirados[num_car] = "CORREN TODOS"
+            else: memoria_retirados[num_car] = "|".join(lista_legacy)
+            
+            # 3. LÓGICA INTELIGENTE DE ACTUALIZACIÓN (La Cirugía)
+            if visibilidad_pantalla:
+                if c_id_actual == carrera_en_pantalla_obs or carrera_en_pantalla_obs is None:
+                    # RUTA A: Estás mirando la misma carrera que está en la TV (Actualización completa)
+                    enviar_pantalla_completa(silencioso=True)
+                else:
+                    # RUTA B: Estás retirando de otra carrera. Solo inyectamos el carrusel al JSON sin tocar el resto.
+                    try:
+                        with open(ARCHIVO_PANTALLA, "r", encoding="utf-8") as f:
+                            data_tv = json.load(f)
+                        
+                        # Reconstruimos la tira de texto para el zócalo
+                        lista_final = []
+                        for k in sorted(memoria_retirados.keys(), key=lambda x: int(x) if x.isdigit() else 0):
+                            lista_final.append(f"{k}ª:{memoria_retirados[k]}")
+                        
+                        data_tv["retirados_global"] = lista_final
+                        guardar_json(ARCHIVO_PANTALLA, data_tv)
+                    except Exception as e:
+                        print(f"Error en cirugía de retirados: {e}")
 
         var.trace_add("write", on_ret_change)
-        
         if num_str in retirados_guardados: var.set(True)
         c = tk.Checkbutton(fr_check_ret, text=f"{num_str} - {cab['nombre']}", var=var, bg="#ecf0f1", anchor="w")
         c.pack(fill="x"); checklist_vars.append({"num": num_str, "nom": cab['nombre'], "var": var})
@@ -550,11 +618,11 @@ def cerrar_carrera_retirados():
     if not num_car: num_car = "1"
     lista_ret = []
     
-    # Notificar masivamente al simulador por las dudas
     for item in checklist_vars:
         if item["var"].get():
             notificar_retirado_simulador(item["num"])
-            lista_ret.append(f"{num_car},{item['nom']}")
+            # SOLUCIÓN BUG MANDIL AL CERRAR
+            lista_ret.append(f"{item['num']},{item['nom']}")
 
         num = item['num']; is_ret = item["var"].get()
         if num not in memoria_paseo: memoria_paseo[num] = {}
@@ -634,8 +702,10 @@ def enviar_pantalla_completa(silencioso=False):
     }
     guardar_json(ARCHIVO_PANTALLA, data)
     
-    # Solo cambiamos los botones si NO es silencioso (click manual)
+    # Solo cambiamos los botones y FIJAMOS EL ANCLA si NO es silencioso (click manual)
     if not silencioso:
+        global carrera_en_pantalla_obs
+        carrera_en_pantalla_obs = entry_num.get() # <--- ACÁ EL SISTEMA MEMORIZA QUÉ ESTÁ EN TV
         btn_pantalla_toggle.config(text="👁️ OCULTAR", bg="#7f8c8d")
 
 def toggle_pantalla():

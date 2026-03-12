@@ -55,12 +55,8 @@
         /* CUERPO */
         .body-content { flex-grow: 1; display: flex; border-radius: 0 0 15px 15px; overflow: hidden; }
 
-        /* RETIRADOS BLOQUE BOTTOM */
-        .retirados-content { background: #001a2ca2; padding: 20px 40px; border-radius: 0 0 15px 15px; }
-        .txt-retirados { color: var(--amarillo-oficial); font-size: 36px; font-weight: 900; text-transform: uppercase; margin-bottom: 15px; }
-
         /* IZQUIERDA */
-        .col-marcador { background: #001a2ca2; box-shadow: var(--sombra-tablero); display: flex; flex-direction: column; padding: 10px 0; border-right: 4px solid var(--amarillo-oficial); z-index: 10;}
+        .col-marcador { background: #001a2c; box-shadow: var(--sombra-tablero); display: flex; flex-direction: column; padding: 10px 0; border-right: 4px solid var(--amarillo-oficial); z-index: 10;}
         .fila-puesto { display: flex; align-items: center; height: 16.66%; padding: 0 20px; border-bottom: 2px solid rgba(255,255,255,0.05); }
         .lbl-puesto { width: 70px; text-align: center; color: var(--amarillo-oficial); font-family: 'Chakra Petch'; font-size: 45px; font-weight: 700; margin-right: 15px; }
         .mandil-box { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; font-size: 42px; font-weight: 900; color: white; border-radius: 8px; border: 3px solid rgba(255,255,255,0.4); box-shadow: 4px 4px 10px rgba(0,0,0,0.5); margin-right: 20px; }
@@ -69,7 +65,7 @@
         .chapa { width: 75px; height: 75px; flex-shrink: 0; background: var(--amarillo-oficial); border-radius: 10px; border: 4px solid #b7950b; display: flex; justify-content: center; align-items: center; font-family: 'Chakra Petch', sans-serif; color: black; box-shadow: inset 0 0 15px rgba(0,0,0,0.2); position: relative; }
 
         /* DERECHA */
-        .col-ganador { background: #001a2ca2; display: flex; flex-direction: column; position: relative; padding: 40px 60px; }
+        .col-ganador { background: #001a2c; display: flex; flex-direction: column; position: relative; padding: 40px 60px; }
         .logo-corner { position: absolute; bottom: 20px; left: 50px; width: 120px; height: auto; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2)); z-index: 10; }
         .header-ganador-info { display: flex; align-items: flex-end; margin-bottom: 30px; margin-top: 30px; border-bottom: 3px solid #ccc; padding-bottom: 20px;}
         .mandil-ganador { width: 120px; height: 120px; display: flex; justify-content: center; align-items: center; font-size: 70px; font-weight: 900; color: white; border-radius: 12px; border: 4px solid rgba(0,0,0,0.1); box-shadow: 5px 5px 20px rgba(0,0,0,0.3); margin-right: 30px; }
@@ -144,9 +140,6 @@
                     <div class="txt-time-val" id="val-tiempo">--' --'' --</div>
                 </div>
             </div>
-        </div>
-        <div class="retirados-content">
-            <div class="txt-retirados">Retirados:</div>
         </div>
     </div>
 
