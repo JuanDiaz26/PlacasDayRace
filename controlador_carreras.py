@@ -29,15 +29,34 @@ memoria_retirados = {}
 memoria_global_gui = {} 
 memoria_resultados = {} 
 
-reloj_corriendo = False 
+reloj_corriendo = False
 visibilidad_placa = True
 visibilidad_reloj = True
 visibilidad_marcador = True
 visibilidad_paseo = False
-visibilidad_pantalla = False 
+visibilidad_pantalla = False
 visibilidad_resultados = False
 carrera_simulada = None  # Para que el simulador no se pierda al cambiar de pestaña
 carrera_en_pantalla_obs = None  # Recuerda qué carrera está ponchada en la TV
+
+# === MAQUINA DE ESTADOS DE CARRERA ===
+ESTADO_PREVIA      = "PREVIA"
+ESTADO_PASEO       = "PASEO"
+ESTADO_PRELARGADA  = "PRE-LARGADA"
+ESTADO_EN_CARRERA  = "EN CARRERA"
+ESTADO_LLEGADA     = "LLEGADA"
+ESTADO_OFICIAL     = "OFICIAL"
+
+ESTADO_COLORES = {
+    ESTADO_PREVIA:     ("#7f8c8d", "white"),
+    ESTADO_PASEO:      ("#e67e22", "white"),
+    ESTADO_PRELARGADA: ("#2980b9", "white"),
+    ESTADO_EN_CARRERA: ("#27ae60", "white"),
+    ESTADO_LLEGADA:    ("#c0392b", "white"),
+    ESTADO_OFICIAL:    ("#8e44ad", "white"),
+}
+
+estado_actual = ESTADO_PREVIA
 
 # Variables globales widgets
 combo_head_2 = None; combo_head_3 = None; combo_head_4 = None
@@ -54,6 +73,15 @@ combo_pozo_exa_lbl = None
 combo_pozo_tri_lbl = None
 btn_simulador = None
 
+# Widgets del Centro de Comando (panel superior siempre visible)
+lbl_estado_actual = None
+lbl_aire_tucuman = None
+lbl_aire_marcador = None
+lbl_aire_paseo = None
+lbl_aire_pantalla = None
+lbl_aire_reloj = None
+lbl_aire_resultados = None
+
 # Variables Pestaña Dividendos
 vars_div = {} 
 
@@ -61,16 +89,58 @@ vars_div = {}
 # FUNCIONES SISTEMA
 # =============================================================================
 def inicializar_sistema():
-    print("--- INICIANDO SISTEMA V39 (SIMULADOR COMBINADO) ---")
-    guardar_json(ARCHIVO_MARCADOR, []) 
+    global visibilidad_placa, visibilidad_reloj, visibilidad_marcador
+    global visibilidad_paseo, visibilidad_pantalla, visibilidad_resultados
+
+    print("--- INICIANDO SISTEMA V40 (CENTRO DE COMANDO) ---")
+
+    # Reset de flags: al iniciar todas las placas están OCULTAS
+    visibilidad_placa = False
+    visibilidad_reloj = False
+    visibilidad_marcador = False
+    visibilidad_paseo = False
+    visibilidad_pantalla = False
+    visibilidad_resultados = False
+
+    guardar_json(ARCHIVO_MARCADOR, [])
     guardar_json(ARCHIVO_PASEO, {"visible": False})
     guardar_json(ARCHIVO_PANTALLA, {"visible": False})
     guardar_json(ARCHIVO_RESULTADOS, {"visible": False})
     guardar_json(ARCHIVO_DIVIDENDOS, {"visible": False})
+    enviar_comando_reloj("OCULTAR")
     enviar_comando_reloj("RESET")
     datos_vacios = {"num_carrera": "", "distancia": "", "premio": "", "condicion": "", "estado_pista": "", "visible": False}
     guardar_json(ARCHIVO_DATOS, datos_vacios)
+
+    # Sincronizar botones de visibilidad con los flags reales
+    try: btn_placa_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+    try: btn_reloj_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+    try: btn_mar_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+    try: btn_paseo_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+    try: btn_pantalla_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+    try: btn_res_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+
+    # Estado inicial
+    cambiar_estado(ESTADO_PREVIA)
+
+    # Polling del panel de aire (refresca cada 500ms)
+    loop_panel_aire()
     root.after(2000, ciclo_automatico_paseo)
+
+
+def loop_panel_aire():
+    """Refresca periódicamente el panel 'al aire' para reflejar el estado real"""
+    try:
+        actualizar_panel_aire()
+    except Exception as e:
+        print(f"Error refrescando panel: {e}")
+    root.after(500, loop_panel_aire)
 
 def guardar_json(archivo, data):
     try:
@@ -809,11 +879,167 @@ def toggle_pantalla():
     if visibilidad_pantalla: enviar_pantalla_completa()
     else: guardar_json(ARCHIVO_PANTALLA, {"visible": False}); btn_pantalla_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
 
+# =============================================================================
+# CENTRO DE COMANDO: ESTADOS Y ACCIONES ATOMICAS
+# =============================================================================
+def cambiar_estado(nuevo):
+    """Cambia el estado actual de la carrera y actualiza el indicador visual"""
+    global estado_actual
+    estado_actual = nuevo
+    if lbl_estado_actual:
+        bg, fg = ESTADO_COLORES.get(nuevo, ("#34495e", "white"))
+        lbl_estado_actual.config(text=f"  ⚡ {nuevo}  ", bg=bg, fg=fg)
+    actualizar_panel_aire()
+
+
+def actualizar_panel_aire():
+    """Actualiza los indicadores de qué placas están al aire en este momento"""
+    if not lbl_aire_tucuman:
+        return  # GUI todavía no inicializada
+    items = [
+        (lbl_aire_tucuman,   visibilidad_placa,      "TUCUMÁN"),
+        (lbl_aire_marcador,  visibilidad_marcador,   "MARCADOR"),
+        (lbl_aire_paseo,     visibilidad_paseo,      "PASEO"),
+        (lbl_aire_pantalla,  visibilidad_pantalla,   "PANTALLA"),
+        (lbl_aire_reloj,     visibilidad_reloj,      "RELOJ"),
+        (lbl_aire_resultados,visibilidad_resultados, "RESULT."),
+    ]
+    for lbl, visible, name in items:
+        if visible:
+            lbl.config(text=f" 🟢 {name} ", bg="#27ae60", fg="white")
+        else:
+            lbl.config(text=f" ⚫ {name} ", bg="#2c3e50", fg="#7f8c8d")
+
+
+def accion_largaron():
+    """LARGARON (F1): oculta paseo y pantalla completa, muestra reloj e inicia el cronómetro"""
+    global visibilidad_paseo, visibilidad_pantalla, visibilidad_reloj
+
+    # 1. Ocultar paseo
+    if visibilidad_paseo:
+        visibilidad_paseo = False
+        guardar_json(ARCHIVO_PASEO, {"visible": False})
+        try: btn_paseo_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+        except: pass
+
+    # 2. Ocultar pantalla completa
+    if visibilidad_pantalla:
+        visibilidad_pantalla = False
+        guardar_json(ARCHIVO_PANTALLA, {"visible": False})
+        try: btn_pantalla_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+        except: pass
+
+    # 3. Asegurar reloj visible
+    if not visibilidad_reloj:
+        visibilidad_reloj = True
+        enviar_comando_reloj("MOSTRAR")
+        try: btn_reloj_toggle.config(text="👁️ OCULTAR", bg="#7f8c8d")
+        except: pass
+
+    # 4. Iniciar cronómetro
+    btn_start()
+
+    # 5. Cambiar estado
+    cambiar_estado(ESTADO_EN_CARRERA)
+
+
+def accion_llegada():
+    """LLEGADA (F3): finaliza el cronómetro y marca el cierre de la carrera"""
+    btn_final()
+    cambiar_estado(ESTADO_LLEGADA)
+
+
+def accion_oficial():
+    """OFICIAL (F4): muestra los resultados oficiales en pantalla"""
+    if not carrera_actual_data:
+        messagebox.showwarning("Atención", "Primero seleccioná una carrera.")
+        return
+    enviar_resultados_oficiales()
+    cambiar_estado(ESTADO_OFICIAL)
+
+
+def accion_previa():
+    """PREVIA (F5): vuelve al modo paseo (oculta reloj/resultados, muestra pantalla y paseo)"""
+    global visibilidad_pantalla, visibilidad_paseo, visibilidad_resultados, visibilidad_reloj
+
+    # 1. Ocultar reloj
+    if visibilidad_reloj:
+        visibilidad_reloj = False
+        enviar_comando_reloj("OCULTAR")
+        try: btn_reloj_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+        except: pass
+
+    # 2. Ocultar resultados
+    if visibilidad_resultados:
+        visibilidad_resultados = False
+        guardar_json(ARCHIVO_RESULTADOS, {"visible": False})
+        try: btn_res_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+        except: pass
+
+    # 3. Mostrar pantalla completa
+    if not visibilidad_pantalla:
+        enviar_pantalla_completa()
+
+    # 4. Mostrar paseo (con auto-rotation activado)
+    try: chk_auto_var.set(True)
+    except: pass
+    enviar_placa_paseo()
+
+    cambiar_estado(ESTADO_PASEO)
+
+
+def accion_parar_emergencia():
+    """EMERGENCIA: oculta TODAS las placas (con confirmación)"""
+    global visibilidad_placa, visibilidad_marcador, visibilidad_paseo
+    global visibilidad_pantalla, visibilidad_reloj, visibilidad_resultados
+
+    if not messagebox.askyesno("⚠️ EMERGENCIA",
+        "¿Ocultar TODAS las placas al aire?\n\nEsto sacará todo del aire."):
+        return
+
+    visibilidad_placa = False; guardar_placa_json()
+    try: btn_placa_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+
+    visibilidad_marcador = False; guardar_json(ARCHIVO_MARCADOR, [])
+    try: btn_mar_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+
+    visibilidad_paseo = False; guardar_json(ARCHIVO_PASEO, {"visible": False})
+    try: btn_paseo_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+
+    visibilidad_pantalla = False; guardar_json(ARCHIVO_PANTALLA, {"visible": False})
+    try: btn_pantalla_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+
+    visibilidad_reloj = False; enviar_comando_reloj("OCULTAR")
+    try: btn_reloj_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+
+    visibilidad_resultados = False; guardar_json(ARCHIVO_RESULTADOS, {"visible": False})
+    try: btn_res_toggle.config(text="👁️ MOSTRAR", bg="#2ecc71")
+    except: pass
+
+    cambiar_estado(ESTADO_PREVIA)
+
+
 def key_handler(event):
-    if event.keysym == 'F1': btn_start()
-    if event.keysym == 'F2': btn_parcial()
-    if event.keysym == 'F3': btn_final()
-    if event.keysym == 'F4': btn_reset()
+    """Atajos de teclado para operación en vivo"""
+    k = event.keysym
+    # No disparar hotkeys si se está editando un Entry/Text
+    w = event.widget
+    if isinstance(w, (tk.Entry, tk.Text, ttk.Combobox)):
+        return
+    if   k == 'F1': accion_largaron()
+    elif k == 'F2': btn_parcial()
+    elif k == 'F3': accion_llegada()
+    elif k == 'F4': accion_oficial()
+    elif k == 'F5': accion_previa()
+    elif k == 'F9': btn_reset()
+    elif k == 'F10': toggle_reloj_visible()
+    elif k == 'Escape': accion_parar_emergencia()
+
 
 # =============================================================================
 # RESULTADOS Y MARCADOR FINAL
@@ -1084,8 +1310,8 @@ def toggle_dividendos():
 # =============================================================================
 # VENTANA PRINCIPAL
 # =============================================================================
-root = tk.Tk(); root.title("CONSOLA DE MANDO V38 - FINAL PRO (INTEGRADO)"); root.geometry("1300x850"); root.configure(bg="#2c3e50") 
-p_izq = tk.Frame(root, bg="#ecf0f1", padx=10, pady=10); p_izq.place(relx=0, rely=0, relwidth=0.30, relheight=1)
+root = tk.Tk(); root.title("CONSOLA DE MANDO V40 - CENTRO DE COMANDO"); root.geometry("1450x920"); root.configure(bg="#1a252f")
+p_izq = tk.Frame(root, bg="#ecf0f1", padx=10, pady=10); p_izq.place(relx=0, rely=0, relwidth=0.28, relheight=1)
 tk.Label(p_izq, text="1. CONFIGURACIÓN", font=("Segoe UI", 14, "bold"), bg="#ecf0f1", fg="#7f8c8d").pack(anchor="w")
 fr_carga = tk.LabelFrame(p_izq, text="Archivo", bg="#ecf0f1"); fr_carga.pack(fill="x", pady=5); tk.Button(fr_carga, text="📂 EXCEL", command=cargar_excel, bg="#bdc3c7").pack(side="left", padx=5, pady=5); combo_selector = ttk.Combobox(fr_carga, state="readonly"); combo_selector.pack(side="left", fill="x", expand=True, padx=5); combo_selector.bind("<<ComboboxSelected>>", seleccionar_carrera)
 fr_datos = tk.Frame(p_izq, bg="#ecf0f1"); fr_datos.pack(fill="x", pady=10); tk.Label(fr_datos, text="Carrera:", bg="#ecf0f1").grid(row=0, column=0, sticky="w"); entry_num = tk.Entry(fr_datos, width=28); entry_num.grid(row=0, column=1, pady=2); tk.Label(fr_datos, text="Distancia:", bg="#ecf0f1").grid(row=1, column=0, sticky="w"); entry_dist = tk.Entry(fr_datos, width=28); entry_dist.grid(row=1, column=1, pady=2); tk.Label(fr_datos, text="Premio:", bg="#ecf0f1").grid(row=2, column=0, sticky="w"); entry_premio = tk.Entry(fr_datos, width=28); entry_premio.grid(row=2, column=1, pady=2); tk.Label(fr_datos, text="Condición:", bg="#ecf0f1").grid(row=3, column=0, sticky="nw"); txt_cond = tk.Text(fr_datos, width=28, height=4); txt_cond.grid(row=3, column=1, pady=2); tk.Label(fr_datos, text="Pista:", bg="#ecf0f1").grid(row=4, column=0, sticky="w"); combo_pista = ttk.Combobox(fr_datos, values=["NORMAL", "HÚMEDA", "PESADA", "FANGOSA", "BARROSA"], width=25); combo_pista.current(0); combo_pista.grid(row=4, column=1, pady=2)
@@ -1096,7 +1322,49 @@ btn_simulador = tk.Button(p_izq, text="🔴 CONECTAR SIMULADOR", command=toggle_
 btn_simulador.pack(fill="x", pady=10)
 
 tk.Button(p_izq, text="💰 CARGAR PAGOS", command=abrir_pagos, bg="#2980b9", fg="white", font=("bold", 10)).pack(fill="x", pady=5); lbl_status = tk.Label(p_izq, text="Esperando archivo...", bg="#ecf0f1", fg="#95a5a6"); lbl_status.pack(side="bottom")
-p_der = tk.Frame(root, bg="#34495e", padx=10, pady=10); p_der.place(relx=0.30, rely=0, relwidth=0.70, relheight=1); style = ttk.Style(); style.configure("TNotebook", background="#34495e", borderwidth=0); style.configure("TNotebook.Tab", padding=[10, 5], font=('Segoe UI', 10, 'bold')); notebook = ttk.Notebook(p_der, style="TNotebook"); notebook.pack(fill="both", expand=True)
+p_der = tk.Frame(root, bg="#34495e", padx=10, pady=10); p_der.place(relx=0.28, rely=0, relwidth=0.72, relheight=1)
+style = ttk.Style(); style.configure("TNotebook", background="#34495e", borderwidth=0); style.configure("TNotebook.Tab", padding=[10, 5], font=('Segoe UI', 10, 'bold'))
+
+# =============================================================================
+# CENTRO DE COMANDO (Barra superior siempre visible)
+# =============================================================================
+fr_command_bar = tk.Frame(p_der, bg="#0f1923", relief="ridge", bd=2)
+fr_command_bar.pack(fill="x", pady=(0, 8))
+
+# --- Fila 1: Estado y placas al aire ---
+fr_estado_aire = tk.Frame(fr_command_bar, bg="#0f1923")
+fr_estado_aire.pack(fill="x", padx=10, pady=(8, 4))
+
+tk.Label(fr_estado_aire, text="ESTADO:", bg="#0f1923", fg="#bdc3c7", font=("Segoe UI", 9, "bold")).pack(side="left", padx=(0, 6))
+
+lbl_estado_actual = tk.Label(fr_estado_aire, text=f"  ⚡ {ESTADO_PREVIA}  ",
+    bg="#7f8c8d", fg="white", font=("Segoe UI", 13, "bold"), padx=6, pady=2)
+lbl_estado_actual.pack(side="left", padx=4)
+
+tk.Label(fr_estado_aire, text="🛰 AL AIRE:", bg="#0f1923", fg="#f1c40f", font=("Segoe UI", 9, "bold")).pack(side="left", padx=(20, 4))
+
+lbl_aire_tucuman   = tk.Label(fr_estado_aire, text=" ⚫ TUCUMÁN ",  bg="#2c3e50", fg="#7f8c8d", font=("Segoe UI", 8, "bold"), padx=2); lbl_aire_tucuman.pack(side="left", padx=2)
+lbl_aire_marcador  = tk.Label(fr_estado_aire, text=" ⚫ MARCADOR ", bg="#2c3e50", fg="#7f8c8d", font=("Segoe UI", 8, "bold"), padx=2); lbl_aire_marcador.pack(side="left", padx=2)
+lbl_aire_paseo     = tk.Label(fr_estado_aire, text=" ⚫ PASEO ",    bg="#2c3e50", fg="#7f8c8d", font=("Segoe UI", 8, "bold"), padx=2); lbl_aire_paseo.pack(side="left", padx=2)
+lbl_aire_pantalla  = tk.Label(fr_estado_aire, text=" ⚫ PANTALLA ", bg="#2c3e50", fg="#7f8c8d", font=("Segoe UI", 8, "bold"), padx=2); lbl_aire_pantalla.pack(side="left", padx=2)
+lbl_aire_reloj     = tk.Label(fr_estado_aire, text=" ⚫ RELOJ ",    bg="#2c3e50", fg="#7f8c8d", font=("Segoe UI", 8, "bold"), padx=2); lbl_aire_reloj.pack(side="left", padx=2)
+lbl_aire_resultados= tk.Label(fr_estado_aire, text=" ⚫ RESULT. ",  bg="#2c3e50", fg="#7f8c8d", font=("Segoe UI", 8, "bold"), padx=2); lbl_aire_resultados.pack(side="left", padx=2)
+
+# --- Fila 2: Botones atómicos ---
+fr_atomic_btns = tk.Frame(fr_command_bar, bg="#0f1923")
+fr_atomic_btns.pack(fill="x", padx=10, pady=(2, 8))
+
+btn_atom_largar  = tk.Button(fr_atomic_btns, text="▶ LARGARON\n[F1]",  command=accion_largaron,         bg="#27ae60", fg="white", font=("Segoe UI", 10, "bold"), height=2, relief="raised", bd=2)
+btn_atom_parcial = tk.Button(fr_atomic_btns, text="📷 PARCIAL\n[F2]",   command=btn_parcial,             bg="#e67e22", fg="white", font=("Segoe UI", 10, "bold"), height=2, relief="raised", bd=2)
+btn_atom_llegada = tk.Button(fr_atomic_btns, text="🏁 LLEGADA\n[F3]",   command=accion_llegada,          bg="#c0392b", fg="white", font=("Segoe UI", 10, "bold"), height=2, relief="raised", bd=2)
+btn_atom_oficial = tk.Button(fr_atomic_btns, text="🏆 OFICIAL\n[F4]",   command=accion_oficial,          bg="#8e44ad", fg="white", font=("Segoe UI", 10, "bold"), height=2, relief="raised", bd=2)
+btn_atom_previa  = tk.Button(fr_atomic_btns, text="↩ PREVIA\n[F5]",     command=accion_previa,           bg="#2980b9", fg="white", font=("Segoe UI", 10, "bold"), height=2, relief="raised", bd=2)
+btn_atom_emerg   = tk.Button(fr_atomic_btns, text="⛔ PARAR\n[ESC]",     command=accion_parar_emergencia, bg="#641e16", fg="white", font=("Segoe UI", 10, "bold"), height=2, relief="raised", bd=2)
+
+for b in (btn_atom_largar, btn_atom_parcial, btn_atom_llegada, btn_atom_oficial, btn_atom_previa, btn_atom_emerg):
+    b.pack(side="left", fill="x", expand=True, padx=3)
+
+notebook = ttk.Notebook(p_der, style="TNotebook"); notebook.pack(fill="both", expand=True)
 
 # TABS (RESTO IGUAL QUE TU ORIGINAL V34)
 tab_paseo = tk.Frame(notebook, bg="#34495e", padx=20, pady=20); notebook.add(tab_paseo, text=" PREVIA / PASEO "); tk.Label(tab_paseo, text="CONTROL PLACA PASEO", font=("Segoe UI", 16, "bold"), bg="#34495e", fg="#f1c40f").pack(pady=10); fr_nav = tk.Frame(tab_paseo, bg="#34495e"); fr_nav.pack(fill="x", pady=5); tk.Button(fr_nav, text="◀ ANT", command=anterior_caballo, bg="#95a5a6").pack(side="left"); combo_paseo = ttk.Combobox(fr_nav, state="readonly", font=("Arial", 12)); combo_paseo.pack(side="left", fill="x", expand=True, padx=5); combo_paseo.bind("<<ComboboxSelected>>", seleccionar_caballo_paseo); tk.Button(fr_nav, text="SIG ▶", command=siguiente_caballo, bg="#95a5a6").pack(side="left"); fr_edit_paseo = tk.LabelFrame(tab_paseo, text="Datos Editables", bg="#34495e", fg="white", padx=10, pady=10); fr_edit_paseo.pack(fill="x", pady=10); tk.Label(fr_edit_paseo, text="Jockey:", bg="#34495e", fg="white").grid(row=0, column=0, sticky="e"); entry_jockey = tk.Entry(fr_edit_paseo, width=30); entry_jockey.grid(row=0, column=1, pady=5, padx=5); fr_checks = tk.Frame(fr_edit_paseo, bg="#34495e"); fr_checks.grid(row=0, column=2, rowspan=3, padx=10); chk_cambio_var = tk.BooleanVar(); tk.Checkbutton(fr_checks, text="Cambio de Monta", var=chk_cambio_var, bg="#34495e", fg="#f1c40f", selectcolor="#2c3e50").pack(anchor="w"); chk_retirado_var = tk.BooleanVar(); tk.Checkbutton(fr_checks, text="🚫 RETIRADO", var=chk_retirado_var, bg="#34495e", fg="#e74c3c", font=("bold",10), selectcolor="#2c3e50").pack(anchor="w", pady=5); tk.Label(fr_edit_paseo, text="Stud:", bg="#34495e", fg="white").grid(row=1, column=0, sticky="e"); entry_stud = tk.Entry(fr_edit_paseo, width=30); entry_stud.grid(row=1, column=1, pady=5, padx=5); tk.Label(fr_edit_paseo, text="Entrenador:", bg="#34495e", fg="white").grid(row=2, column=0, sticky="e"); entry_cuid = tk.Entry(fr_edit_paseo, width=30); entry_cuid.grid(row=2, column=1, pady=5, padx=5); chk_auto_var = tk.BooleanVar(); tk.Checkbutton(tab_paseo, text="🔄 PASEO AUTOMÁTICO (20 seg)", var=chk_auto_var, bg="#34495e", fg="#f1c40f", font=("bold", 11), selectcolor="#2c3e50").pack(pady=5); fr_btn_paseo = tk.Frame(tab_paseo, bg="#34495e"); fr_btn_paseo.pack(pady=20); tk.Button(fr_btn_paseo, text="🚀 MOSTRAR PLACA", command=enviar_placa_paseo, bg="#e67e22", fg="white", font=("bold", 12), width=20, height=2).pack(side="left", padx=5); btn_paseo_toggle = tk.Button(fr_btn_paseo, text="👁️ OCULTAR", command=toggle_paseo, bg="#7f8c8d", fg="white", font=("bold", 10), width=12, height=2); btn_paseo_toggle.pack(side="left", padx=5)

@@ -2,83 +2,152 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Placa Paseo V6 - Logic Retirado</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@900&family=Segoe+UI:wght@700;900&display=swap" rel="stylesheet">
+    <title>Placa Paseo V7 - Pro Broadcast</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
     <style>
-        /* --- COLORES OFICIALES --- */
         :root {
             --verde-tucuman: #257E77;
             --verde-oscuro: #1b5e59;
+            --verde-claro: #2d9088;
             --naranja-tucuman: #EF5B2B;
-            --blanco-hueso: #ecf0f1;
+            --blanco-hueso: #f5f7f7;
             --rojo-retirado: #c0392b;
+            --rojo-claro: #e74c3c;
+            --amarillo: #ffeb3b;
         }
 
-        body { 
-            margin: 0; padding: 0; background: transparent; overflow: hidden; 
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            opacity: 1; transition: opacity 0.4s ease-in-out;
+        body {
+            margin: 0; padding: 0; background: transparent; overflow: hidden;
+            font-family: 'Roboto Condensed', 'Segoe UI', sans-serif;
+            opacity: 1;
+            transition: opacity 0.4s ease-in-out;
         }
 
         body.oculto { opacity: 0 !important; }
 
         /* --- CONTENEDOR PRINCIPAL --- */
         #contenedor-paseo {
-            position: absolute; bottom: 15px; left: 65%; transform: translateX(-50%);
-            display: flex; width: 82%; max-width: 1100px; height: 125px; 
-            filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.7));
+            position: absolute;
+            bottom: 18px;
+            left: 65%;
+            transform: translateX(-50%);
+            display: flex;
+            width: 82%;
+            max-width: 1100px;
+            height: 130px;
+            filter: drop-shadow(0px 12px 24px rgba(0,0,0,0.7));
         }
 
         /* --- MANDIL --- */
         #caja-mandil {
-            width: 125px; display: flex; justify-content: center; align-items: center;
-            font-size: 75px; font-weight: 900; color: white; text-shadow: 4px 4px 0px rgba(0,0,0,0.3);
-            border-radius: 8px 0 0 8px; position: relative; z-index: 2;
-            box-shadow: inset -5px 0 15px rgba(0,0,0,0.4);
+            width: 130px;
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Roboto', sans-serif;
+            font-size: 78px;
+            font-weight: 900;
+            color: white;
+            text-shadow: 4px 4px 0px rgba(0,0,0,0.35);
+            border-radius: 8px 0 0 8px;
+            position: relative;
+            z-index: 2;
+            box-shadow: inset -6px 0 18px rgba(0,0,0,0.45),
+                        inset 0 1px 0 rgba(255,255,255,0.15);
+            border-top: 4px solid rgba(255,255,255,0.18);
+            transition: background-color 0.3s;
+        }
+
+        /* Brillo en la esquina del mandil */
+        #caja-mandil::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 30%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 100%);
+            border-radius: 8px 0 0 0;
+            pointer-events: none;
         }
 
         /* --- DATOS --- */
         #caja-datos {
-            flex-grow: 1; background: linear-gradient(90deg, var(--verde-tucuman) 0%, var(--verde-oscuro) 100%);
-            border-radius: 0 8px 8px 0; border-top: 5px solid var(--naranja-tucuman);
+            flex-grow: 1;
+            background: linear-gradient(95deg, var(--verde-claro) 0%, var(--verde-tucuman) 30%, var(--verde-oscuro) 100%);
+            border-radius: 0 8px 8px 0;
+            border-top: 5px solid var(--naranja-tucuman);
             display: flex; flex-direction: column; justify-content: center;
-            padding: 0 25px; color: white; border-left: 1px solid rgba(0,0,0,0.2);
-            position: relative; /* Para posicionar el cartel de retirado */
+            padding: 0 28px;
+            color: white;
+            border-left: 1px solid rgba(0,0,0,0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Efecto de luz diagonal sobre la caja de datos */
+        #caja-datos::after {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 30%;
+            height: 200%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+            transform: skewX(-20deg);
+            pointer-events: none;
         }
 
         /* --- FILAS NORMALES --- */
         .fila-superior {
              display: flex; align-items: center; justify-content: space-between;
-             height: 50%; border-bottom: 2px solid rgba(255,255,255,0.1);
+             height: 50%; border-bottom: 2px solid rgba(255,255,255,0.12);
              transition: opacity 0.3s;
+             position: relative;
+             z-index: 1;
         }
         .fila-inferior {
             display: flex; align-items: center; justify-content: space-between;
-            height: 50%; padding-top: 4px;
+            height: 50%; padding-top: 5px;
             transition: opacity 0.3s;
+            position: relative;
+            z-index: 1;
         }
 
         #nombre-caballo {
-            font-size: 42px; font-weight: 900; text-transform: uppercase;
-            letter-spacing: -0.5px; text-shadow: 3px 3px 5px rgba(0,0,0,0.5);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 62%;
+            font-family: 'Roboto', sans-serif;
+            font-size: 44px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.8px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.6);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 62%;
+            line-height: 1;
         }
 
-        /* --- CARTEL RETIRADO (Oculto por defecto) --- */
+        /* --- CARTEL RETIRADO --- */
         #cartel-retirado {
-            display: none; /* Se activa con JS */
+            display: none;
             position: absolute;
-            right: 0; top: 0; bottom: 0; width: 40%;
-            background: var(--rojo-retirado);
+            right: 0; top: 0; bottom: 0; width: 42%;
+            background: linear-gradient(135deg, var(--rojo-claro) 0%, var(--rojo-retirado) 100%);
             align-items: center; justify-content: center;
-            font-size: 36px; font-weight: 900; color: white;
-            text-transform: uppercase; letter-spacing: 2px;
-            box-shadow: -10px 0 20px rgba(0,0,0,0.5);
-            clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%); /* Efecto diagonal */
+            font-family: 'Roboto', sans-serif;
+            font-size: 38px;
+            font-weight: 900;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            box-shadow: -12px 0 22px rgba(0,0,0,0.55);
+            clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
             animation: alertaRoja 2s infinite alternate;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 5;
         }
 
-        @keyframes alertaRoja { from { background-color: #c0392b; } to { background-color: #e74c3c; } }
+        @keyframes alertaRoja {
+            from { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+            to   { background: linear-gradient(135deg, #ec7063 0%, #cb4335 100%); }
+        }
 
         /* Estilos Generales Datos */
         .bloque-dato { display: flex; align-items: baseline; white-space: nowrap; }
@@ -86,22 +155,57 @@
         .alinear-izquierda { justify-content: flex-start; width: 62%; }
 
         .etiqueta {
-            color: rgba(255,255,255,0.6); font-size: 25px; font-weight: 700;
-            margin-right: 6px; text-transform: uppercase; letter-spacing: 0.5px;
+            color: rgba(255,255,255,0.65);
+            font-size: 18px;
+            font-weight: 700;
+            margin-right: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
         }
         .etiqueta::after { content: ":"; }
 
-        .valor { 
-            color: var(--blanco-hueso); font-size: 25px; font-weight: 800;
-            letter-spacing: -0.5px; text-transform: uppercase;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        .valor {
+            color: var(--blanco-hueso);
+            font-size: 25px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            line-height: 1;
         }
-        .valor-stud { font-size: 25px; } 
 
-        .jockey-cambio { color: #ffeb3b !important; font-weight: 900; text-shadow: 0 0 8px rgba(255, 235, 59, 0.7); }
-        
-        /* Colores Mandil */
-        .m1 { background-color: #d32f2f; color: #fff !important; } .m2 { background-color: #ffffff; color: #000 !important; text-shadow: none !important; } .m3 { background-color: #1565c0; color: #fff !important; } .m4 { background-color: #fdd835; color: #000 !important; text-shadow: none !important; } .m5 { background-color: #2e7d32; color: #fff !important; } .m6 { background-color: #000000; color: #f1c40f !important; border: 1px solid #555; } .m7 { background-color: #ef6c00; color: #000 !important; text-shadow: none !important; } .m8 { background-color: #f48fb1; color: #000 !important; text-shadow: none !important; } .m9 { background-color: #00bcd4; color: #000 !important; text-shadow: none !important; } .m10 { background-color: #7b1fa2; color: #fff !important; } .m11 { background-color: #9e9e9e; color: #da2128 !important; } .m12 { background-color: #71bf44; color: #000 !important; text-shadow: none !important; } .m13 { background-color: #a05b09; color: #fff200 !important; } .m14 { background-color: #b71c1c; color: #fff !important; } .m15 { background-color: #f3d19c; color: #ffffff 	!important ; text-shadow:none 	! important ;} .m0 { background-color:#333 ;} 
+        .valor-stud { font-size: 25px; }
+
+        .jockey-cambio {
+            color: var(--amarillo) !important;
+            font-weight: 900;
+            text-shadow: 0 0 10px rgba(255, 235, 59, 0.8), 1px 1px 2px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .jockey-cambio::before {
+            content: '★';
+            margin-right: 6px;
+            color: var(--amarillo);
+            font-size: 20px;
+        }
+
+        /* Colores Mandil (oficiales) */
+        .m1  { background-color: #d32f2f; color: #fff !important; }
+        .m2  { background-color: #ffffff; color: #000 !important; text-shadow: none !important; }
+        .m3  { background-color: #1565c0; color: #fff !important; }
+        .m4  { background-color: #fdd835; color: #000 !important; text-shadow: none !important; }
+        .m5  { background-color: #2e7d32; color: #fff !important; }
+        .m6  { background-color: #000000; color: #f1c40f !important; border-right: 1px solid #555; }
+        .m7  { background-color: #ef6c00; color: #000 !important; text-shadow: none !important; }
+        .m8  { background-color: #f48fb1; color: #000 !important; text-shadow: none !important; }
+        .m9  { background-color: #00bcd4; color: #000 !important; text-shadow: none !important; }
+        .m10 { background-color: #7b1fa2; color: #fff !important; }
+        .m11 { background-color: #9e9e9e; color: #da2128 !important; }
+        .m12 { background-color: #71bf44; color: #000 !important; text-shadow: none !important; }
+        .m13 { background-color: #a05b09; color: #fff200 !important; }
+        .m14 { background-color: #b71c1c; color: #fff !important; }
+        .m15 { background-color: #f3d19c; color: #ffffff !important; text-shadow: none !important; }
+        .m0  { background-color: #333; }
     </style>
 </head>
 <body>
@@ -134,6 +238,8 @@
     </div>
 
     <script>
+        let lastNumero = null;
+
         async function leerPaseo() {
             try {
                 const response = await fetch('paseo.json?nocache=' + new Date().getTime());
@@ -148,30 +254,27 @@
                 // Datos básicos
                 document.getElementById('num-mandil').innerText = data.numero;
                 document.getElementById('nombre-caballo').innerText = data.nombre;
-                let numLimpio = data.numero.replace(/\D/g, '') || "0"; 
+                let numLimpio = data.numero.replace(/\D/g, '') || "0";
                 document.getElementById('caja-mandil').className = `m${numLimpio}`;
 
                 // --- LOGICA RETIRADO ---
                 const divRetirado = document.getElementById('cartel-retirado');
                 const rowBottom = document.getElementById('row-bottom');
                 const boxStud = document.getElementById('box-stud');
-                
+
                 if (data.retirado === true) {
-                    // MODO RETIRADO: Mostrar cartel, ocultar detalles
-                    divRetirado.style.display = "flex"; // Aparece el bloque rojo
-                    rowBottom.style.opacity = "0"; // Desaparece la fila de abajo
-                    boxStud.style.opacity = "0"; // Desaparece el Stud
+                    divRetirado.style.display = "flex";
+                    rowBottom.style.opacity = "0";
+                    boxStud.style.opacity = "0";
                 } else {
-                    // MODO NORMAL
                     divRetirado.style.display = "none";
                     rowBottom.style.opacity = "1";
                     boxStud.style.opacity = "1";
 
-                    // Solo llenamos datos si no está retirado para ahorrar recursos
                     document.getElementById('val-jockey').innerText = data.jockey;
                     document.getElementById('val-stud').innerText = data.stud;
                     document.getElementById('val-entr').innerText = data.cuidador;
-                    
+
                     const valJockey = document.getElementById('val-jockey');
                     if (data.cambio_monta === true) valJockey.classList.add('jockey-cambio');
                     else valJockey.classList.remove('jockey-cambio');

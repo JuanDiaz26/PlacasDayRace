@@ -2,191 +2,590 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cronómetro TV SPORT PRO (Remoto)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
+    <title>Reloj Hipódromo Tucumán - Compacto Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        /* --- COLORES OFICIALES --- */
-        :root { --verde: #257E77; --verde-oscuro: #1b5e59; --naranja: #EF5B2B; --blanco: #ffffff; --negro-trans: rgba(0,0,0,0.85); }
-        
-        body { 
-            background-color: rgba(0, 0, 0, 0.01); 
-            margin: 0; padding: 0; overflow: hidden; height: 100vh; width: 100vw; 
-            font-family: 'Roboto', sans-serif; 
-            
-            /* --- FIX VISIBILIDAD --- */
-            opacity: 1;
-            transition: opacity 0.5s ease-in-out; 
-        }
-        
-        /* Clase para ocultar todo */
-        body.oculto {
-            opacity: 0 !important;
+        :root {
+            --verde: #257E77;
+            --verde-oscuro: #1b5e59;
+            --verde-claro: #2d9088;
+            --naranja: #EF5B2B;
+            --blanco: #ffffff;
+            --negro-trans: rgba(0,0,0,0.85);
+            --amarillo: #ffeb3b;
         }
 
-        #pantalla-transmision { position: absolute; bottom: 30px; left: 30px; right: 30px; display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none; }
-        #lista-parciales { display: flex; flex-direction: column; gap: 5px; min-width: 200px; pointer-events: auto; transform: skewX(-10deg); }
-        .fila-parcial { font-size: 20px; color: var(--blanco); background: linear-gradient(90deg, var(--negro-trans) 0%, rgba(0,0,0,0) 100%); padding: 6px 20px; border-left: 6px solid var(--naranja); box-shadow: 2px 2px 0px rgba(0,0,0,0.3); animation: entrarIzquierda 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; }
-        .fila-parcial span { transform: skewX(10deg); }
-        .fila-final { background: linear-gradient(90deg, #b71c1c 0%, rgba(183, 28, 28, 0) 100%); border-left: 6px solid #ffeb3b; color: #ffeb3b; }
-        .distancia { color: #ccc; margin-right: 15px; font-weight: 700; font-size: 16px; text-transform: uppercase; width: 60px; }
-        .tiempo-parcial { font-weight: 900; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
-        #contenedor-reloj { pointer-events: auto; transform: skewX(-10deg); box-shadow: 4px 4px 10px rgba(0,0,0,0.5); transition: transform 0.1s; }
-        #caja-tiempo { background: linear-gradient(135deg, var(--verde) 0%, var(--verde-oscuro) 100%); padding: 5px 30px; display: flex; align-items: baseline; justify-content: center; border-top: 2px solid rgba(255,255,255,0.3); border-left: 2px solid rgba(255,255,255,0.3); }
-        #barra-deco { height: 8px; background-color: var(--naranja); width: 100%; background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.2) 5px, rgba(0,0,0,0.2) 10px); }
-        #numeros-reloj { color: white; font-family: 'Roboto', sans-serif; font-weight: 900; font-size: 52px; line-height: 1; text-shadow: 3px 3px 0 rgba(0,0,0,0.4); font-variant-numeric: tabular-nums; transform: skewX(10deg); display: flex; align-items: baseline; }
-        #milisegundos { font-size: 32px; color: #a7ffeb; margin-left: 2px; }
-        @keyframes entrarIzquierda { from { opacity: 0; transform: translateX(-30px) skewX(-10deg); } to { opacity: 1; transform: translateX(0) skewX(-10deg); } }
+        body {
+            background: rgba(0, 0, 0, 0.01);
+            margin: 0; padding: 0; overflow: hidden;
+            height: 100vh; width: 100vw;
+            font-family: 'Roboto Condensed', sans-serif;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        body.oculto { opacity: 0 !important; }
+
+        /* ========================================================
+           MAPA DEL ÓVALO (Inferior Izquierda)
+           ======================================================== */
+        #track-map {
+            position: absolute;
+            bottom: 35px; left: 35px;
+            width: 270px; height: 115px;
+            background: linear-gradient(135deg, var(--verde) 0%, var(--verde-oscuro) 100%);
+            border-radius: 6px;
+            border-top: 3px solid var(--naranja);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
+            box-sizing: border-box;
+            padding: 18px 10px 8px 10px;
+            overflow: hidden;
+        }
+
+        #track-map::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 22px;
+            background: linear-gradient(90deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .map-header {
+            position: absolute;
+            top: 3px; left: 0; right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            z-index: 5;
+        }
+
+        .map-title {
+            color: rgba(255,255,255,0.95);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+        }
+
+        .map-distancia {
+            color: var(--amarillo);
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        #track-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+        }
+
+        .track-base {
+            fill: none;
+            stroke: rgba(0, 0, 0, 0.45);
+            stroke-width: 14;
+            stroke-linecap: round;
+        }
+
+        .track-line {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.92);
+            stroke-width: 7;
+            stroke-linecap: round;
+        }
+
+        .finish-line {
+            stroke: var(--naranja);
+            stroke-width: 6;
+            stroke-linecap: round;
+        }
+
+        #race-path {
+            fill: none;
+            stroke: none;
+        }
+
+        .start-marker-bg {
+            fill: rgba(255, 235, 59, 0.25);
+            stroke: rgba(0,0,0,0.4);
+            stroke-width: 1;
+        }
+
+        #race-dot {
+            fill: var(--amarillo);
+            stroke: #000;
+            stroke-width: 1.5;
+            filter: drop-shadow(0 0 5px rgba(255, 235, 59, 0.9));
+            transition: opacity 0.3s;
+        }
+
+        #race-dot.running {
+            animation: pulse 0.7s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { r: 6; filter: drop-shadow(0 0 5px rgba(255, 235, 59, 0.9)); }
+            to   { r: 8; filter: drop-shadow(0 0 12px rgba(255, 235, 59, 1)); }
+        }
+
+        /* ========================================================
+           RELOJ + PARCIALES (Inferior Derecha)
+           ======================================================== */
+        #clock-stack {
+            position: absolute;
+            bottom: 35px; right: 35px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        #parciales-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+        }
+
+        .parcial-row {
+            background: linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(27,94,89,0.95) 100%);
+            border-left: 4px solid var(--naranja);
+            padding: 6px 16px 6px 14px;
+            display: flex;
+            align-items: center;
+            min-width: 200px;
+            box-shadow: 2px 3px 10px rgba(0,0,0,0.55);
+            border-radius: 3px 0 0 3px;
+            animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-sizing: border-box;
+        }
+
+        .parcial-row.final {
+            border-left-color: var(--amarillo);
+            background: linear-gradient(90deg, rgba(0,0,0,0.4) 0%, rgba(183, 28, 28, 0.95) 100%);
+        }
+
+        .parcial-dist {
+            color: rgba(255,255,255,0.85);
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            min-width: 55px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+        }
+
+        .parcial-row.final .parcial-dist {
+            color: var(--amarillo);
+            font-weight: 900;
+        }
+
+        .parcial-time {
+            color: var(--blanco);
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            margin-left: auto;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+        }
+
+        .parcial-row.final .parcial-time {
+            color: var(--amarillo);
+            font-weight: 700;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* RELOJ PRINCIPAL */
+        #clock-box {
+            background: linear-gradient(135deg, var(--verde) 0%, var(--verde-oscuro) 100%);
+            border-top: 3px solid var(--naranja);
+            padding: 6px 18px 8px 18px;
+            display: flex;
+            align-items: center;
+            box-shadow: 3px 4px 14px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.15);
+            min-width: 200px;
+            box-sizing: border-box;
+            border-radius: 3px 0 0 3px;
+            position: relative;
+        }
+
+        #clock-label {
+            color: rgba(255,255,255,0.85);
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-right: 14px;
+            line-height: 1;
+        }
+
+        #clock-time {
+            color: var(--blanco);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            font-variant-numeric: tabular-nums;
+            display: flex;
+            align-items: baseline;
+            margin-left: auto;
+        }
+
+        #clock-mili {
+            font-size: 18px;
+            color: #a7ffeb;
+            margin-left: 1px;
+            font-weight: 500;
+        }
+
+        #clock-time.stopped { color: var(--amarillo); }
+        #clock-time.stopped #clock-mili { color: var(--amarillo); }
     </style>
 </head>
 <body>
 
-    <div id="pantalla-transmision">
-        <div id="lista-parciales"></div>
-        <div id="contenedor-reloj">
-            <div id="caja-tiempo">
-                <div id="numeros-reloj">
-                    <span id="min-sec">00:00</span>
-                    <span id="milisegundos">.00</span>
-                </div>
+    <!-- ============= MAPA DEL ÓVALO ============= -->
+    <div id="track-map">
+        <div class="map-header">
+            <span class="map-title">HIPÓDROMO TUCUMÁN</span>
+            <span class="map-distancia" id="dist-label">---</span>
+        </div>
+        <svg id="track-svg" viewBox="0 0 500 200" preserveAspectRatio="xMidYMid meet">
+            <!-- Sombra interna del track -->
+            <path class="track-base" d="M 120,60 L 380,60 A 50,50 0 0,1 380,160 L 120,160 A 50,50 0 0,1 120,60 Z" />
+            <line class="track-base" x1="40" y1="160" x2="120" y2="160" />
+            <line class="track-base" x1="380" y1="60" x2="460" y2="60" />
+
+            <!-- Track principal -->
+            <path class="track-line" d="M 120,60 L 380,60 A 50,50 0 0,1 380,160 L 120,160 A 50,50 0 0,1 120,60 Z" />
+            <line class="track-line" x1="40" y1="160" x2="120" y2="160" />
+            <line class="track-line" x1="380" y1="60" x2="460" y2="60" />
+
+            <!-- Línea de llegada -->
+            <line class="finish-line" x1="350" y1="138" x2="350" y2="182" />
+
+            <!-- Halo en posición de largada (visible cuando no está corriendo) -->
+            <circle id="start-halo" class="start-marker-bg" cx="250" cy="60" r="11" />
+
+            <!-- Path invisible que define el recorrido (desde largada hasta meta) -->
+            <path id="race-path" d="" />
+
+            <!-- Punto animado (caballo) -->
+            <circle id="race-dot" cx="250" cy="60" r="6" />
+        </svg>
+    </div>
+
+    <!-- ============= RELOJ + PARCIALES ============= -->
+    <div id="clock-stack">
+        <div id="parciales-list"></div>
+        <div id="clock-box">
+            <span id="clock-label">TIEMPO</span>
+            <div id="clock-time">
+                <span id="time-main">00:00</span>
+                <span id="clock-mili">.00</span>
             </div>
-            <div id="barra-deco"></div>
         </div>
     </div>
 
     <script>
-        const hitos = ["400m", "800m", "1200m", "1600m", "2000m", "2400m"];
-        let indiceHito = 0;
-        let startTime, tInterval;
+        // ============================================================
+        // CONFIGURACIÓN: Paths del recorrido para cada distancia
+        // Dirección: CCW (top R→L, left T→B, bottom L→R, right B→T)
+        // Finish line: x=350 en la recta inferior (y=160)
+        // ============================================================
+        const racePaths = {
+            "700":  "M 60,160 L 350,160",
+            "800":  "M 40,160 L 350,160",
+            "1000": "M 120,60 A 50,50 0 0,0 120,160 L 350,160",
+            "1100": "M 180,60 L 120,60 A 50,50 0 0,0 120,160 L 350,160",
+            "1200": "M 250,60 L 120,60 A 50,50 0 0,0 120,160 L 350,160",
+            "1300": "M 320,60 L 120,60 A 50,50 0 0,0 120,160 L 350,160",
+            "1400": "M 360,60 L 120,60 A 50,50 0 0,0 120,160 L 350,160",
+            "1500": "M 450,60 L 380,60 L 120,60 A 50,50 0 0,0 120,160 L 350,160",
+            "1600": "M 430,110 A 50,50 0 0,0 380,60 L 120,60 A 50,50 0 0,0 120,160 L 350,160",
+            "1800": "M 390,160 L 380,160 A 50,50 0 0,0 380,60 L 120,60 A 50,50 0 0,0 120,160 L 350,160",
+            "2000": "M 240,160 L 380,160 A 50,50 0 0,0 380,60 L 120,60 A 50,50 0 0,0 120,160 L 350,160",
+            "2200": "M 180,160 L 380,160 A 50,50 0 0,0 380,60 L 120,60 A 50,50 0 0,0 120,160 L 350,160",
+            "2400": "M 80,110 A 50,50 0 0,0 120,160 L 380,160 A 50,50 0 0,0 380,60 L 120,60 A 50,50 0 0,0 120,160 L 350,160"
+        };
+
+        // Posición inicial del halo (igual al primer punto del path)
+        const startPositions = {
+            "700":  {cx: 60, cy: 160},
+            "800":  {cx: 40, cy: 160},
+            "1000": {cx: 120, cy: 60},
+            "1100": {cx: 180, cy: 60},
+            "1200": {cx: 250, cy: 60},
+            "1300": {cx: 320, cy: 60},
+            "1400": {cx: 360, cy: 60},
+            "1500": {cx: 450, cy: 60},
+            "1600": {cx: 430, cy: 110},
+            "1800": {cx: 390, cy: 160},
+            "2000": {cx: 240, cy: 160},
+            "2200": {cx: 180, cy: 160},
+            "2400": {cx: 80, cy: 110}
+        };
+
+        // ============================================================
+        // PARCIALES POR DISTANCIA (palos de X metros de "metros restantes")
+        // Convención: cada número es el "palo" que se cruza, expresado
+        // como metros que faltan para la meta.
+        // ============================================================
+        const polesPorDistancia = {
+            "700":  [400],
+            "800":  [400],
+            "1000": [600, 400],
+            "1100": [600, 400],
+            "1200": [800, 400],
+            "1300": [800, 400],
+            "1400": [1000, 400],
+            "1500": [1000, 400],
+            "1600": [1200, 800, 400],
+            "1800": [1400, 800, 400],
+            "2000": [1600, 1200, 800, 400],
+            "2200": [1800, 1200, 800, 400],
+            "2400": [2000, 1600, 1200, 800, 400]
+        };
+
+        // ============================================================
+        // ESTADO
+        // ============================================================
+        let currentDistance = 1200;
+        let pathTotalLength = 0;
+        let raceStartTime = null;
         let running = false;
-        let distanciaRealDeLaCarrera = "FINAL"; // Valor por defecto
-        let ultimoComandoID = 0; 
+        let parcialIndex = 0;
+        let animationFrame = null;
+        let elapsedAtStop = 0;
+        let ultimoComandoID = 0;
 
-        const displayMinSec = document.getElementById('min-sec');
-        const displayMili = document.getElementById('milisegundos');
-        const listaParciales = document.getElementById('lista-parciales');
-        const numerosReloj = document.getElementById('numeros-reloj');
+        const raceDot = document.getElementById('race-dot');
+        const racePath = document.getElementById('race-path');
+        const startHalo = document.getElementById('start-halo');
+        const clockTimeMain = document.getElementById('time-main');
+        const clockMili = document.getElementById('clock-mili');
+        const clockTime = document.getElementById('clock-time');
+        const parcialesList = document.getElementById('parciales-list');
+        const distLabel = document.getElementById('dist-label');
 
-        // --- 1. LEER DISTANCIA (AJUSTADO PARA "M") ---
+        // ============================================================
+        // CONFIGURAR DISTANCIA
+        // ============================================================
+        function setRaceForDistance(dist) {
+            const key = String(dist);
+            const pathD = racePaths[key];
+
+            // Si no hay match exacto, busca la más cercana
+            let usedKey = key;
+            if (!pathD) {
+                // Fallback: usar 1200
+                usedKey = "1200";
+            }
+
+            const finalPath = racePaths[usedKey];
+            racePath.setAttribute('d', finalPath);
+            pathTotalLength = racePath.getTotalLength();
+
+            // Posicionar halo y dot en la salida
+            const sp = startPositions[usedKey];
+            if (sp) {
+                startHalo.setAttribute('cx', sp.cx);
+                startHalo.setAttribute('cy', sp.cy);
+                if (!running) {
+                    raceDot.setAttribute('cx', sp.cx);
+                    raceDot.setAttribute('cy', sp.cy);
+                }
+            }
+
+            currentDistance = parseInt(dist);
+            distLabel.innerText = currentDistance + "m";
+        }
+
+        // ============================================================
+        // LECTURA DE DISTANCIA DESDE datos.json
+        // ============================================================
         async function leerDistancia() {
             try {
-                const r = await fetch('datos.json?nocache=' + Date.now()); 
+                const r = await fetch('datos.json?nc=' + Date.now());
                 const d = await r.json();
                 if (d.distancia) {
-                    // Limpieza total: 1200 METROS -> 1200M
-                    let texto = d.distancia.toUpperCase(); // Todo a mayusculas
-                    texto = texto.replace("METROS", "M").replace("MTS", "M"); // Reemplazo palabras
-                    texto = texto.replace(/\s/g, ""); // Borro espacios (1200 M -> 1200M)
-                    distanciaRealDeLaCarrera = texto;
+                    let texto = String(d.distancia).toUpperCase()
+                        .replace("METROS", "").replace("MTS", "").replace(/\s/g, "");
+                    let match = texto.match(/(\d+)/);
+                    if (match) {
+                        let num = parseInt(match[1]);
+                        if (num !== currentDistance) {
+                            setRaceForDistance(num);
+                        }
+                    }
                 }
             } catch (e) {}
         }
 
-        // --- 2. LEER COMANDOS ---
+        // ============================================================
+        // ESCUCHAR COMANDOS
+        // ============================================================
         async function escucharComandos() {
             try {
-                const response = await fetch('comando_reloj.json?nocache=' + Date.now());
-                const data = await response.json();
-                
-                if (data.id && data.id !== ultimoComandoID) {
-                    ultimoComandoID = data.id; 
-                    ejecutarAccion(data.accion);
+                const r = await fetch('comando_reloj.json?nc=' + Date.now());
+                const d = await r.json();
+                if (d.id && d.id !== ultimoComandoID) {
+                    ultimoComandoID = d.id;
+                    ejecutarAccion(d.accion);
                 }
             } catch (e) {}
         }
 
         function ejecutarAccion(accion) {
-            console.log("Comando recibido:", accion);
-            if (accion === "START") startTimer();
-            if (accion === "STOP") stopTimer();
-            if (accion === "RESET") resetTimer();
-            if (accion === "PARCIAL") agregarParcial();
-            if (accion === "FINALIZAR") finalizarCarrera();
-            
-            // --- FIX VISIBILIDAD ---
-            if (accion === "OCULTAR") {
-                document.body.classList.add('oculto');
-            }
-            if (accion === "MOSTRAR") {
-                document.body.classList.remove('oculto');
-            }
+            console.log("Comando:", accion);
+            if (accion === "START") startRace();
+            else if (accion === "STOP") stopRace();
+            else if (accion === "RESET") resetRace();
+            else if (accion === "PARCIAL") agregarParcial();
+            else if (accion === "FINALIZAR") finalizarRace();
+            else if (accion === "OCULTAR") document.body.classList.add('oculto');
+            else if (accion === "MOSTRAR") document.body.classList.remove('oculto');
         }
 
-        // --- FUNCIONES DEL RELOJ ---
-        function startTimer() {
-            if(!running){
-                if(displayMinSec.innerHTML === "00:00" && displayMili.innerHTML === ".00") {
-                     startTime = new Date().getTime();
-                } else {
-                    let partes = displayMinSec.innerHTML.split(":");
-                    let msActuales = (parseInt(partes[0])*60000) + (parseInt(partes[1])*1000) + (parseInt(displayMili.innerHTML.replace(".",""))*10);
-                    startTime = new Date().getTime() - msActuales;
-                }
-                tInterval = setInterval(getShowTime, 10);
-                running = true;
-                numerosReloj.style.color = "#fff"; 
-            }
+        // ============================================================
+        // CONTROL DEL RELOJ Y ANIMACIÓN
+        // ============================================================
+        function startRace() {
+            if (running) return;
+            raceStartTime = Date.now() - elapsedAtStop;
+            running = true;
+            raceDot.classList.add('running');
+            clockTime.classList.remove('stopped');
+            startHalo.style.opacity = "0.4";
+            animate();
         }
 
-        function stopTimer() {
-            if (running){
-                clearInterval(tInterval);
-                running = false;
-                numerosReloj.style.color = "#ffeb3b"; 
-            }
-        }
-
-        function resetTimer() {
-            clearInterval(tInterval);
+        function stopRace() {
+            if (!running) return;
             running = false;
-            displayMinSec.innerHTML = "00:00";
-            displayMili.innerHTML = ".00";
-            listaParciales.innerHTML = "";
-            indiceHito = 0;
-            numerosReloj.style.color = "#fff";
+            elapsedAtStop = Date.now() - raceStartTime;
+            raceDot.classList.remove('running');
+            clockTime.classList.add('stopped');
+            cancelAnimationFrame(animationFrame);
         }
 
-        function getShowTime(){
-            let updatedTime = new Date().getTime();
-            let difference = updatedTime - startTime;
-            let minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-            let seconds = Math.floor((difference % (1000 * 60)) / 1000);
-            let milliseconds = Math.floor((difference % 1000) / 10);
-            
-            minutes = (minutes < 10) ? "0" + minutes : minutes;
-            seconds = (seconds < 10) ? "0" + seconds : seconds;
-            milliseconds = (milliseconds < 10) ? "0" + milliseconds : milliseconds;
-            
-            displayMinSec.innerHTML = minutes + ':' + seconds;
-            displayMili.innerHTML = '.' + milliseconds;
+        function resetRace() {
+            running = false;
+            elapsedAtStop = 0;
+            raceStartTime = null;
+            parcialIndex = 0;
+            cancelAnimationFrame(animationFrame);
+            raceDot.classList.remove('running');
+            clockTime.classList.remove('stopped');
+            parcialesList.innerHTML = '';
+            clockTimeMain.innerText = "00:00";
+            clockMili.innerText = ".00";
+            startHalo.style.opacity = "1";
+
+            // Reposicionar dot al inicio
+            const sp = startPositions[String(currentDistance)];
+            if (sp) {
+                raceDot.setAttribute('cx', sp.cx);
+                raceDot.setAttribute('cy', sp.cy);
+            }
+        }
+
+        function finalizarRace() {
+            if (!running && elapsedAtStop === 0) return;
+
+            const wasRunning = running;
+            if (running) {
+                stopRace();
+            }
+
+            // Línea final con la distancia total
+            const tiempoFinal = clockTimeMain.innerText + clockMili.innerText;
+            const row = document.createElement('div');
+            row.className = 'parcial-row final';
+            row.innerHTML = `<span class="parcial-dist">${currentDistance}m</span>`
+                          + `<span class="parcial-time">${tiempoFinal}</span>`;
+            parcialesList.appendChild(row);
+
+            // Dot al final
+            if (pathTotalLength > 0) {
+                const end = racePath.getPointAtLength(pathTotalLength);
+                raceDot.setAttribute('cx', end.x);
+                raceDot.setAttribute('cy', end.y);
+            }
         }
 
         function agregarParcial() {
-            if (running) {
-                let tiempoFoto = displayMinSec.innerHTML + displayMili.innerHTML;
-                let etiqueta = hitos[indiceHito] ? hitos[indiceHito] : "P.";
-                let nuevoRenglon = document.createElement("div");
-                nuevoRenglon.className = "fila-parcial";
-                nuevoRenglon.innerHTML = `<span><span class="distancia">${etiqueta}</span><span class="tiempo-parcial">${tiempoFoto}</span></span>`;
-                listaParciales.appendChild(nuevoRenglon);
-                indiceHito++;
+            if (!running) return;
+            const tiempo = clockTimeMain.innerText + clockMili.innerText;
+            const poles = polesPorDistancia[String(currentDistance)] || [];
+            const polActual = poles[parcialIndex];
+            const labelDist = polActual !== undefined
+                ? polActual + "m"
+                : "P." + (parcialIndex + 1);
+
+            const row = document.createElement('div');
+            row.className = 'parcial-row';
+            row.innerHTML = `<span class="parcial-dist">${labelDist}</span>`
+                          + `<span class="parcial-time">${tiempo}</span>`;
+            parcialesList.appendChild(row);
+            parcialIndex++;
+
+            // Si hay info de pole, alineamos el dot a esa posición proporcional del recorrido
+            if (polActual !== undefined && pathTotalLength > 0) {
+                const recorridoMetros = currentDistance - polActual;
+                const progreso = recorridoMetros / currentDistance;
+                const point = racePath.getPointAtLength(progreso * pathTotalLength);
+                // Calibrar para que la animación siga desde acá
+                // (no movemos el dot abruptamente; la animación se autocorrige)
             }
         }
 
-        function finalizarCarrera() {
-            if (running) {
-                stopTimer();
-                let tiempoFinalTexto = displayMinSec.innerHTML + displayMili.innerHTML;
-                let etiquetaFinal = distanciaRealDeLaCarrera; // Aquí ya viene corregido como "1200M"
-                let nuevoRenglon = document.createElement("div");
-                nuevoRenglon.className = "fila-parcial fila-final"; 
-                nuevoRenglon.innerHTML = `<span><span class="distancia">${etiquetaFinal}</span><span class="tiempo-parcial">${tiempoFinalTexto}</span></span>`;
-                listaParciales.appendChild(nuevoRenglon);
-            }
+        // Estimación de duración (~16 m/s promedio para galope)
+        function getEstimatedDuration(distM) {
+            return (distM / 16.0) * 1000;
         }
 
-        setInterval(leerDistancia, 2000); 
-        setInterval(escucharComandos, 100); 
+        function animate() {
+            if (!running) return;
+            const elapsed = Date.now() - raceStartTime;
 
+            // Actualizar reloj
+            const min = Math.floor(elapsed / 60000);
+            const sec = Math.floor((elapsed % 60000) / 1000);
+            const ms = Math.floor((elapsed % 1000) / 10);
+            clockTimeMain.innerText = String(min).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+            clockMili.innerText = '.' + String(ms).padStart(2, '0');
+
+            // Animar dot a lo largo del path
+            if (pathTotalLength > 0) {
+                const totalDuration = getEstimatedDuration(currentDistance);
+                let progress = Math.min(elapsed / totalDuration, 0.98); // No llega al 100% hasta FINALIZAR
+                const point = racePath.getPointAtLength(progress * pathTotalLength);
+                raceDot.setAttribute('cx', point.x);
+                raceDot.setAttribute('cy', point.y);
+            }
+
+            animationFrame = requestAnimationFrame(animate);
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        setRaceForDistance(1200);
+        setInterval(leerDistancia, 2000);
+        setInterval(escucharComandos, 100);
     </script>
 </body>
 </html>
