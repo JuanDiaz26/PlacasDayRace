@@ -1,3 +1,105 @@
 {
-    "visible": false
+    "visible": true,
+    "favoritos": "",
+    "carrera_info": {
+        "numero": "3º Carrera",
+        "distancia": "800 METROS",
+        "hora": "15:10",
+        "pista": "PESADA"
+    },
+    "pozos": {
+        "gan": "",
+        "exa": "",
+        "tri": "",
+        "extra": "",
+        "label_extra": "CADENA:",
+        "label_exa": "EXACTA:",
+        "label_tri": "TRIFECTA:"
+    },
+    "incremento": {
+        "label": "EXACTA",
+        "monto": "1"
+    },
+    "retirados_global": [
+        "3ª:CORREN TODOS",
+        "4ª:CORREN TODOS",
+        "5ª:CORREN TODOS",
+        "6ª:CORREN TODOS",
+        "7ª:CORREN TODOS",
+        "8ª:CORREN TODOS",
+        "9ª:CORREN TODOS",
+        "10ª:CORREN TODOS",
+        "11ª:CORREN TODOS"
+    ],
+    "retirados_detalle": [],
+    "tabla_apuestas": [
+        {
+            "numero": "1",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
+        },
+        {
+            "numero": "2",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
+        },
+        {
+            "numero": "3",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
+        },
+        {
+            "numero": "4",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
+        },
+        {
+            "numero": "5",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
+        },
+        {
+            "numero": "6",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
+        },
+        {
+            "numero": "7",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
+        },
+        {
+            "numero": "8",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
+        },
+        {
+            "numero": "9",
+            "ganador": "",
+            "exacta": "",
+            "trifecta": "",
+            "doble": ""
+        }
+    ],
+    "config_nombres": {
+        "col2": "EXACTA",
+        "col3": "TRIFECTA",
+        "col4": "DOBLE"
+    }
 }

@@ -1,8 +1,8 @@
 {
-    "num_carrera": "",
-    "distancia": "",
-    "premio": "",
-    "condicion": "",
-    "estado_pista": "",
-    "visible": false
+    "num_carrera": "3º Carrera",
+    "distancia": "800 METROS",
+    "premio": "PREMIO \"ENRIQUE R. *COCO* ORTIZ\"",
+    "condicion": "Para todo spc de 3 años perdedor en todas las categorías. peso 56 kilos. yeguas con descargo de 2 kilos. aprendices sin descargo.",
+    "estado_pista": "PESADA",
+    "visible": true
 }
